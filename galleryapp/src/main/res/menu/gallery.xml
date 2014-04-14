@@ -1,0 +1,21 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.galleryapp.activities.GalleryActivity" >
+    
+    <item android:id="@+id/action_add_photo_item"
+        android:title="@string/action_add_photo_item"
+        android:icon="@android:drawable/ic_menu_camera"
+        android:orderInCategory="99"
+        android:showAsAction="always|withText"
+        />
+    <item android:id="@+id/action_add_gallery_item"
+        android:title="@string/action_add_gallery_item"
+        android:icon="@android:drawable/ic_menu_gallery"
+        android:orderInCategory="100"
+        android:showAsAction="always|withText"
+        />
+    <item android:id="@+id/action_settings"
+        android:title="@string/action_settings"
+        android:orderInCategory="101"
+        android:showAsAction="never" />
+</menu>

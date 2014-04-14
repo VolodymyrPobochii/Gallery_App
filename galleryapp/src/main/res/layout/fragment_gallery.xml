@@ -1,0 +1,27 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.galleryapp.fragmernts.GalleryFragment">
+
+    <TextView
+        android:id="@+id/scroll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/holo_red_dark"
+        android:textStyle="bold"
+        android:layout_gravity="start"
+        />
+    <!-- TODO: Update blank fragment layout -->
+    <GridView
+        android:id="@+id/gallery_gv"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="10dp"
+        android:verticalSpacing="10dp"
+        android:horizontalSpacing="10dp"
+        android:numColumns="@integer/grid_num_columns"
+        android:gravity="center"
+        />
+
+</FrameLayout>
