@@ -4,7 +4,6 @@ import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
@@ -19,7 +18,6 @@ import android.widget.GridView;
 import android.widget.ImageView;
 
 import com.galleryapp.R;
-import com.galleryapp.fragmernts.GalleryFragment;
 
 import java.io.IOException;
 
@@ -40,7 +38,7 @@ public class ImageAdapter extends CursorAdapter {
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
         ImageView picturesView = new ImageView(context);
-        picturesView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        picturesView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         picturesView.setPadding(5, 5, 5, 5);
         GridView.LayoutParams lp = new GridView.LayoutParams(
                 (int) context.getResources().getDimension(R.dimen.grid_item),

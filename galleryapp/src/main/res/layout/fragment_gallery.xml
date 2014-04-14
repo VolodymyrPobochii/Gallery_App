@@ -11,6 +11,7 @@
         android:textColor="@android:color/holo_red_dark"
         android:textStyle="bold"
         android:layout_gravity="start"
+        android:visibility="gone"
         />
     <!-- TODO: Update blank fragment layout -->
     <GridView
