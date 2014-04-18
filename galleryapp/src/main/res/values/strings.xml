@@ -45,4 +45,12 @@
     <string name="action_delete_photo_item">Delete</string>
     <string name="action_send_photo_item">Send</string>
 
+    <string name="album_name">CameraSample</string>
+    <string name="cannot">Cannot</string>
+    <string name="comments">Comments</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="btnReIntend">Recapture</string>
+    <string name="photo">Take photo</string>
+
 </resources>

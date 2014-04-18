@@ -14,6 +14,8 @@ import com.galleryapp.fragmernts.GalleryFragment;
 public class GalleryActivity extends Activity implements GalleryFragment.OnFragmentInteractionListener {
 
     private static final int REQUEST_SETTINGS = 1000;
+    private static final int REQUEST_CAMERA_PHOTO = 1100;
+    private static final int REQUEST_LOAD_IMAGE = 1200;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +46,13 @@ public class GalleryActivity extends Activity implements GalleryFragment.OnFragm
         switch (id) {
             case R.id.action_settings:
                 startActivityForResult(new Intent(this, PrefActivity.class), REQUEST_SETTINGS);
+                return true;
+            case R.id.action_add_photo_item:
+                startActivityForResult(new Intent(this, PhotoIntentActivity.class), REQUEST_CAMERA_PHOTO);
+                return true;
+            case R.id.action_add_gallery_item:
+                Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(i, REQUEST_LOAD_IMAGE);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

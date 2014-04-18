@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp">
+
+        <Button
+            android:text="@string/btnReIntend"
+            android:id="@+id/btnReIntend"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:visibility="visible"
+            />
+
+        <Button
+            android:text="@string/save"
+            android:id="@+id/btnSave"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:visibility="visible"
+            />
+
+        <Button
+            android:text="@string/cancel"
+            android:id="@+id/btnCancel"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:visibility="visible"
+            />
+
+        <EditText
+            android:id="@+id/comments"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_margin="5dp"
+            android:padding="10dp"
+            android:gravity="start"
+            android:hint="@string/comments"
+            />
+
+    </LinearLayout>
+
+    <ImageView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_margin="5dp"
+        android:layout_gravity="right|center_vertical"
+        android:visibility="visible"
+        android:id="@+id/preview" />
+
+</LinearLayout>
