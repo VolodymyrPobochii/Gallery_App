@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
@@ -18,6 +19,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 
 import com.galleryapp.R;
+import com.galleryapp.data.provider.GalleryDBContent;
 
 import java.io.IOException;
 
@@ -26,13 +28,11 @@ import java.io.IOException;
  */
 public class ImageAdapter extends CursorAdapter {
 
-    private final ObjectAnimator mObjectAnimator;
     private Context mContext;
 
     public ImageAdapter(Context context) {
         super(context, null, false);
         mContext = context;
-        mObjectAnimator = new ObjectAnimator();
     }
 
     @Override
@@ -58,12 +58,12 @@ public class ImageAdapter extends CursorAdapter {
     @Override
     public void bindView(final View view, Context context, final Cursor cursor) {
 //        ((ImageView)view).setImageBitmap(null);
-        final int imageID = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Images.Thumbnails._ID));
+        final String imagePath = cursor.getString(cursor.getColumnIndexOrThrow(GalleryDBContent.GalleryImages.Columns.IMAGE_PATH.getName()));
 //        Uri imageUri = Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID);
 //        ((ImageView) view).setImageURI(imageUri);
-        Log.d("URI", "thumbURI = " + Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID).toString());
+//        Log.d("URI", "thumbURI = " + Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID).toString());
         // Set the content of the image based on the provided URI
-        new AsyncTask<Integer, Void, Bitmap>() {
+        new AsyncTask<String, Void, Bitmap>() {
 
             @Override
             protected void onPreExecute() {
@@ -72,14 +72,11 @@ public class ImageAdapter extends CursorAdapter {
             }
 
             @Override
-            protected Bitmap doInBackground(Integer... params) {
-                Uri imageUri = Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + params[0]);
+            protected Bitmap doInBackground(String... params) {
+//                Uri imageUri = Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + params[0]);
                 Bitmap bitmap = null;
-                try {
-                    bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), imageUri);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                //                    bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), imageUri);
+                bitmap = BitmapFactory.decodeFile(params[0]);
                 return bitmap;
             }
 
@@ -88,7 +85,7 @@ public class ImageAdapter extends CursorAdapter {
                 super.onPostExecute(bitmap);
                 ((ImageView) ((CheckableLayout) view).getChildAt(0)).setImageBitmap(bitmap);
             }
-        }.execute(imageID);
+        }.execute(imagePath);
     }
 
     private class CheckableLayout extends FrameLayout implements Checkable {

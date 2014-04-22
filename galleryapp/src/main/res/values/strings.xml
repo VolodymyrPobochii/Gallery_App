@@ -52,5 +52,6 @@
     <string name="save">Save</string>
     <string name="btnReIntend">Recapture</string>
     <string name="photo">Take photo</string>
+    <string name="title">Title</string>
 
 </resources>

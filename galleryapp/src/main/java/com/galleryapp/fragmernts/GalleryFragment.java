@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import com.galleryapp.R;
 import com.galleryapp.adapters.ImageAdapter;
+import com.galleryapp.data.provider.GalleryDBContent;
 
 /**
  * A simple {@link android.support.v4.app.Fragment} subclass.
@@ -236,17 +237,17 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Uri queryUri = MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI;
+        Uri queryUri = GalleryDBContent.GalleryImages.CONTENT_URI;
 //        int limit = args.getInt(LIMIT, 100);
         queryUri = queryUri.buildUpon().appendQueryParameter(LIMIT, String.valueOf(mConstantLimit)).build();
-        String[] projection = {MediaStore.Images.Thumbnails._ID, MediaStore.Images.Thumbnails.DATA};
-        String selection = MediaStore.Images.Thumbnails._ID + ">=?";
-        String[] selectionArgs = {String.valueOf(mCurrentLimit)};
+        String[] projection = GalleryDBContent.GalleryImages.PROJECTION;
+//        String selection = MediaStore.Images.Thumbnails._ID + ">=?";
+//        String[] selectionArgs = {String.valueOf(mCurrentLimit)};
         return new CursorLoader(getActivity(),
                 queryUri,
                 projection, // Which columns to return
-                selection,       // Return all rows
-                selectionArgs,
+                null,       // Return all rows
+                null,
                 null
         );
     }

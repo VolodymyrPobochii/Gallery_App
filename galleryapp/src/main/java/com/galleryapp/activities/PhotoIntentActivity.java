@@ -20,6 +20,8 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.galleryapp.R;
+import com.galleryapp.application.GalleryApp;
+import com.galleryapp.data.model.ImageObj;
 import com.galleryapp.utils.AlbumStorageDirFactory;
 import com.galleryapp.utils.BaseAlbumDirFactory;
 import com.galleryapp.utils.FroyoAlbumDirFactory;
@@ -61,6 +63,7 @@ public class PhotoIntentActivity extends Activity {
     private String currentCreateDate;
     private String currentDesc;
     private String selectedPhotoItemId = null;
+    private EditText title;
 
 
     /* Photo album for this application */
@@ -200,12 +203,24 @@ public class PhotoIntentActivity extends Activity {
                 currentCreateDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").format(new Date());
             }
 
+            ImageObj image = new ImageObj();
+            image.setCreateDate(currentCreateDate);
+            image.setImageNmae(currentImageFileName);
+            image.setImagePath(mCurrentPhotoPath);
+            image.setImageNotes(comments.getText() != null ? comments.getText().toString() : "-");
+            image.setImageTitle(title.getText() != null ? title.getText().toString() : "-");
+            image.setIsSynced(0);
+
+            GalleryApp app = getApp();
+            Toast.makeText(this, "URI:" + app.saveImage(image).toString(), Toast.LENGTH_SHORT).show();
+
             Intent data = new Intent();
             data.putExtra("selectedPhotoItemId", selectedPhotoItemId);
             data.putExtra("photoPath", mCurrentPhotoPath);
             data.putExtra("photo", currentImageFileName);
             data.putExtra("createDate", currentCreateDate);
             data.putExtra("description", comments.getText() != null ? comments.getText().toString() : "-");
+            data.putExtra("title", title.getText() != null ? title.getText().toString() : "-");
             setResult(RESULT_OK, data);
             mCurrentPhotoPath = null;
             finish();
@@ -256,6 +271,7 @@ public class PhotoIntentActivity extends Activity {
         mImageBitmap = null;
         mVideoUri = null;
 
+        title = (EditText) findViewById(R.id.title);
         comments = (EditText) findViewById(R.id.comments);
 
         picRetakeBtn = (Button) findViewById(R.id.btnReIntend);
@@ -395,6 +411,10 @@ public class PhotoIntentActivity extends Activity {
                     getText(R.string.cannot).toString() + " " + btn.getText());
             btn.setClickable(false);
         }
+    }
+
+    private GalleryApp getApp() {
+        return (GalleryApp) getApplication();
     }
 
 }
