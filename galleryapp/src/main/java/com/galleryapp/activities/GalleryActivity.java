@@ -2,13 +2,21 @@ package com.galleryapp.activities;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.galleryapp.R;
+import com.galleryapp.application.GalleryApp;
+import com.galleryapp.data.model.ImageObj;
 import com.galleryapp.fragmernts.GalleryFragment;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 public class GalleryActivity extends Activity implements GalleryFragment.OnFragmentInteractionListener {
@@ -28,6 +36,32 @@ public class GalleryActivity extends Activity implements GalleryFragment.OnFragm
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_LOAD_IMAGE) {
+            if (resultCode == RESULT_OK) {
+                Log.d("Image", "GalleryURI:" + data.getData().toString());
+                Log.d("Image", "GalleryEncodedPath:" + data.getData().getEncodedPath());
+                Log.d("Image", "GalleryPath:" + data.getData().getPath());
+                Cursor c = getContentResolver().query(data.getData(), new String[]{MediaStore.Images.Media.DATA}, null, null, null);
+                assert c != null;
+                if (c.getCount() > 0) {
+                    c.moveToNext();
+                    Log.d("Image", "GalleryFilePath:" + c.getString(c.getColumnIndex(MediaStore.Images.Media.DATA)));
+                    ImageObj imageObj = new ImageObj();
+                    imageObj.setImagePath(c.getString(c.getColumnIndex(MediaStore.Images.Media.DATA)));
+                    imageObj.setCreateDate(new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").format(new Date()));
+                    imageObj.setImageTitle("New Image");
+                    imageObj.setImageNotes("Image from gallery");
+                    imageObj.setImageName("Image.jpg");
+
+                    GalleryApp app = (GalleryApp) getApplication();
+                    Log.d("Image", "URI:" + app.saveImage(imageObj).toString());
+                }
+            }
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

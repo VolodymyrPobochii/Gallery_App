@@ -3,10 +3,10 @@ package com.galleryapp.fragmernts;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.LoaderManager;
-import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -19,15 +19,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.Checkable;
-import android.widget.FrameLayout;
 import android.widget.GridView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.galleryapp.R;
 import com.galleryapp.adapters.ImageAdapter;
 import com.galleryapp.data.provider.GalleryDBContent;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
 
 /**
  * A simple {@link android.support.v4.app.Fragment} subclass.
@@ -56,6 +55,8 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     private int previousTotal = 0;
     private int currentPage = 0;
     private int mConstantLimit = 100;
+    private DisplayImageOptions mOptions;
+    private ImageLoader mImageLoader;
 
     /**
      * Use this factory method to create a new instance of
@@ -86,6 +87,15 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        mImageLoader = ImageLoader.getInstance();
+        mOptions = new DisplayImageOptions.Builder()
+                .showImageOnLoading(R.drawable.ic_launcher)
+                .showImageForEmptyUri(R.drawable.ic_launcher)
+                .showImageOnFail(R.drawable.ic_launcher)
+                .cacheInMemory(true)
+                .considerExifParams(true)
+                .bitmapConfig(Bitmap.Config.RGB_565)
+                .build();
         initThumbLoader();
     }
 
@@ -96,22 +106,11 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
         // Inflate the layout for this fragment
         // Set up an array of the Thumbnail Image ID column we want
         assert rootView != null;
+
         final GridView mGridView = (GridView) rootView.findViewById(R.id.gallery_gv);
-        mGalleryAdapter = new ImageAdapter(getActivity());
+        mGalleryAdapter = new ImageAdapter(getActivity(), mImageLoader, mOptions);
         mGridView.setAdapter(mGalleryAdapter);
         // Set up a click listener
-        mGridView.setOnScrollListener(new AbsListView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(AbsListView view, int scrollState) {
-
-            }
-
-            @Override
-            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                ((TextView) rootView.findViewById(R.id.scroll)).setText("fvi = " + firstVisibleItem + " vic = " + visibleItemCount + " tic = " + totalItemCount);
-                checkClose2End(firstVisibleItem, visibleItemCount, totalItemCount);
-            }
-        });
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView parent, View v, int position, long id) {
                 // Get the data location of the image
@@ -194,20 +193,10 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
         return rootView;
     }
 
-    private void checkClose2End(int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-        if (!loading && (totalItemCount - visibleItemCount) <= (firstVisibleItem + visibleThreshold)) {
-            // I load the next page of gigs using a background task,
-            // but you can call any function here.
-            loading = true;
-            mConstantLimit += 100;
-            initThumbLoader();
-        }
-    }
-
     private void initThumbLoader() {
 //        Bundle b = new Bundle();
 //        b.putInt(LIMIT, limit);
-       getLoaderManager().restartLoader(R.id.gallery_thumbs_loader, null, this);
+        getLoaderManager().restartLoader(R.id.gallery_thumbs_loader, null, this);
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -239,7 +228,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Uri queryUri = GalleryDBContent.GalleryImages.CONTENT_URI;
 //        int limit = args.getInt(LIMIT, 100);
-        queryUri = queryUri.buildUpon().appendQueryParameter(LIMIT, String.valueOf(mConstantLimit)).build();
+//        queryUri = queryUri.buildUpon().appendQueryParameter(LIMIT, String.valueOf(mConstantLimit)).build();
         String[] projection = GalleryDBContent.GalleryImages.PROJECTION;
 //        String selection = MediaStore.Images.Thumbnails._ID + ">=?";
 //        String[] selectionArgs = {String.valueOf(mCurrentLimit)};
@@ -279,5 +268,4 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
         // TODO: Update argument type and name
         public void onFragmentInteraction(Uri uri);
     }
-
 }

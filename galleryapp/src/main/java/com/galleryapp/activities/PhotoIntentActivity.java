@@ -152,6 +152,7 @@ public class PhotoIntentActivity extends Activity {
         Intent mediaScanIntent = new Intent("android.intent.action.MEDIA_SCANNER_SCAN_FILE");
         File f = new File(mCurrentPhotoPath);
         Uri contentUri = Uri.fromFile(f);
+        Log.d("Image", "galleryAddPic:" + contentUri.toString());
         mediaScanIntent.setData(contentUri);
         this.sendBroadcast(mediaScanIntent);
     }
@@ -205,14 +206,15 @@ public class PhotoIntentActivity extends Activity {
 
             ImageObj image = new ImageObj();
             image.setCreateDate(currentCreateDate);
-            image.setImageNmae(currentImageFileName);
+            image.setImageName(currentImageFileName);
             image.setImagePath(mCurrentPhotoPath);
             image.setImageNotes(comments.getText() != null ? comments.getText().toString() : "-");
             image.setImageTitle(title.getText() != null ? title.getText().toString() : "-");
             image.setIsSynced(0);
 
-            GalleryApp app = getApp();
-            Toast.makeText(this, "URI:" + app.saveImage(image).toString(), Toast.LENGTH_SHORT).show();
+            GalleryApp app = (GalleryApp) getApplication();
+            Log.d("Image", "URI:" + app.saveImage(image).toString());
+            Log.d("Image", "Path:" + mCurrentPhotoPath);
 
             Intent data = new Intent();
             data.putExtra("selectedPhotoItemId", selectedPhotoItemId);
@@ -412,9 +414,4 @@ public class PhotoIntentActivity extends Activity {
             btn.setClickable(false);
         }
     }
-
-    private GalleryApp getApp() {
-        return (GalleryApp) getApplication();
-    }
-
 }

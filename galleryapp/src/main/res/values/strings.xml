@@ -53,5 +53,7 @@
     <string name="btnReIntend">Recapture</string>
     <string name="photo">Take photo</string>
     <string name="title">Title</string>
+    <string name="descr_image">image description</string>
+    <string name="title_image">Image title</string>
 
 </resources>

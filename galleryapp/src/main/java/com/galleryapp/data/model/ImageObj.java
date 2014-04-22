@@ -28,7 +28,7 @@ public class ImageObj {
         return imageNmae;
     }
 
-    public void setImageNmae(String imageNmae) {
+    public void setImageName(String imageNmae) {
         this.imageNmae = imageNmae;
     }
 
@@ -72,7 +72,7 @@ public class ImageObj {
         this.isSynced = isSynced;
     }
 
-    public ContentValues toContentValues(){
+    public ContentValues toContentValues() {
         ContentValues cv = new ContentValues();
 
         cv.put(GalleryDBContent.GalleryImages.Columns.IMAGE_NAME.getName(), getImageNmae());
