@@ -46,6 +46,7 @@
     <string name="action_send_photo_item">Send</string>
 
     <string name="album_name">CameraSample</string>
+    <string name="thumbs_name">CameraSampleThumb</string>
     <string name="cannot">Cannot</string>
     <string name="comments">Comments</string>
     <string name="cancel">Cancel</string>

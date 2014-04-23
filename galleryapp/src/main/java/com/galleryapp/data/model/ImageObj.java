@@ -8,6 +8,7 @@ public class ImageObj {
     private Integer id;
     private String imageNmae;
     private String imagePath;
+    private String thumbPath;
     private String createDate;
     private String imageTitle;
     private String imageNotes;
@@ -72,11 +73,20 @@ public class ImageObj {
         this.isSynced = isSynced;
     }
 
+    public String getThumbPath() {
+        return thumbPath;
+    }
+
+    public void setThumbPath(String thumbPath) {
+        this.thumbPath = thumbPath;
+    }
+
     public ContentValues toContentValues() {
         ContentValues cv = new ContentValues();
 
         cv.put(GalleryDBContent.GalleryImages.Columns.IMAGE_NAME.getName(), getImageNmae());
         cv.put(GalleryDBContent.GalleryImages.Columns.IMAGE_PATH.getName(), getImagePath());
+        cv.put(GalleryDBContent.GalleryImages.Columns.THUMB_PATH.getName(), getThumbPath());
         cv.put(GalleryDBContent.GalleryImages.Columns.IMAGE_TITLE.getName(), getImageTitle());
         cv.put(GalleryDBContent.GalleryImages.Columns.IMAGE_NOTES.getName(), getImageNotes());
         cv.put(GalleryDBContent.GalleryImages.Columns.CREATE_DATE.getName(), getCreateDate());

@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -89,14 +90,51 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
         }
         mImageLoader = ImageLoader.getInstance();
         mOptions = new DisplayImageOptions.Builder()
-                .showImageOnLoading(R.drawable.ic_launcher)
-                .showImageForEmptyUri(R.drawable.ic_launcher)
-                .showImageOnFail(R.drawable.ic_launcher)
                 .cacheInMemory(true)
                 .considerExifParams(true)
                 .bitmapConfig(Bitmap.Config.RGB_565)
                 .build();
         initThumbLoader();
+        testThumbs();
+    }
+
+    private void testThumbs() {
+        Cursor thumbs = getActivity().getContentResolver()
+                .query(
+                        MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI,
+                        new String[]{
+                                MediaStore.Images.Thumbnails._ID,
+                                MediaStore.Images.Thumbnails.DATA,
+                                MediaStore.Images.Thumbnails.IMAGE_ID,
+                        },
+                        null, null, null
+                );
+        assert thumbs != null;
+        if (thumbs.getCount() > 0) {
+            thumbs.moveToNext();
+            Log.d("MediaStore", "THUMBS");
+            Log.d("MediaStore", "THUMBS::_ID = " + thumbs.getString(thumbs.getColumnIndex(MediaStore.Images.Thumbnails._ID)));
+            Log.d("MediaStore", "THUMBS::DATA = " + thumbs.getString(thumbs.getColumnIndex(MediaStore.Images.Thumbnails.DATA)));
+            Log.d("MediaStore", "THUMBS::IMAGE_ID = " + thumbs.getString(thumbs.getColumnIndex(MediaStore.Images.Thumbnails.IMAGE_ID)));
+            thumbs.close();
+        }
+        Cursor images = getActivity().getContentResolver()
+                .query(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        new String[]{
+                                MediaStore.Images.Media._ID,
+                                MediaStore.Images.Media.DATA,
+                        },
+                        null, null, null
+                );
+        assert images != null;
+        if (images.getCount() > 0) {
+            images.moveToNext();
+            Log.d("MediaStore", "IMAGES");
+            Log.d("MediaStore", "IMAGES::_ID = " + images.getString(images.getColumnIndex(MediaStore.Images.Thumbnails._ID)));
+            Log.d("MediaStore", "IMAGES::DATA = " + images.getString(images.getColumnIndex(MediaStore.Images.Thumbnails.DATA)));
+            images.close();
+        }
     }
 
     @Override

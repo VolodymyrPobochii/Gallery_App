@@ -2,9 +2,12 @@ package com.galleryapp.application;
 
 import android.app.Application;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
@@ -51,6 +54,57 @@ public class GalleryApp extends Application {
     }
 
     public Uri saveImage(ImageObj image) {
+//        String imageId = imageId(image.getImagePath());
+//        Log.d("MediaStore", "THUMBS::imageId = " + imageId);
+//        if (imageId != null) {
+//            String thumbData = getThumbData(imageId);
+//            Log.d("MediaStore", "THUMBS::thumbData = " + thumbData);
+//            image.setThumbPath(thumbData);
+//        }
         return getContentResolver().insert(GalleryDBContent.GalleryImages.CONTENT_URI, image.toContentValues());
+    }
+
+    private String getThumbData(String imageId) {
+        Cursor thumbs = getContentResolver()
+                .query(
+                        MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI,
+                        new String[]{MediaStore.Images.Thumbnails.DATA},
+                        MediaStore.Images.Thumbnails.IMAGE_ID + "=?",
+                        new String[]{imageId},
+                        null
+                );
+        String thumbData = null;
+        assert thumbs != null;
+        if (thumbs.getCount() > 0) {
+            thumbs.moveToLast();
+            thumbData = thumbs.getString(thumbs.getColumnIndex(MediaStore.Images.Thumbnails.DATA));
+            Log.d("MediaStore", "THUMBS");
+            Log.d("MediaStore", "THUMBS::DATA = " + thumbData);
+            thumbs.close();
+        }
+        return thumbData;
+    }
+
+    public String imageId(String imagePath) {
+        Cursor images = getContentResolver()
+                .query(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        new String[]{
+                                MediaStore.Images.Media._ID
+                        },
+                        MediaStore.Images.Media.DATA + "=?",
+                        new String[]{imagePath},
+                        null
+                );
+        String imageId = null;
+        assert images != null;
+        if (images.getCount() > 0) {
+            images.moveToLast();
+            imageId = images.getString(images.getColumnIndex(MediaStore.Images.Media._ID));
+            Log.d("MediaStore", "IMAGES");
+            Log.d("MediaStore", "IMAGES::_ID = " + imageId);
+            images.close();
+        }
+        return imageId;
     }
 }

@@ -3,6 +3,7 @@ package com.galleryapp.adapters;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -76,6 +77,8 @@ public class ImageAdapter extends CursorAdapter {
     public void bindView(final View view, Context context, final Cursor cursor) {
 //        ((ImageView)view).setImageBitmap(null);
         final String imagePath = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_PATH.getName()));
+        final String thumbPath = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.THUMB_PATH.getName()));
+        Log.d("MediaStore", "bindView::thumbPath = " + thumbPath);
         final String imageTitle = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_TITLE.getName()));
         final String imageDate = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.CREATE_DATE.getName()));
         ViewHolder holder = (ViewHolder) view.getTag();
@@ -84,7 +87,7 @@ public class ImageAdapter extends CursorAdapter {
 //        ((ImageView) view).setImageURI(imageUri);
 //        Log.d("URI", "thumbURI = " + Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID).toString());
         // Set the content of the image based on the provided URI
-        mImageLoader.displayImage("file://" + imagePath, holder.imageView, mOptions, new SimpleImageLoadingListener() {
+        mImageLoader.displayImage("file://" + thumbPath, holder.imageView, mOptions, new SimpleImageLoadingListener() {
                     @Override
                     public void onLoadingStarted(String imageUri, View view) {
 //                        mHolder.progressBar.setProgress(0);

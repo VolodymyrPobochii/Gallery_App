@@ -7,8 +7,8 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="D:\Android_Projects\Retrofit-Examples\GalleryApp" />
-            <option value="D:\Android_Projects\Retrofit-Examples\GalleryApp\galleryapp" />
+            <option value="D:\Android_Projects\Gallery_App" />
+            <option value="D:\Android_Projects\Gallery_App\galleryapp" />
           </set>
         </option>
       </GradleProjectSettings>

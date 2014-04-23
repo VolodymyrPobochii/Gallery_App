@@ -27,6 +27,7 @@ import com.galleryapp.utils.BaseAlbumDirFactory;
 import com.galleryapp.utils.FroyoAlbumDirFactory;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -51,6 +52,7 @@ public class PhotoIntentActivity extends Activity {
     private String mCurrentPhotoPath;
 
     private static final String JPEG_FILE_PREFIX = "IMG_";
+    private static final String JPEG_FILE_THUMB_PREFIX = "THUMB_";
     private static final String JPEG_FILE_SUFFIX = ".jpg";
 
     private AlbumStorageDirFactory mAlbumStorageDirFactory = null;
@@ -64,11 +66,19 @@ public class PhotoIntentActivity extends Activity {
     private String currentDesc;
     private String selectedPhotoItemId = null;
     private EditText title;
+    private String currentImageThumbFileName;
+    private String mCurrentThumbPath;
+    private Bitmap mCurentThumbBitmap;
 
 
     /* Photo album for this application */
     private String getAlbumName() {
         return getString(R.string.album_name);
+    }
+
+    /* Photo thumbs album for this application */
+    private String getThumbName() {
+        return getString(R.string.thumbs_name);
     }
 
     private File getAlbumDir() {
@@ -94,6 +104,29 @@ public class PhotoIntentActivity extends Activity {
         return storageDir;
     }
 
+    private File getThumbDir() {
+        File thumbDir = null;
+
+        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+
+            thumbDir = mAlbumStorageDirFactory.getAlbumStorageDir(getThumbName());
+
+            if (thumbDir != null) {
+                if (!thumbDir.mkdirs()) {
+                    if (!thumbDir.exists()) {
+                        Log.d("CameraSample", "failed to create directory");
+                        return null;
+                    }
+                }
+            }
+
+        } else {
+            Log.v(getString(R.string.app_name), "External storage is not mounted READ/WRITE.");
+        }
+
+        return thumbDir;
+    }
+
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -104,22 +137,36 @@ public class PhotoIntentActivity extends Activity {
         return imageF;
     }
 
-    private File setUpPhotoFile() throws IOException {
+    private File createImageThumb() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String thumbFileName = JPEG_FILE_THUMB_PREFIX + timeStamp + "_";
+        File thumbAlbumF = getThumbDir();
+        File thumbF = File.createTempFile(thumbFileName, JPEG_FILE_SUFFIX, thumbAlbumF);
+        currentImageThumbFileName = thumbF.getName();
+        return thumbF;
+    }
 
+    private File setUpPhotoFile() throws IOException {
         File f = createImageFile();
         mCurrentPhotoPath = f.getAbsolutePath();
-
         return f;
     }
 
-    private void setPic() {
+    private File setUpThumbFile() throws IOException {
+        File f = createImageThumb();
+        mCurrentThumbPath = f.getAbsolutePath();
+        return f;
+    }
+
+    private Bitmap setPic(boolean forThumb) {
 
 		/* There isn't enough memory to open up more than a couple camera photos */
         /* So pre-scale the target bitmap into which the file is decoded */
 
 		/* Get the size of the ImageView */
-        int targetW = mImageView.getWidth();
-        int targetH = mImageView.getHeight();
+        int targetW = forThumb ? getResources().getInteger(R.integer.grid_thumb_wh) : mImageView.getWidth();
+        int targetH = forThumb ? getResources().getInteger(R.integer.grid_thumb_wh) : mImageView.getHeight();
 
 		/* Get the size of the image */
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
@@ -142,10 +189,13 @@ public class PhotoIntentActivity extends Activity {
 		/* Decode the JPEG file into a Bitmap */
         Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
 
-		/* Associate the Bitmap to the ImageView */
-        mImageView.setImageBitmap(bitmap);
-        mVideoUri = null;
-        mImageView.setVisibility(View.VISIBLE);
+        if (!forThumb) {
+        /* Associate the Bitmap to the ImageView */
+            mImageView.setImageBitmap(bitmap);
+            mVideoUri = null;
+            mImageView.setVisibility(View.VISIBLE);
+        }
+        return bitmap;
     }
 
     private void galleryAddPic() {
@@ -153,8 +203,29 @@ public class PhotoIntentActivity extends Activity {
         File f = new File(mCurrentPhotoPath);
         Uri contentUri = Uri.fromFile(f);
         Log.d("Image", "galleryAddPic:" + contentUri.toString());
+        Log.d("MediaStore", "galleryAddPic::path = " + mCurrentPhotoPath);
+        Log.d("MediaStore", "galleryAddPic::uri = " + contentUri);
         mediaScanIntent.setData(contentUri);
         this.sendBroadcast(mediaScanIntent);
+    }
+
+    private void saveThumb(Bitmap finalBitmap) {
+        File file = null;
+        try {
+            file = setUpThumbFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        assert file != null;
+        if (file.exists()) file.delete();
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void dispatchTakePictureIntent(int actionCode) {
@@ -164,7 +235,6 @@ public class PhotoIntentActivity extends Activity {
         switch (actionCode) {
             case ACTION_TAKE_PHOTO_B:
                 File f = null;
-
                 try {
                     f = setUpPhotoFile();
                     mCurrentPhotoPath = f.getAbsolutePath();
@@ -190,6 +260,7 @@ public class PhotoIntentActivity extends Activity {
 
     private void handleSmallCameraPhoto(Intent intent) {
         Bundle extras = intent.getExtras();
+        assert extras != null;
         mImageBitmap = (Bitmap) extras.get("data");
         mImageView.setImageBitmap(mImageBitmap);
         mVideoUri = null;
@@ -200,14 +271,16 @@ public class PhotoIntentActivity extends Activity {
         if (mCurrentPhotoPath != null) {
 //            setPic();
             if (!isEdit) {
-                galleryAddPic();
                 currentCreateDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").format(new Date());
+//                galleryAddPic();
+                saveThumb(setPic(true));
             }
 
             ImageObj image = new ImageObj();
             image.setCreateDate(currentCreateDate);
             image.setImageName(currentImageFileName);
             image.setImagePath(mCurrentPhotoPath);
+            image.setThumbPath(mCurrentThumbPath);
             image.setImageNotes(comments.getText() != null ? comments.getText().toString() : "-");
             image.setImageTitle(title.getText() != null ? title.getText().toString() : "-");
             image.setIsSynced(0);
@@ -219,6 +292,7 @@ public class PhotoIntentActivity extends Activity {
             Intent data = new Intent();
             data.putExtra("selectedPhotoItemId", selectedPhotoItemId);
             data.putExtra("photoPath", mCurrentPhotoPath);
+            data.putExtra("thumbPath", mCurrentThumbPath);
             data.putExtra("photo", currentImageFileName);
             data.putExtra("createDate", currentCreateDate);
             data.putExtra("description", comments.getText() != null ? comments.getText().toString() : "-");
@@ -314,7 +388,7 @@ public class PhotoIntentActivity extends Activity {
             currentCreateDate = getIntent().getStringExtra("createDate");
             currentDesc = getIntent().getStringExtra("description");
             comments.setText(currentDesc);
-            setPic();
+            setPic(false);
         } else {
             takePhoto();
         }
@@ -337,7 +411,7 @@ public class PhotoIntentActivity extends Activity {
                 if (resultCode == RESULT_OK) {
                     saveBtn.setEnabled(true);
 //                    handleBigCameraPhoto();
-                    setPic();
+                    setPic(false);
                 }
                 break;
             } // ACTION_TAKE_PHOTO_B

@@ -44,23 +44,52 @@ public class GalleryActivity extends Activity implements GalleryFragment.OnFragm
                 Log.d("Image", "GalleryURI:" + data.getData().toString());
                 Log.d("Image", "GalleryEncodedPath:" + data.getData().getEncodedPath());
                 Log.d("Image", "GalleryPath:" + data.getData().getPath());
-                Cursor c = getContentResolver().query(data.getData(), new String[]{MediaStore.Images.Media.DATA}, null, null, null);
-                assert c != null;
-                if (c.getCount() > 0) {
-                    c.moveToNext();
-                    Log.d("Image", "GalleryFilePath:" + c.getString(c.getColumnIndex(MediaStore.Images.Media.DATA)));
-                    ImageObj imageObj = new ImageObj();
-                    imageObj.setImagePath(c.getString(c.getColumnIndex(MediaStore.Images.Media.DATA)));
-                    imageObj.setCreateDate(new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").format(new Date()));
-                    imageObj.setImageTitle("New Image");
-                    imageObj.setImageNotes("Image from gallery");
-                    imageObj.setImageName("Image.jpg");
-
-                    GalleryApp app = (GalleryApp) getApplication();
-                    Log.d("Image", "URI:" + app.saveImage(imageObj).toString());
-                }
+                queryImageData(data);
             }
         }
+    }
+
+    private void queryImageData(Intent data) {
+        Cursor c = getContentResolver().query(data.getData(), new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA}, null, null, null);
+        assert c != null;
+        if (c.getCount() > 0) {
+            c.moveToNext();
+            String imageId = c.getString(c.getColumnIndex(MediaStore.Images.Media._ID));
+            String thumbData = queryImageThumbData(imageId);
+            Log.d("Image", "GalleryFilePath:" + c.getString(c.getColumnIndex(MediaStore.Images.Media.DATA)));
+            Log.d("Image", "GalleryFileId:" + imageId);
+
+            ImageObj imageObj = new ImageObj();
+            imageObj.setImagePath(c.getString(c.getColumnIndex(MediaStore.Images.Media.DATA)));
+            imageObj.setThumbPath(thumbData);
+            imageObj.setCreateDate(new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").format(new Date()));
+            imageObj.setImageTitle("New Image");
+            imageObj.setImageNotes("Image from gallery");
+            imageObj.setImageName("Image.jpg");
+
+            GalleryApp app = (GalleryApp) getApplication();
+            Log.d("Image", "URI:" + app.saveImage(imageObj).toString());
+            c.close();
+        }
+    }
+
+    private String queryImageThumbData(String imageId) {
+        Cursor c = getContentResolver()
+                .query(
+                        MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI,
+                        new String[]{MediaStore.Images.Thumbnails.DATA},
+                        MediaStore.Images.Thumbnails.IMAGE_ID + "=?",
+                        new String[]{imageId},
+                        null);
+        String thumbData = null;
+        assert c != null;
+        if (c.getCount() > 0) {
+            c.moveToNext();
+            thumbData = c.getString(c.getColumnIndex(MediaStore.Images.Thumbnails.DATA));
+            Log.d("Image", "GalleryFilePath:" + thumbData);
+            c.close();
+        }
+        return thumbData;
     }
 
     @Override
