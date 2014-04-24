@@ -3,7 +3,6 @@ package com.galleryapp.activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -15,7 +14,9 @@ import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ImageObj;
 import com.galleryapp.fragmernts.GalleryFragment;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 
@@ -68,7 +69,7 @@ public class GalleryActivity extends Activity implements GalleryFragment.OnFragm
             imageObj.setImageName("Image.jpg");
 
             GalleryApp app = (GalleryApp) getApplication();
-            Log.d("Image", "URI:" + app.saveImage(imageObj).toString());
+            app.saveImage(imageObj);
             c.close();
         }
     }
@@ -123,7 +124,13 @@ public class GalleryActivity extends Activity implements GalleryFragment.OnFragm
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri) {
-
+    public void onFragmentInteraction(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs) {
+        if (ids != null && ids.size() > 0) {
+            for (String id : ids) {
+                Log.d("CHECKED_IDS", "ID[delete] = " + id);
+            }
+            GalleryApp app = (GalleryApp) getApplication();
+            app.deleteImage(ids, checkedImages, checkedThumbs);
+        }
     }
 }

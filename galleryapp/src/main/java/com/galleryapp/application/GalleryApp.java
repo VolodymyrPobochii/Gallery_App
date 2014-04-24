@@ -1,10 +1,13 @@
 package com.galleryapp.application;
 
 import android.app.Application;
+import android.content.ContentProviderOperation;
 import android.content.Context;
+import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -13,6 +16,7 @@ import android.view.WindowManager;
 
 import com.galleryapp.data.model.ImageObj;
 import com.galleryapp.data.provider.GalleryDBContent;
+import com.galleryapp.data.provider.GalleryDBProvider;
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
 import com.nostra13.universalimageloader.cache.memory.impl.LruMemoryCache;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -20,6 +24,7 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.utils.StorageUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 
 public class GalleryApp extends Application {
     public GalleryApp() {
@@ -53,7 +58,44 @@ public class GalleryApp extends Application {
         super.onTerminate();
     }
 
-    public Uri saveImage(ImageObj image) {
+    public void deleteImage(ArrayList<String> ids, ArrayList<File> images, ArrayList<File> thumbs) {
+        ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
+        for (String id : ids) {
+            operations.add(ContentProviderOperation.newDelete(GalleryDBContent.GalleryImages.CONTENT_URI)
+                    .withSelection(GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?", new String[]{id})
+                    .build());
+        }
+        try {
+            getContentResolver().applyBatch(GalleryDBProvider.AUTHORITY, operations);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (OperationApplicationException e) {
+            e.printStackTrace();
+        }
+        deleteFilesRecursive(images, thumbs);
+    }
+
+    private void deleteFilesRecursive(ArrayList<File> images, ArrayList<File> thumbs) {
+        for (File image : images) {
+            deleteFileRecursive(image);
+        }
+        for (File thumb : thumbs) {
+            deleteFileRecursive(thumb);
+        }
+    }
+
+    private void deleteFileRecursive(File file) {
+        if (file.isDirectory()) {
+            for (File child : file.listFiles()) {
+                deleteFileRecursive(child);
+            }
+        } else {
+            boolean result = file.delete();
+            Log.d("CHECKED_IDS", "File[deleted] = " + result);
+        }
+    }
+
+    public Uri saveImage(final ImageObj image) {
 //        String imageId = imageId(image.getImagePath());
 //        Log.d("MediaStore", "THUMBS::imageId = " + imageId);
 //        if (imageId != null) {

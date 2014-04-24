@@ -286,7 +286,7 @@ public class PhotoIntentActivity extends Activity {
             image.setIsSynced(0);
 
             GalleryApp app = (GalleryApp) getApplication();
-            Log.d("Image", "URI:" + app.saveImage(image).toString());
+            app.saveImage(image);
             Log.d("Image", "Path:" + mCurrentPhotoPath);
 
             Intent data = new Intent();

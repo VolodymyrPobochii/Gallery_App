@@ -29,6 +29,9 @@ import com.galleryapp.data.provider.GalleryDBContent;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
+import java.io.File;
+import java.util.ArrayList;
+
 /**
  * A simple {@link android.support.v4.app.Fragment} subclass.
  * Activities that contain this fragment must implement the
@@ -58,6 +61,8 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     private int mConstantLimit = 100;
     private DisplayImageOptions mOptions;
     private ImageLoader mImageLoader;
+    private long[] mCheckedIds;
+    private GridView mGridView;
 
     /**
      * Use this factory method to create a new instance of
@@ -145,7 +150,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
         // Set up an array of the Thumbnail Image ID column we want
         assert rootView != null;
 
-        final GridView mGridView = (GridView) rootView.findViewById(R.id.gallery_gv);
+        mGridView = (GridView) rootView.findViewById(R.id.gallery_gv);
         mGalleryAdapter = new ImageAdapter(getActivity(), mImageLoader, mOptions);
         mGridView.setAdapter(mGalleryAdapter);
         // Set up a click listener
@@ -176,6 +181,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
             public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
                 // Here you can do something when items are selected/de-selected,
                 // such as update the title in the CAB
+                mCheckedIds = mGridView.getCheckedItemIds();
                 int selectCount = mGridView.getCheckedItemCount();
                 switch (selectCount) {
                     case 1:
@@ -192,7 +198,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                 // Respond to clicks on the actions in the CAB
                 switch (item.getItemId()) {
                     case R.id.action_delete_photo_item:
-//                        deleteSelectedItems();
+                        deleteSelectedItems();
                         mode.finish(); // Action picked, so close the CAB
                         return true;
                     case R.id.action_send_photo_item:
@@ -231,6 +237,30 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
         return rootView;
     }
 
+    private void deleteSelectedItems() {
+        ArrayList<String> checkedCursorIds = new ArrayList<String>();
+        ArrayList<File> checkedImages = new ArrayList<File>();
+        ArrayList<File> checkedThumbs = new ArrayList<File>();
+        Cursor cursor = ((ImageAdapter) mGridView.getAdapter()).getCursor();
+        assert cursor != null;
+        if (cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
+                String cursorId = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.ID.getName()));
+                assert cursorId != null;
+                for (long id : mCheckedIds) {
+                    Log.d("CHECKED_IDS", "ID[] = " + id);
+                    if (cursorId.equals(String.valueOf(id))) {
+                        checkedCursorIds.add(cursorId);
+                        checkedImages.add(new File(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_PATH.getName()))));
+                        checkedThumbs.add(new File(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.THUMB_PATH.getName()))));
+                    }
+                }
+            }
+            cursor.close();
+        }
+        mListener.onFragmentInteraction(checkedCursorIds, checkedImages, checkedThumbs);
+    }
+
     private void initThumbLoader() {
 //        Bundle b = new Bundle();
 //        b.putInt(LIMIT, limit);
@@ -240,7 +270,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
+//            mListener.onFragmentInteraction(null, null, null);
         }
     }
 
@@ -304,6 +334,6 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
      */
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
-        public void onFragmentInteraction(Uri uri);
+        public void onFragmentInteraction(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs);
     }
 }
