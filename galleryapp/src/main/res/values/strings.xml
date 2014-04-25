@@ -56,5 +56,6 @@
     <string name="title">Title</string>
     <string name="descr_image">image description</string>
     <string name="title_image">Image title</string>
+    <string name="file_upload">File uploading...</string>
 
 </resources>

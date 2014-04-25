@@ -13,6 +13,9 @@ import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ImageObj;
 import com.galleryapp.fragmernts.GalleryFragment;
+import com.galleryapp.interfaces.ProgressiveEntityListener;
+
+import org.apache.http.entity.FileEntity;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -20,7 +23,8 @@ import java.util.ArrayList;
 import java.util.Date;
 
 
-public class GalleryActivity extends Activity implements GalleryFragment.OnFragmentInteractionListener {
+public class GalleryActivity extends Activity
+        implements GalleryFragment.OnFragmentInteractionListener, ProgressiveEntityListener {
 
     private static final int REQUEST_SETTINGS = 1000;
     private static final int REQUEST_CAMERA_PHOTO = 1100;
@@ -124,7 +128,7 @@ public class GalleryActivity extends Activity implements GalleryFragment.OnFragm
     }
 
     @Override
-    public void onFragmentInteraction(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs) {
+    public void onDeleteItemsOperation(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs) {
         if (ids != null && ids.size() > 0) {
             for (String id : ids) {
                 Log.d("CHECKED_IDS", "ID[delete] = " + id);
@@ -137,5 +141,10 @@ public class GalleryActivity extends Activity implements GalleryFragment.OnFragm
             }
             ((GalleryApp) getApplication()).deleteImage(ids, checkedImages, checkedThumbs);
         }
+    }
+
+    @Override
+    public void onFileUpload(String response, String fileName, FileEntity fileEntity, String responseId) {
+        Log.d("FILE_UPLOAD", "RESPONSE = " + response);
     }
 }

@@ -23,11 +23,15 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import com.galleryapp.Config;
 import com.galleryapp.R;
 import com.galleryapp.adapters.ImageAdapter;
+import com.galleryapp.asynctasks.CreateResourceTask;
 import com.galleryapp.data.provider.GalleryDBContent;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
+
+import org.apache.http.entity.FileEntity;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -101,7 +105,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                 .bitmapConfig(Bitmap.Config.RGB_565)
                 .build();
         initThumbLoader();
-        testThumbs();
+//        testThumbs();
     }
 
     private void testThumbs() {
@@ -180,6 +184,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
 
             @Override
             public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
+                Log.d("CHECKED_IDS", "onItemCheckedStateChanged");
                 // Here you can do something when items are selected/de-selected,
                 // such as update the title in the CAB
                 if (checked) {
@@ -200,6 +205,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
 
             @Override
             public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                Log.d("CHECKED_IDS", "onActionItemClicked");
                 // Respond to clicks on the actions in the CAB
                 switch (item.getItemId()) {
                     case R.id.action_delete_photo_item:
@@ -207,8 +213,8 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                         mode.finish(); // Action picked, so close the CAB
                         return true;
                     case R.id.action_send_photo_item:
-//                        sendSelectedItems();
                         mode.finish(); // Action picked, so close the CAB
+                        sendSelectedItems();
                         return true;
                     default:
                         return false;
@@ -218,6 +224,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
             @Override
             public boolean onCreateActionMode(ActionMode mode, Menu menu) {
                 // Inflate the menu for the CAB
+                Log.d("CHECKED_IDS", "onCreateActionMode");
                 MenuInflater inflater = mode.getMenuInflater();
                 assert inflater != null;
                 inflater.inflate(R.menu.context, menu);
@@ -230,17 +237,50 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
             public void onDestroyActionMode(ActionMode mode) {
                 // Here you can make any necessary updates to the activity when
                 // the CAB is removed. By default, selected items are deselected/unchecked.
-                mCheckedIds.clear();
+                Log.d("CHECKED_IDS", "onDestroyActionMode");
+//                mCheckedIds.clear();
+                initThumbLoader();
             }
 
             @Override
             public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
                 // Here you can perform updates to the CAB due to
                 // an invalidate() request
-                return false;
+                mCheckedIds.clear();
+                return true;
             }
         });
         return rootView;
+    }
+
+    private void sendSelectedItems() {
+        String filePath = null;
+        String fileName = null;
+
+        Cursor cursor = ((ImageAdapter) mGridView.getAdapter()).getCursor();
+        assert cursor != null;
+        if (cursor.getCount() > 0) {
+            for (Integer id : mCheckedIds) {
+                Log.d("CHECKED_IDS", "ID[] = " + id);
+                cursor.moveToPosition(id);
+                filePath = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_PATH.getName()));
+                fileName = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_NAME.getName()));
+            }
+            cursor.close();
+        }
+
+        String token = "token";
+        String cmsBaseUrl = Config.URL_PREFIX + Config.DEFAULT_HOST + ":" + Config.DEFAULT_PORT + Config.DEFAULT_CSM_URL_BODY;
+        String domain = Config.DEFAULT_DOMAIN;
+        String responseId = "13";
+        String url = cmsBaseUrl + Config.MOBILE_CREATE_RESOURCE_RULE + domain;
+        String query = String.format("%s=%s&%s=%s", "t", token, "u", Config.AMBUL_DOCUMENTS + fileName);
+        url += "?" + query;
+        assert filePath != null;
+        File file = new File(filePath);
+        FileEntity fileEntity = new FileEntity(file, Config.CONTENT_TYPE_IMAGE_JPG);
+        CreateResourceTask putTask = new CreateResourceTask(getActivity(), fileEntity, fileName, url, responseId);
+        putTask.execute();
     }
 
     private void deleteSelectedItems() {
@@ -259,7 +299,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
             }
             cursor.close();
         }
-        mListener.onFragmentInteraction(checkedCursorIds, checkedImages, checkedThumbs);
+        mListener.onDeleteItemsOperation(checkedCursorIds, checkedImages, checkedThumbs);
     }
 
     private void initThumbLoader() {
@@ -271,7 +311,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
-//            mListener.onFragmentInteraction(null, null, null);
+//            mListener.onDeleteItemsOperation(null, null, null);
         }
     }
 
@@ -334,6 +374,6 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
      */
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
-        public void onFragmentInteraction(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs);
+        public void onDeleteItemsOperation(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs);
     }
 }
