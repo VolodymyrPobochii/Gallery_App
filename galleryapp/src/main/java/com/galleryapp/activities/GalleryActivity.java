@@ -129,8 +129,13 @@ public class GalleryActivity extends Activity implements GalleryFragment.OnFragm
             for (String id : ids) {
                 Log.d("CHECKED_IDS", "ID[delete] = " + id);
             }
-            GalleryApp app = (GalleryApp) getApplication();
-            app.deleteImage(ids, checkedImages, checkedThumbs);
+            for (File checkedImage : checkedImages) {
+                Log.d("CHECKED_IDS", "checkedImage[delete] = " + checkedImage);
+            }
+            for (File checkedThumb : checkedThumbs) {
+                Log.d("CHECKED_IDS", "checkedThumb[delete] = " + checkedThumb);
+            }
+            ((GalleryApp) getApplication()).deleteImage(ids, checkedImages, checkedThumbs);
         }
     }
 }

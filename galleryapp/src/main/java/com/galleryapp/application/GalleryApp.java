@@ -67,12 +67,12 @@ public class GalleryApp extends Application {
         }
         try {
             getContentResolver().applyBatch(GalleryDBProvider.AUTHORITY, operations);
+            deleteFilesRecursive(images, thumbs);
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (OperationApplicationException e) {
             e.printStackTrace();
         }
-        deleteFilesRecursive(images, thumbs);
     }
 
     private void deleteFilesRecursive(ArrayList<File> images, ArrayList<File> thumbs) {

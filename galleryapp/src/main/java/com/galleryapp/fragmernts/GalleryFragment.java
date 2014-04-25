@@ -31,6 +31,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link android.support.v4.app.Fragment} subclass.
@@ -61,7 +62,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     private int mConstantLimit = 100;
     private DisplayImageOptions mOptions;
     private ImageLoader mImageLoader;
-    private long[] mCheckedIds;
+    private List<Integer> mCheckedIds = new ArrayList<Integer>();
     private GridView mGridView;
 
     /**
@@ -181,7 +182,11 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
             public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
                 // Here you can do something when items are selected/de-selected,
                 // such as update the title in the CAB
-                mCheckedIds = mGridView.getCheckedItemIds();
+                if (checked) {
+                    mCheckedIds.add(position);
+                } else {
+                    mCheckedIds.remove((Integer) position);
+                }
                 int selectCount = mGridView.getCheckedItemCount();
                 switch (selectCount) {
                     case 1:
@@ -225,6 +230,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
             public void onDestroyActionMode(ActionMode mode) {
                 // Here you can make any necessary updates to the activity when
                 // the CAB is removed. By default, selected items are deselected/unchecked.
+                mCheckedIds.clear();
             }
 
             @Override
@@ -244,17 +250,12 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
         Cursor cursor = ((ImageAdapter) mGridView.getAdapter()).getCursor();
         assert cursor != null;
         if (cursor.getCount() > 0) {
-            while (cursor.moveToNext()) {
-                String cursorId = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.ID.getName()));
-                assert cursorId != null;
-                for (long id : mCheckedIds) {
-                    Log.d("CHECKED_IDS", "ID[] = " + id);
-                    if (cursorId.equals(String.valueOf(id))) {
-                        checkedCursorIds.add(cursorId);
-                        checkedImages.add(new File(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_PATH.getName()))));
-                        checkedThumbs.add(new File(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.THUMB_PATH.getName()))));
-                    }
-                }
+            for (Integer id : mCheckedIds) {
+                Log.d("CHECKED_IDS", "ID[] = " + id);
+                cursor.moveToPosition(id);
+                checkedCursorIds.add(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.ID.getName())));
+                checkedImages.add(new File(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_PATH.getName()))));
+                checkedThumbs.add(new File(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.THUMB_PATH.getName()))));
             }
             cursor.close();
         }
@@ -312,7 +313,6 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         if (cursor != null && cursor.getCount() > 0) {
-            loading = false;
             mGalleryAdapter.changeCursor(cursor);
         }
     }
