@@ -1,6 +1,5 @@
 package com.galleryapp.activities;
 
-import android.app.Activity;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -18,10 +17,9 @@ import android.widget.EditText;
 
 import com.galleryapp.Config;
 import com.galleryapp.R;
-import com.galleryapp.application.GalleryApp;
 import com.galleryapp.services.LoginService;
 
-public class LoginActivity extends Activity {
+public class LoginActivity extends BaseActivity {
 
     private static final String LOG_TAG = LoginActivity.class.getSimpleName();
     private static final int TOKEN_LENGTH = 80;
@@ -70,7 +68,7 @@ public class LoginActivity extends Activity {
                         loginProgress.setMessage(getResources().getString(R.string.server_connection_problem));
                         loginProgress.dismiss();
                         getApp().customAlertDialog(LoginActivity.this, getResources().getString(R.string.server_connection_problem),
-                                "Закрити", false, null, false, false).show();
+                                getString(R.string.close), false, null, false, false).show();
                     }
                     break;
                 case LoginService.AUTH_FINISHED:
@@ -82,24 +80,24 @@ public class LoginActivity extends Activity {
     }
 
     private void checkAuthResult(Intent intent) {
-        if (intent.hasExtra("responseToken") && !tokenReceived) {
-            String responseToken = intent.getStringExtra("responseToken");
+        if (intent.hasExtra(getString(R.string.response_token)) && !tokenReceived) {
+            String responseToken = intent.getStringExtra(getString(R.string.response_token));
             if (responseToken != null && responseToken.length() > TOKEN_LENGTH) {
                 if (loginProgress != null && loginProgress.isShowing()) loginProgress.dismiss();
                 getApp().customAlertDialog(LoginActivity.this, getResources().getString(R.string.login_pass_problem),
-                        "Закрити", false, null, false, false).show();
+                        getString(R.string.close), false, null, false, false).show();
                 tokenReceived = true;
                 return;
             }
             getApp().setToken(responseToken);
             Log.d("PostLoginReceiver", "onReceive()" + "TOKEN = " + responseToken);
             tokenReceived = true;
-            completeAuth(mOnCreateIntent);
+            completeAuth();
         } else if (intent.hasExtra(Config.SERVER_CONNECTION)) {
             if (LoginService.AUTH_PROBLEM.equalsIgnoreCase(intent.getStringExtra(Config.SERVER_CONNECTION))) {
                 if (loginProgress != null && loginProgress.isShowing()) loginProgress.dismiss();
                 getApp().customAlertDialog(LoginActivity.this, getResources().getString(R.string.auth_problem),
-                        "Закрити", false, null, false, false).show();
+                        getString(R.string.close), false, null, false, false).show();
             }
         }
     }
@@ -111,13 +109,14 @@ public class LoginActivity extends Activity {
 
     private void initViews() {
         saveLogin = (CheckBox) findViewById(R.id.save_credentials);
-        saveLogin.setChecked(getApp().getAmbulPreff().getBoolean("saveLogin", false));
+        saveLogin.setChecked(getApp().getPreff().getBoolean(getString(R.string.save_login), false));
 
         login = (EditText) findViewById(R.id.login_txt);
-        if (saveLogin.isChecked()) {
-            login.setText(getApp().getAmbulPreff().getString("login", ""));
-        }
         pass = (EditText) findViewById(R.id.password_txt);
+        if (saveLogin.isChecked()) {
+            login.setText(getApp().getPreff().getString(getString(R.string.login), ""));
+            pass.setText(getApp().getPreff().getString(getString(R.string.password), ""));
+        }
         loginButton = (Button) findViewById(R.id.login);
         loginButton.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -126,7 +125,7 @@ public class LoginActivity extends Activity {
                 if (getApp().isNetworkConnected()) {
                     attemptLogin();
                 } else {
-                    connectionProblemDialog();
+                    getApp().noConnectionDialog();
                 }
             }
         });
@@ -146,14 +145,14 @@ public class LoginActivity extends Activity {
 
         // Check for a valid password.
         if (TextUtils.isEmpty(mPassword)) {
-            pass.setError(getString(R.string.error_pass_field_required));
+            pass.setError(getString(R.string.error_field_required));
             focusView = pass;
             cancel = true;
         }
 
         // Check for a valid login address.
         if (TextUtils.isEmpty(mLogin)) {
-            login.setError(getString(R.string.error_login_field_required));
+            login.setError(getString(R.string.error_field_required));
             focusView = login;
             cancel = true;
         }
@@ -173,7 +172,6 @@ public class LoginActivity extends Activity {
             mServiceLoginIntent.putExtra("loginProgressIntent", loginProgressIntent);
             mServiceLoginIntent.putExtra("login", login.getText().toString());
             mServiceLoginIntent.putExtra("pass", pass.getText().toString());
-            mServiceLoginIntent.putExtra("uuid", getApp().getDeviceID());
             mServiceLoginIntent.putExtra("baseUrl", getApp().getLoginBaseUrl());
             mServiceLoginIntent.putExtra("hostName", getApp().getHostName());
             mServiceLoginIntent.putExtra("port", getApp().getPort());
@@ -181,16 +179,11 @@ public class LoginActivity extends Activity {
         }
     }
 
-    private void completeAuth(Intent resultIntent) {
-        if (mOnCreateIntent.hasExtra("first_launch") && !mOnCreateIntent.getBooleanExtra("first_launch", true)) {
-            Log.d("LoginActivity", "SECOND_LAUNCH");
-            LoginActivity.this.setResult(RESULT_OK, resultIntent);
-        } else {
-            Log.d("LoginActivity", "FIRST_LAUNCH");
-            resultIntent.setClass(LoginActivity.this, GalleryActivity.class);
-            startActivity(resultIntent);
+    private void completeAuth() {
+        if (tokenReceived) {
+            startActivity(new Intent(LoginActivity.this, GalleryActivity.class));
+            finish();
         }
-        finish();
     }
 
     @Override
@@ -239,22 +232,20 @@ public class LoginActivity extends Activity {
     @Override
     public void finish() {
         if (saveLogin.isChecked()) {
-            getApp().getAmbulPreff()
+            getApp().getPreff()
                     .edit()
                     .putBoolean("saveLogin", true)
-                    .putString("login", login.getText().toString())
+                    .putString("username", login.getText().toString())
+                    .putString("password", pass.getText().toString())
                     .apply();
         } else {
-            getApp().getAmbulPreff()
+            getApp().getPreff()
                     .edit()
                     .putBoolean("saveLogin", false)
-                    .putString("login", "")
+                    .putString("username", "")
+                    .putString("password", "")
                     .apply();
         }
         super.finish();
-    }
-
-    private GalleryApp getApp() {
-        return (GalleryApp) getApplication();
     }
 }

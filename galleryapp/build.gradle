@@ -20,7 +20,7 @@ android {
 
 dependencies {
 
-    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.+'
+    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.1'
 
     // You must install or update the Support Repository through the SDK manager to use this dependency.
     // The Support Repository (separate from the corresponding library) can be found in the Extras category.

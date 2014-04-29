@@ -20,7 +20,7 @@
     <EditTextPreference
         android:defaultValue="@string/default_value_host_preference"
         android:dialogTitle="@string/dialog_title_host_preference"
-        android:key="default_host"
+        android:key="hostName"
         android:summary="@string/summary_host_preference"
         android:title="@string/title_host_preference" />
 
@@ -28,22 +28,22 @@
         android:defaultValue="@string/default_value_port_preference"
         android:dialogTitle="@string/dialog_title_port_preference"
         android:inputType="number"
-        android:key="default_port"
+        android:key="port"
         android:summary="@string/summary_port_preference"
         android:title="@string/title_port_preference" />
 
     <EditTextPreference
         android:defaultValue="@string/default_value_username_preference"
         android:dialogTitle="@string/dialog_title_username_preference"
-        android:key="default_username"
+        android:key="username"
         android:summary="@string/summary_username_preference"
         android:title="@string/title_username_preference" />
 
     <EditTextPreference
         android:defaultValue="@string/default_value_password_preference"
         android:dialogTitle="@string/dialog_title_password_preference"
-        android:inputType="textPassword|numberPassword"
-        android:key="default_password"
+        android:inputType="textPassword"
+        android:key="password"
         android:summary="@string/summary_password_preference"
         android:title="@string/title_password_preference" />
 

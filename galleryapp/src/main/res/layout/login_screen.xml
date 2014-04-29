@@ -1,0 +1,94 @@
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".activities.LoginActivity">
+
+    <RelativeLayout
+        android:layout_width="@dimen/login_screen_form_width"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_gravity="center">
+
+        <TextView
+            android:id="@+id/login_lable"
+            android:layout_height="wrap_content"
+            android:layout_width="@dimen/login_lable_width"
+            android:gravity="center_vertical|left"
+            android:text="@string/login_lable"
+            android:textIsSelectable="false"
+            android:editable="false"
+            android:textStyle="bold"
+            android:padding="@dimen/login_lable_padding"
+            android:textSize="@dimen/login_lable_text_size"
+            android:singleLine="true"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/pass_lable"
+            android:layout_below="@id/login_lable"
+            android:layout_height="wrap_content"
+            android:layout_width="@dimen/pass_lable_width"
+            android:gravity="center_vertical|left"
+            android:text="Пароль"
+            android:textIsSelectable="false"
+            android:editable="false"
+            android:textStyle="bold"
+            android:layout_marginTop="@dimen/pass_lable_margin_top"
+            android:padding="@dimen/pass_lable_padding"
+            android:textSize="@dimen/pass_lable_text_size"
+            android:singleLine="true"
+            android:visibility="gone" />
+
+        <EditText
+            android:id="@+id/login_txt"
+            android:layout_toRightOf="@id/login_lable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/login_text_padding"
+            android:textSize="@dimen/login_text_size"
+            android:singleLine="true"
+            android:hint="@string/login_txt"
+            android:inputType="textNoSuggestions"
+            android:textIsSelectable="false"
+            android:editable="true"
+            android:gravity="left|center_vertical" />
+
+        <EditText
+            android:id="@+id/password_txt"
+            android:layout_toRightOf="@id/pass_lable"
+            android:password="true"
+            android:layout_below="@id/login_txt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/password_txt_margin_top"
+            android:padding="@dimen/password_txt_padding"
+            android:textSize="@dimen/password_txt_size"
+            android:singleLine="true"
+            android:hint="@string/password_txt_hint"
+            android:editable="true"
+            android:gravity="left|center_vertical" />
+
+        <CheckBox
+            android:id="@+id/save_credentials"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@id/password_txt"
+            android:layout_below="@id/password_txt"
+            android:layout_marginTop="@dimen/save_credentials_margin_top"
+            android:text="@string/save_login" />
+
+        <Button
+            android:id="@+id/login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/password_txt"
+            android:layout_toRightOf="@id/save_credentials"
+            android:layout_marginTop="@dimen/save_credentials_margin_top"
+            android:layout_marginLeft="@dimen/login_margin_top"
+            android:text="@string/login_text"
+            android:textSize="@dimen/login_text_size"
+            android:inputType="textNoSuggestions"
+            android:textIsSelectable="false"
+            android:editable="false" />
+
+    </RelativeLayout>
+</merge>

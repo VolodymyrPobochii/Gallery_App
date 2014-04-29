@@ -1,19 +1,30 @@
 package com.galleryapp.application;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Application;
+import android.app.ProgressDialog;
 import android.content.ContentProviderOperation;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.OperationApplicationException;
-import android.database.Cursor;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.RemoteException;
-import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
+import com.galleryapp.Config;
+import com.galleryapp.R;
+import com.galleryapp.activities.GalleryActivity;
+import com.galleryapp.activities.PrefActivity;
 import com.galleryapp.data.model.ImageObj;
 import com.galleryapp.data.provider.GalleryDBContent;
 import com.galleryapp.data.provider.GalleryDBProvider;
@@ -27,6 +38,16 @@ import java.io.File;
 import java.util.ArrayList;
 
 public class GalleryApp extends Application {
+    private String token;
+    private String domain;
+    private SharedPreferences preff;
+    private String hostName;
+    private String port;
+    private String baseUrl;
+    private String loginBaseUrl;
+    private String cmsBaseUrl;
+    private String appVersion;
+
     public GalleryApp() {
     }
 
@@ -51,6 +72,9 @@ public class GalleryApp extends Application {
                 .writeDebugLogs()
                 .build();
         ImageLoader.getInstance().init(config);
+
+        setPreff(PrefActivity.getPrefs(getApplicationContext()));
+        setUpHost();
     }
 
     @Override
@@ -96,57 +120,168 @@ public class GalleryApp extends Application {
     }
 
     public Uri saveImage(final ImageObj image) {
-//        String imageId = imageId(image.getImagePath());
-//        Log.d("MediaStore", "THUMBS::imageId = " + imageId);
-//        if (imageId != null) {
-//            String thumbData = getThumbData(imageId);
-//            Log.d("MediaStore", "THUMBS::thumbData = " + thumbData);
-//            image.setThumbPath(thumbData);
-//        }
-        return getContentResolver().insert(GalleryDBContent.GalleryImages.CONTENT_URI, image.toContentValues());
+        return getContentResolver()
+                .insert(GalleryDBContent.GalleryImages.CONTENT_URI, image.toContentValues());
     }
 
-    private String getThumbData(String imageId) {
-        Cursor thumbs = getContentResolver()
-                .query(
-                        MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI,
-                        new String[]{MediaStore.Images.Thumbnails.DATA},
-                        MediaStore.Images.Thumbnails.IMAGE_ID + "=?",
-                        new String[]{imageId},
-                        null
-                );
-        String thumbData = null;
-        assert thumbs != null;
-        if (thumbs.getCount() > 0) {
-            thumbs.moveToLast();
-            thumbData = thumbs.getString(thumbs.getColumnIndex(MediaStore.Images.Thumbnails.DATA));
-            Log.d("MediaStore", "THUMBS");
-            Log.d("MediaStore", "THUMBS::DATA = " + thumbData);
-            thumbs.close();
-        }
-        return thumbData;
+
+    public boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo ni = cm.getActiveNetworkInfo();
+        if (ni == null) {
+            // There are no active networks.
+            return false;
+        } else
+            return true;
     }
 
-    public String imageId(String imagePath) {
-        Cursor images = getContentResolver()
-                .query(
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        new String[]{
-                                MediaStore.Images.Media._ID
-                        },
-                        MediaStore.Images.Media.DATA + "=?",
-                        new String[]{imagePath},
-                        null
-                );
-        String imageId = null;
-        assert images != null;
-        if (images.getCount() > 0) {
-            images.moveToLast();
-            imageId = images.getString(images.getColumnIndex(MediaStore.Images.Media._ID));
-            Log.d("MediaStore", "IMAGES");
-            Log.d("MediaStore", "IMAGES::_ID = " + imageId);
-            images.close();
+    public AlertDialog customAlertDialog(final Context activity, String message,
+                                         String posText, final boolean posFinish,
+                                         String negatText, final boolean negFinish, final boolean logOut) {
+        AlertDialog dialog = new AlertDialog.Builder(activity).create();
+        dialog.setIcon(R.drawable.ic_launcher);
+        dialog.setTitle(activity.getResources().getString(R.string.app_name));
+        dialog.setMessage(message);
+        dialog.setCancelable(false);
+        dialog.setCanceledOnTouchOutside(false);
+        if (posText != null) {
+            dialog.setButton(AlertDialog.BUTTON_POSITIVE, posText, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (posFinish) {
+                        if (activity instanceof GalleryActivity) {
+                            if (logOut) setToken(null);
+                            ((GalleryActivity) activity).finish();
+//                        android.os.Process.killProcess(Process.myPid());
+                        } else {
+                            Intent intent = new Intent(activity, GalleryActivity.class);
+                            intent.putExtra("logout", logOut);
+                            activity.startActivity(intent);
+                            ((Activity) activity).finish();
+                        }
+                    }
+                    dialog.dismiss();
+                }
+            });
         }
-        return imageId;
+        if (negatText != null) {
+            dialog.setButton(AlertDialog.BUTTON_NEGATIVE, negatText, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (negFinish) ((Activity) activity).finish();
+                    dialog.dismiss();
+                }
+            });
+        }
+
+        return dialog;
     }
+
+    public ProgressDialog customProgressDialog(final Context context, String message) {
+
+        ProgressDialog progressDialog = new ProgressDialog(context);
+        progressDialog.setTitle(context.getResources().getString(R.string.app_name));
+        progressDialog.setMessage(message);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setCancelable(false);
+        progressDialog.setCanceledOnTouchOutside(false);
+
+        return progressDialog;
+    }
+
+    public AlertDialog noConnectionDialog() {
+        return customAlertDialog(getApplicationContext(), getString(R.string.no_connection), getString(R.string.close), false, null, false, false);
+    }
+
+    private void setUpHost() {
+        setHostName(getPreff().getString("hostName", Config.DEFAULT_HOST));
+        setPort(getPreff().getString("port", Config.DEFAULT_PORT));
+        setDomain(getPreff().getString("domain", Config.DEFAULT_DOMAIN));
+        setLoginBaseUrl(Config.URL_PREFIX + getHostName() + ":" + getPort());
+        setBaseUrl(Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.DEFAULT_URL_BODY + getDomain());
+        setCmsBaseUrl(Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.DEFAULT_CSM_URL_BODY);
+
+        Log.d("BaseActivity", "BaseActivity::LoginBaseURL=" + getLoginBaseUrl());
+        Log.d("BaseActivity", "BaseActivity::BaseURL=" + getBaseUrl());
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public SharedPreferences getPreff() {
+        return preff;
+    }
+
+    public void setPreff(SharedPreferences preff) {
+        this.preff = preff;
+    }
+
+    public String getHostName() {
+        return hostName;
+    }
+
+    public void setHostName(String hostName) {
+        this.hostName = hostName;
+    }
+
+    public String getPort() {
+        return port;
+    }
+
+    public void setPort(String port) {
+        this.port = port;
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    // TODO: Fix this
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
+
+    public String getLoginBaseUrl() {
+        return loginBaseUrl;
+    }
+
+    public void setLoginBaseUrl(String loginBaseUrl) {
+        this.loginBaseUrl = loginBaseUrl;
+    }
+
+    public String getCmsBaseUrl() {
+        return cmsBaseUrl;
+    }
+
+    public void setCmsBaseUrl(String cmsBaseUrl) {
+        this.cmsBaseUrl = cmsBaseUrl;
+    }
+
+    public String getAppVersion() {
+        try {
+            return "v." + getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_CONFIGURATIONS).versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return getString(R.string.version_unavailable);
+        }
+    }
+
+    public void setAppVersion(String appVersion) {
+        this.appVersion = appVersion;
+    }
+
+
 }

@@ -60,7 +60,7 @@ public final class LoginService extends IntentService {
 
         String query = null;
         try {
-            query = String.format("%s=%s&%s=%s&%s=%s", Config.USER, URLEncoder.encode(login, "UTF-8"), Config.PASS, pass);
+            query = String.format("%s=%s&%s=%s", Config.USER, URLEncoder.encode(login, "UTF-8"), Config.PASS, pass);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }

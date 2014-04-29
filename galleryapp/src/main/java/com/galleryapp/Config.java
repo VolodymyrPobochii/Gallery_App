@@ -11,12 +11,12 @@ public class Config {
     public static final String USER = "u";
     public static final String PASS = "p";
 
-    //public static final String DEFAULT_DOMAIN = "/103_FixedBoNames_Production.tenant41";
-    //public static final String DEFAULT_PORT = "9004";
+    public static final String DEFAULT_DOMAIN = "/103_FixedBoNames_Production.tenant41";
+    public static final String DEFAULT_PORT = "9004";
 
-    public static final String DEFAULT_PORT = "8086";
+//    public static final String DEFAULT_PORT = "8086";
+//    public static final String DEFAULT_DOMAIN = "/UA103_Production.tenant62";
 
-    public static final String DEFAULT_DOMAIN = "/UA103_Production.tenant62";
     public static final String DEFAULT_URL_BODY = "/BDS.WebService/DataServiceRest.svc/post";
 
     public static final String DEFAULT_CSM_URL_BODY = "/CMS.WebService/CMSServiceRest.svc";

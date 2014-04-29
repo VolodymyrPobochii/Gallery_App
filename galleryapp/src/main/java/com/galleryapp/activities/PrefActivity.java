@@ -24,10 +24,12 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.app.TaskStackBuilder;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.galleryapp.R;
+import com.galleryapp.application.GalleryApp;
 
 /**
  * This activity is an example of a simple settings screen that has default
@@ -42,23 +44,32 @@ import com.galleryapp.R;
  * An easy way to do this is to have a common function for retrieving the
  * SharedPreferences that takes care of calling it.
  */
-public class PrefActivity extends PreferenceActivity {
+public class PrefActivity extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     // This is the global (to the .apk) name under which we store these
     // preferences.  We want this to be unique from other preferences so that
     // we do not have unexpected name conflicts, and the framework can correctly
     // determine whether these preferences' defaults have already been written.
-    static final String PREFS_NAME = "defaults";
+    public static final String PREFS_NAME = "defaults";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getActionBar().setDisplayHomeAsUpEnabled(true);
-        getPrefs(this);
+        getPrefs(this).registerOnSharedPreferenceChangeListener(this);
         getPreferenceManager().setSharedPreferencesName(PREFS_NAME);
         addPreferencesFromResource(R.xml.default_values);
+
+        updatePreffSummaries();
     }
 
-    static SharedPreferences getPrefs(Context context) {
+    private void updatePreffSummaries() {
+        getPreferenceScreen().getPreference(0)
+                .setSummary(getPrefs(this).getString("hostName", getString(R.string.default_value_host_preference)));
+        getPreferenceScreen().getPreference(1)
+                .setSummary(getPrefs(this).getString("port", getString(R.string.default_value_port_preference)));
+    }
+
+    public static SharedPreferences getPrefs(Context context) {
         PreferenceManager.setDefaultValues(context, PREFS_NAME, MODE_PRIVATE, R.xml.default_values, false);
         return context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
     }
@@ -90,5 +101,15 @@ public class PrefActivity extends PreferenceActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        Log.d("PREFF", "Changed : preff = " + sharedPreferences.toString() + " key = " + key);
+        updatePreffSummaries();
+    }
+
+    private GalleryApp getApp() {
+        return (GalleryApp) getApplication();
     }
 }

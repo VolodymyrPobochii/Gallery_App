@@ -7,18 +7,14 @@
     <string name="action_add_photo_item">Camera photo</string>
     <string name="action_add_gallery_item">Gallery photo</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
-
     <string name="title_checkbox_preference">Checkbox preference</string>
     <string name="summary_checkbox_preference">This is a checkbox</string>
-
     <string name="title_switch_preference">Switch preference</string>
     <string name="summary_switch_preference">This is a switch</string>
     <string name="summary_switch_preference_yes_no">This is a switch with custom text</string>
-
     <string name="title_yesno_preference">Yes or no preference</string>
     <string name="summary_yesno_preference">An example that uses a yes/no dialog</string>
     <string name="dialog_title_yesno_preference">Do you like bananas?</string>
-
     <string name="title_host_preference">Host preference</string>
     <string name="summary_host_preference">Value for default host</string>
     <string name="title_port_preference">Port preference</string>
@@ -31,20 +27,17 @@
     <string name="dialog_title_port_preference">Enter Port</string>
     <string name="dialog_title_username_preference">Enter Username</string>
     <string name="dialog_title_password_preference">Enter Password</string>
-
     <string name="title_list_preference">List preference</string>
     <string name="summary_list_preference">An example that uses a list dialog</string>
     <string name="dialog_title_list_preference">Choose one</string>
-
     <string name="default_value_list_preference">beta</string>
-    <string name="default_value_host_preference">default.host</string>
-    <string name="default_value_port_preference">8080</string>
-    <string name="default_value_username_preference">username</string>
-    <string name="default_value_password_preference">password</string>
+    <string name="default_value_host_preference">soldevqa06.eccentex.com</string>
+    <string name="default_value_port_preference">9004</string>
+    <string name="default_value_username_preference">super</string>
+    <string name="default_value_password_preference">super</string>
     <string name="preferences">Preferences</string>
     <string name="action_delete_photo_item">Delete</string>
     <string name="action_send_photo_item">Send</string>
-
     <string name="album_name">CameraSample</string>
     <string name="thumbs_name">CameraSampleThumb</string>
     <string name="cannot">Cannot</string>
@@ -57,5 +50,24 @@
     <string name="descr_image">image description</string>
     <string name="title_image">Image title</string>
     <string name="file_upload">File uploading...</string>
+    <string name="authenticate">Log-In</string>
+    <string name="authentication_progress">Loggin in...</string>
+    <string name="connection_established">Connection established</string>
+    <string name="server_connection_problem">Server connection problem</string>
+    <string name="login_pass_problem">Incorrect Login or Password</string>
+    <string name="auth_problem">Login problem</string>
+    <string name="close">Close</string>
+    <string name="response_token">responseToken</string>
+    <string name="save_login">saveLogin</string>
+    <string name="login">username</string>
+    <string name="password">password</string>
+    <string name="error_field_required">Field required</string>
+    <string name="version_unavailable">Version unavailable</string>
+    <string name="login_lable">Login</string>
+    <string name="login_txt">Username</string>
+    <string name="password_txt_hint">Password</string>
+    <string name="login_text">LogIn</string>
+    <string name="no_connection">No connection to the Internet</string>
+    <string name="title_activity_base">BaseActivity</string>
 
 </resources>
