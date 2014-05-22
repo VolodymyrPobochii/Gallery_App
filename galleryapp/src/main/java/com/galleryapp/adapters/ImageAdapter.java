@@ -51,6 +51,7 @@ public class ImageAdapter extends CursorAdapter {
         assert picturesView != null;
         mHolder.imageView = (ImageView) picturesView.findViewById(R.id.image);
         mHolder.thumbTitle = (TextView) picturesView.findViewById(R.id.thumb_title);
+        mHolder.thumbSyncStatus = (TextView) picturesView.findViewById(R.id.thumb_is_synced);
         mHolder.progressBar = (ProgressBar) picturesView.findViewById(R.id.progress);
 //        picturesView.setTag(mHolder);
 
@@ -81,8 +82,14 @@ public class ImageAdapter extends CursorAdapter {
         Log.d("MediaStore", "bindView::thumbPath = " + thumbPath);
         final String imageTitle = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_TITLE.getName()));
         final String imageDate = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.CREATE_DATE.getName()));
-        ViewHolder holder = (ViewHolder) view.getTag();
+        final int imageSynced = cursor.getInt(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName()));
+        final ViewHolder holder = (ViewHolder) view.getTag();
         holder.thumbTitle.setText(String.format("%s\n%s", imageTitle, imageDate));
+        if (imageSynced == 1) {
+            holder.thumbSyncStatus.setText("Synced");
+        } else {
+            holder.thumbSyncStatus.setText("Not Synced");
+        }
 //        Uri imageUri = Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID);
 //        ((ImageView) view).setImageURI(imageUri);
 //        Log.d("URI", "thumbURI = " + Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID).toString());
@@ -90,25 +97,24 @@ public class ImageAdapter extends CursorAdapter {
         mImageLoader.displayImage("file://" + thumbPath, holder.imageView, mOptions, new SimpleImageLoadingListener() {
                     @Override
                     public void onLoadingStarted(String imageUri, View view) {
-//                        mHolder.progressBar.setProgress(0);
-//                        mHolder.progressBar.setVisibility(View.VISIBLE);
+                        holder.progressBar.setProgress(0);
+                        holder.progressBar.setVisibility(View.VISIBLE);
                     }
 
                     @Override
                     public void onLoadingFailed(String imageUri, View view,
                                                 FailReason failReason) {
-//                        mHolder.progressBar.setVisibility(View.GONE);
+                        holder.progressBar.setVisibility(View.GONE);
                     }
 
                     @Override
                     public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-//                        mHolder.progressBar.setVisibility(View.GONE);
+                        holder.progressBar.setVisibility(View.GONE);
                     }
                 }, new ImageLoadingProgressListener() {
                     @Override
-                    public void onProgressUpdate(String imageUri, View view, int current,
-                                                 int total) {
-//                        mHolder.progressBar.setProgress(Math.round(100.0f * current / total));
+                    public void onProgressUpdate(String imageUri, View view, int current, int total) {
+                        holder.progressBar.setProgress(Math.round(100.0f * current / total));
                     }
                 }
         );
@@ -139,6 +145,7 @@ public class ImageAdapter extends CursorAdapter {
     private class ViewHolder {
         ImageView imageView;
         TextView thumbTitle;
+        TextView thumbSyncStatus;
         ProgressBar progressBar;
     }
 

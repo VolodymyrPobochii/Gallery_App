@@ -1,6 +1,5 @@
 package com.galleryapp.activities;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -9,13 +8,13 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.galleryapp.ProgressiveEntityListener;
 import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
+import com.galleryapp.data.model.DocSubmittedObj;
+import com.galleryapp.data.model.FileUploadObj;
 import com.galleryapp.data.model.ImageObj;
 import com.galleryapp.fragmernts.GalleryFragment;
-import com.galleryapp.interfaces.ProgressiveEntityListener;
-
-import org.apache.http.entity.FileEntity;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -23,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 
-public class GalleryActivity extends Activity
+public class GalleryActivity extends BaseActivity
         implements GalleryFragment.OnFragmentInteractionListener, ProgressiveEntityListener {
 
     private static final int REQUEST_SETTINGS = 1000;
@@ -139,12 +138,26 @@ public class GalleryActivity extends Activity
             for (File checkedThumb : checkedThumbs) {
                 Log.d("CHECKED_IDS", "checkedThumb[delete] = " + checkedThumb);
             }
-            ((GalleryApp) getApplication()).deleteImage(ids, checkedImages, checkedThumbs);
+            getApp().deleteImage(ids, checkedImages, checkedThumbs);
         }
     }
 
     @Override
-    public void onFileUpload(String response, String fileName, FileEntity fileEntity, String responseId) {
-        Log.d("FILE_UPLOAD", "RESPONSE = " + response);
+    public void onFileUploaded(FileUploadObj response, String id, String name, long length) {
+        Log.d("UPLOAD", "onFileUploaded():: response = " + response.getUrl());
+        if (getApp().updateImageUri(response.getUrl(), id) != 0) {
+            Log.d("UPLOAD", "updateImageUri():: imageId = " + id + "\nImageName = " + name + "\n" + "FileURI = " + response.getUrl());
+            getApp().submitDocs(this, response, id, name, length);
+        }
     }
+
+    @Override
+    public void onDocSubmitted(DocSubmittedObj response, String id, String name) {
+        Log.d("UPLOAD", "onDocSubmitted():: response = " + response.getId());
+        if (getApp().updateImageId(response.getId(), id) != 0) {
+            Log.d("UPLOAD", "updateImageId() :: imageId = " + id + "\nImageName = " + name + "\n" + "FileID = " + response.getId());
+        }
+    }
+
+
 }

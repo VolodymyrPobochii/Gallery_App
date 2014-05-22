@@ -44,16 +44,17 @@ public class PhotoIntentActivity extends Activity {
     private static final String IMAGEVIEW_VISIBILITY_STORAGE_KEY = "imageviewvisibility";
     private ImageView mImageView;
     private Bitmap mImageBitmap;
-
     private static final String VIDEO_STORAGE_KEY = "viewvideo";
+
     private static final String VIDEOVIEW_VISIBILITY_STORAGE_KEY = "videoviewvisibility";
     private Uri mVideoUri;
-
     private String mCurrentPhotoPath;
 
     private static final String JPEG_FILE_PREFIX = "IMG_";
+
     private static final String JPEG_FILE_THUMB_PREFIX = "THUMB_";
     private static final String JPEG_FILE_SUFFIX = ".jpg";
+    private static final String TIFF_FILE_SUFFIX = ".tiff";
 
     private AlbumStorageDirFactory mAlbumStorageDirFactory = null;
     private Button picRetakeBtn;

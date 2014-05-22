@@ -9,7 +9,8 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -21,19 +22,17 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.Toast;
 
-import com.galleryapp.Config;
 import com.galleryapp.R;
 import com.galleryapp.adapters.ImageAdapter;
-import com.galleryapp.asynctasks.CreateResourceTask;
+import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.provider.GalleryDBContent;
+import com.google.common.io.Files;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
-import org.apache.http.entity.FileEntity;
-
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,6 +67,11 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     private ImageLoader mImageLoader;
     private List<Integer> mCheckedIds = new ArrayList<Integer>();
     private GridView mGridView;
+    private Handler mUploadHandler;
+
+    public ImageAdapter getGalleryAdapter() {
+        return mGalleryAdapter;
+    }
 
     /**
      * Use this factory method to create a new instance of
@@ -98,6 +102,14 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        mUploadHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                if (msg.obj != null) {
+                    Log.d("UPLOAD", "handleMessage() :: msg.obj = " + msg.obj);
+                }
+            }
+        };
         mImageLoader = ImageLoader.getInstance();
         mOptions = new DisplayImageOptions.Builder()
                 .cacheInMemory(true)
@@ -105,46 +117,6 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                 .bitmapConfig(Bitmap.Config.RGB_565)
                 .build();
         initThumbLoader();
-//        testThumbs();
-    }
-
-    private void testThumbs() {
-        Cursor thumbs = getActivity().getContentResolver()
-                .query(
-                        MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI,
-                        new String[]{
-                                MediaStore.Images.Thumbnails._ID,
-                                MediaStore.Images.Thumbnails.DATA,
-                                MediaStore.Images.Thumbnails.IMAGE_ID,
-                        },
-                        null, null, null
-                );
-        assert thumbs != null;
-        if (thumbs.getCount() > 0) {
-            thumbs.moveToNext();
-            Log.d("MediaStore", "THUMBS");
-            Log.d("MediaStore", "THUMBS::_ID = " + thumbs.getString(thumbs.getColumnIndex(MediaStore.Images.Thumbnails._ID)));
-            Log.d("MediaStore", "THUMBS::DATA = " + thumbs.getString(thumbs.getColumnIndex(MediaStore.Images.Thumbnails.DATA)));
-            Log.d("MediaStore", "THUMBS::IMAGE_ID = " + thumbs.getString(thumbs.getColumnIndex(MediaStore.Images.Thumbnails.IMAGE_ID)));
-            thumbs.close();
-        }
-        Cursor images = getActivity().getContentResolver()
-                .query(
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        new String[]{
-                                MediaStore.Images.Media._ID,
-                                MediaStore.Images.Media.DATA,
-                        },
-                        null, null, null
-                );
-        assert images != null;
-        if (images.getCount() > 0) {
-            images.moveToNext();
-            Log.d("MediaStore", "IMAGES");
-            Log.d("MediaStore", "IMAGES::_ID = " + images.getString(images.getColumnIndex(MediaStore.Images.Thumbnails._ID)));
-            Log.d("MediaStore", "IMAGES::DATA = " + images.getString(images.getColumnIndex(MediaStore.Images.Thumbnails.DATA)));
-            images.close();
-        }
     }
 
     @Override
@@ -162,21 +134,6 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView parent, View v, int position, long id) {
                 // Get the data location of the image
-                String[] projection = {MediaStore.Images.Media.DATA};
-                Cursor cursor = getActivity().getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        projection, // Which columns to return
-                        null,       // Return all rows
-                        null,
-                        null);
-                assert cursor != null;
-                int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                cursor.moveToPosition(position);
-                // Get image filename
-                String imagePath = cursor.getString(columnIndex);
-                cursor.close();
-                // Use this path to do further processing, i.e. full screen display
-                Toast.makeText(getActivity(), "ImagePath : " + imagePath, Toast.LENGTH_SHORT).show();
-                // Use this path to do further processing, i.e. full screen display
             }
         });
         mGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);
@@ -254,33 +211,39 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     private void sendSelectedItems() {
-        String filePath = null;
-        String fileName = null;
+        ArrayList<String> filePaths = new ArrayList<String>();
+        ArrayList<String> fileNames = new ArrayList<String>();
+        ArrayList<Integer> fileIds = new ArrayList<Integer>();
 
         Cursor cursor = ((ImageAdapter) mGridView.getAdapter()).getCursor();
         assert cursor != null;
         if (cursor.getCount() > 0) {
             for (Integer id : mCheckedIds) {
-                Log.d("CHECKED_IDS", "ID[] = " + id);
+                Log.d("UPLOAD", "ID[" + id + "] = " + id);
                 cursor.moveToPosition(id);
-                filePath = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_PATH.getName()));
-                fileName = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_NAME.getName()));
+                fileIds.add(cursor.getInt(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.ID.getName())));
+                filePaths.add(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_PATH.getName())));
+                fileNames.add(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_NAME.getName())));
+                Log.d("UPLOAD", "filePath = " + filePaths + "\nfileName = " + fileNames);
             }
             cursor.close();
         }
 
-        String token = "token";
-        String cmsBaseUrl = Config.URL_PREFIX + Config.DEFAULT_HOST + ":" + Config.DEFAULT_PORT + Config.DEFAULT_CSM_URL_BODY;
-        String domain = Config.DEFAULT_DOMAIN;
-        String responseId = "13";
-        String url = cmsBaseUrl + Config.MOBILE_CREATE_RESOURCE_RULE + domain;
-        String query = String.format("%s=%s&%s=%s", "t", token, "u", Config.AMBUL_DOCUMENTS + fileName);
-        url += "?" + query;
-        assert filePath != null;
-        File file = new File(filePath);
-        FileEntity fileEntity = new FileEntity(file, Config.CONTENT_TYPE_IMAGE_JPG);
-        CreateResourceTask putTask = new CreateResourceTask(getActivity(), fileEntity, fileName, url, responseId);
-        putTask.execute();
+        File uploadFile = null;
+//        ArrayList<TypedInput> files = new ArrayList<TypedInput>();
+        ArrayList<byte[]> fileBytes = new ArrayList<byte[]>();
+        if (!filePaths.isEmpty()) {
+            for (String filePath : filePaths) {
+                uploadFile = new File(filePath);
+                try {
+                    fileBytes.add(Files.toByteArray(uploadFile));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+//                files.add(new TypedFile("application/binary", uploadFile));
+            }
+            GalleryApp.getInstance().uploadFile(getActivity(), mUploadHandler, fileBytes, filePaths, fileNames, fileIds);
+        }
     }
 
     private void deleteSelectedItems() {
@@ -302,7 +265,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
         mListener.onDeleteItemsOperation(checkedCursorIds, checkedImages, checkedThumbs);
     }
 
-    private void initThumbLoader() {
+    public final void initThumbLoader() {
 //        Bundle b = new Bundle();
 //        b.putInt(LIMIT, limit);
         getLoaderManager().restartLoader(R.id.gallery_thumbs_loader, null, this);

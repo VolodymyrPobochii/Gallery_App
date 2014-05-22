@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Gallery App</string>
+    <string name="app_name">ScanApp</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="action_add_photo_item">Camera photo</string>
@@ -69,5 +69,9 @@
     <string name="login_text">LogIn</string>
     <string name="no_connection">No connection to the Internet</string>
     <string name="title_activity_base">BaseActivity</string>
+    <string name="generic_server_down">Server timeout</string>
+    <string name="no_internet">No internet connection</string>
+    <string name="generic_error">Generic error</string>
+    <string name="image_synced_status">Sync status</string>
 
 </resources>

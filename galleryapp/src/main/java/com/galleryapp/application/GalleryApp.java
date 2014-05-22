@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.Application;
 import android.app.ProgressDialog;
 import android.content.ContentProviderOperation;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -15,17 +16,28 @@ import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Handler;
 import android.os.RemoteException;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.galleryapp.Config;
 import com.galleryapp.R;
+import com.galleryapp.SubmitDocumentTask;
+import com.galleryapp.UploadFileTask2;
 import com.galleryapp.activities.GalleryActivity;
 import com.galleryapp.activities.PrefActivity;
+import com.galleryapp.data.model.FileUploadObj;
 import com.galleryapp.data.model.ImageObj;
+import com.galleryapp.data.model.SubmitDocumentObj;
+import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj;
+import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj;
+import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj.Folder;
+import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj.Folder.Document;
+import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj.Folder.DocumentError;
 import com.galleryapp.data.provider.GalleryDBContent;
 import com.galleryapp.data.provider.GalleryDBProvider;
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
@@ -34,10 +46,16 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.utils.StorageUtils;
 
+import org.apache.http.entity.FileEntity;
+
 import java.io.File;
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class GalleryApp extends Application {
+
+    private static GalleryApp instance;
+
     private String token;
     private String domain;
     private SharedPreferences preff;
@@ -47,6 +65,7 @@ public class GalleryApp extends Application {
     private String loginBaseUrl;
     private String cmsBaseUrl;
     private String appVersion;
+//    private static RestAdapter mRestAdapter;
 
     public GalleryApp() {
     }
@@ -54,6 +73,9 @@ public class GalleryApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        if (instance == null) {
+            instance = this;
+        }
         DisplayMetrics metrics = new DisplayMetrics();
         WindowManager windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         Display display = windowManager.getDefaultDisplay();
@@ -75,6 +97,20 @@ public class GalleryApp extends Application {
 
         setPreff(PrefActivity.getPrefs(getApplicationContext()));
         setUpHost();
+//        initRestAdapter();
+//        initVolley();
+    }
+
+    private void initVolley() {
+//        ScanVolley.init(this);
+    }
+
+    private void initRestAdapter() {
+        // Create a very simple REST adapter which points the FileUpload API endpoint.
+     /*   mRestAdapter = new RestAdapter.Builder()
+                .setClient(new OkClient())
+                .setEndpoint(CaptureServiceRestClient.API_URL)
+                .build();*/
     }
 
     @Override
@@ -205,6 +241,14 @@ public class GalleryApp extends Application {
         Log.d("BaseActivity", "BaseActivity::BaseURL=" + getBaseUrl());
     }
 
+//    public static RestAdapter getRestAdapter() {
+//        return mRestAdapter;
+//    }
+
+    public static GalleryApp getInstance() {
+        return instance;
+    }
+
     public String getDomain() {
         return domain;
     }
@@ -284,4 +328,136 @@ public class GalleryApp extends Application {
     }
 
 
+    public void uploadFile(Context context, final Handler uploadHandler,
+                           ArrayList<byte[]> fileBytes, ArrayList<String> filePaths,
+                           ArrayList<String> fileNames, ArrayList<Integer> ids) {
+        //        Retrofit block
+       /* RestAdapter restAdapter = GalleryApp.getRestAdapter();
+
+        final Message msg = uploadHandler.obtainMessage();
+        // Create an instance of our FileUpload API interface.
+        final CaptureServiceRestClient.CaptureServiceRest captureServiceRest = restAdapter.create(CaptureServiceRestClient.CaptureServiceRest.class);
+        // Fetch and print a FileUploadObj.
+        assert file != null;
+        captureServiceRest.uploadFile(
+                Config.METHOD_UPLOAD,
+                Config.DEFAULT_PARAM_DOMAIN,
+                GalleryApp.getInstance().getToken(),
+                file,
+                String.valueOf(file.length()),
+                new Callback<CaptureServiceRestClient.FileUploadObj>() {
+                    @Override
+                    public void success(CaptureServiceRestClient.FileUploadObj fileUploadObj, Response response) {
+                        msg.obj = response.getReason();
+                        Log.d("UPLOAD", "success() :: responseReason = " + response.getReason() +
+                                "\nresponseBody = " + response.getBody().toString() +
+                                "\nurl = " + response.getUrl() +
+                                "\nURI = " + fileUploadObj.Url);
+                        uploadHandler.sendMessageDelayed(msg, 500);
+                    }
+
+                    @Override
+                    public void failure(RetrofitError retrofitError) {
+                        msg.obj = retrofitError.getResponse().getReason();
+                        Log.d("UPLOAD", "failure() :: response : Message = " + retrofitError.getMessage()
+                                + "\nLocalizedMessage = " + retrofitError.getLocalizedMessage()
+                                + "\nReason = " + retrofitError.getResponse().getReason()
+                                + "\nurl=" + retrofitError.getUrl());
+                        uploadHandler.sendMessageDelayed(msg, 500);
+                    }
+                }
+        );*/
+
+//        Volley block
+//        new UploadFileVolley(context, fileBytes).execute();
+
+        assert filePaths != null;
+        if (isNetworkConnected()) {
+            for (String filePath : filePaths) {
+                File uploadFile = new File(filePath);
+                FileEntity fileEntity = new FileEntity(uploadFile, "application/binary");
+                int id = ids.get(filePaths.indexOf(filePath));
+                String name = fileNames.get(filePaths.indexOf(filePath));
+                UploadFileTask2 uploadFileTask = new UploadFileTask2(context, fileEntity, id, name);
+                uploadFileTask.execute();
+            }
+        } else {
+            Toast.makeText(context, "No Connection", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public int updateImageUri(String uri, String id) {
+        ContentValues cv = new ContentValues();
+        cv.put(GalleryDBContent.GalleryImages.Columns.FILE_URI.getName(), uri);
+        return getContentResolver().update(GalleryDBContent.GalleryImages.CONTENT_URI, cv,
+                GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?", new String[]{id});
+    }
+
+    public int updateImageId(String fileId, String id) {
+        ContentValues cv = new ContentValues();
+        cv.put(GalleryDBContent.GalleryImages.Columns.FILE_ID.getName(), fileId);
+        cv.put(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName(), 1);
+        return getContentResolver().update(GalleryDBContent.GalleryImages.CONTENT_URI, cv,
+                GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?", new String[]{id});
+    }
+
+    public void submitDocs(Context context, FileUploadObj response, String id, String name, long length) {
+        ArrayList<DocumentError> documentErrors = new ArrayList<DocumentError>();
+        DocumentError documentError = new DocumentError();
+        documentErrors.add(documentError);
+
+        ArrayList<Document> documents = new ArrayList<Document>();
+        Document document = new Document();
+        document.setIndexSchema("");
+        document.setOriginalFileName(name);
+        document.setContentType("image/jpg");
+        document.setContentLength((int) length);
+        document.setUri(response.getUrl());
+        document.setExistingCMSUri(null);
+        document.setIsEmailManifest(false);
+        document.setBody(null);
+        documents.add(document);
+
+        ArrayList<Folder> folders = new ArrayList<Folder>();
+        Folder folder = new Folder();
+        folder.setIndexSchema("");
+        folder.setDocuments(documents);
+        folder.setDocumentErrors(documentErrors);
+        folders.add(folder);
+
+        BatchObj batchObj = new BatchObj();
+        batchObj.setIndexSchema("");
+        batchObj.setRemovedDocumentUriCSV(null);
+        batchObj.setOperationType(1);
+        batchObj.setFolders(folders);
+
+        CaptureItemObj captureItemObj = new CaptureItemObj();
+        captureItemObj.setId(UUID.randomUUID().toString().replace("-", ""));
+        captureItemObj.setChannelCode("root_compositescanchannel");
+        captureItemObj.setBatch(batchObj);
+        captureItemObj.setIndexData("");
+        String parameters = new StringBuilder()
+                .append("controller=composite").append("&")
+                .append("baseuri=").append(Config.DEFAULT_HOST).append(":").append(Config.DEFAULT_PORT).append("&")
+                .append("stampsenabled=false").append("&")
+                .append("hidescancontrols=false").append("&")
+                .append("dataroot=UserStamps").append("&")
+                .append("capturechannelcode=root_CompositeScanChannel").append("&")
+                .append("uri=").append("&")
+                .append("t=").append(getToken()).append("&")
+                .append("d=").append(Config.DEFAULT_PARAM_DOMAIN).append("&")
+                .append("sync=true").append("&")
+                .append("scheme=http")
+                .toString();
+        captureItemObj.setParameters(parameters);
+        captureItemObj.setChannelType(3);
+
+        SubmitDocumentObj submitDocumentObj = new SubmitDocumentObj();
+        submitDocumentObj.setDomain(Config.DEFAULT_PARAM_DOMAIN);
+        submitDocumentObj.setCaptureItem(captureItemObj);
+        submitDocumentObj.setToken(getToken());
+
+        SubmitDocumentTask submitDocumentTask = new SubmitDocumentTask(context, submitDocumentObj, id, name);
+        submitDocumentTask.execute();
+    }
 }

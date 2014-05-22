@@ -13,6 +13,9 @@ public class ImageObj {
     private String imageTitle;
     private String imageNotes;
     private Integer isSynced;
+    private Integer needUpload;
+    private String fileUri;
+    private String fileId;
 
     public ImageObj() {
     }
@@ -81,6 +84,30 @@ public class ImageObj {
         this.thumbPath = thumbPath;
     }
 
+    public Integer getNeedUpload() {
+        return needUpload;
+    }
+
+    public void setNeedUpload(Integer needUpload) {
+        this.needUpload = needUpload;
+    }
+
+    public String getFileUri() {
+        return fileUri;
+    }
+
+    public void setFileUri(String fileUri) {
+        this.fileUri = fileUri;
+    }
+
+    public String getFileId() {
+        return fileId;
+    }
+
+    public void setFileId(String fileId) {
+        this.fileId = fileId;
+    }
+
     public ContentValues toContentValues() {
         ContentValues cv = new ContentValues();
 
@@ -91,6 +118,9 @@ public class ImageObj {
         cv.put(GalleryDBContent.GalleryImages.Columns.IMAGE_NOTES.getName(), getImageNotes());
         cv.put(GalleryDBContent.GalleryImages.Columns.CREATE_DATE.getName(), getCreateDate());
         cv.put(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName(), getIsSynced());
+        cv.put(GalleryDBContent.GalleryImages.Columns.NEED_UPLOAD.getName(), getNeedUpload());
+        cv.put(GalleryDBContent.GalleryImages.Columns.FILE_URI.getName(), getFileUri());
+        cv.put(GalleryDBContent.GalleryImages.Columns.FILE_ID.getName(), getFileId());
 
         return cv;
     }
