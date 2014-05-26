@@ -2,7 +2,7 @@ apply plugin: 'android'
 
 android {
     compileSdkVersion 19
-    buildToolsVersion "19.0.3"
+    buildToolsVersion "19.1.0"
 
     defaultConfig {
         minSdkVersion 15
@@ -32,7 +32,7 @@ dependencies {
     // You must install or update the Support Repository through the SDK manager to use this dependency.
     // The Support Repository (separate from the corresponding library) can be found in the Extras category.
     //
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+//    compile fileTree(dir: 'libs', include: ['*.jar'])
     // Google Play Services
 //    compile 'com.google.android.gms:play-services:4.3.23'
     // Support Libraries
@@ -42,4 +42,5 @@ dependencies {
     compile 'com.google.code.gson:gson:2.2.4'
 //    compile 'com.mcxiaoke.volley:library:1.0.0'
 //    compile project(':volley')
+//    compile project(':retrofit')
 }

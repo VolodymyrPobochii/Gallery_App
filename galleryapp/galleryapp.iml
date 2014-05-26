@@ -74,7 +74,6 @@
     <orderEntry type="library" exported="" name="appcompat-v7-19.1.0" level="project" />
     <orderEntry type="library" exported="" name="guava-17.0" level="project" />
     <orderEntry type="library" exported="" name="support-v4-19.1.0" level="project" />
-    <orderEntry type="library" exported="" name="aspose-imaging-2.1.0.0-jdk16" level="project" />
     <orderEntry type="library" exported="" name="universal-image-loader-1.9.1" level="project" />
     <orderEntry type="library" exported="" name="okhttp-1.5.4" level="project" />
   </component>

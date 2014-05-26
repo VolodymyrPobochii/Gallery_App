@@ -43,6 +43,7 @@ public abstract class GalleryDBContent {
             IMAGE_NOTES("imageNotes", "text"),
             CREATE_DATE("createDate", "text"),
             IS_SYNCED("isSynced", "integer"),
+            STATUS("status", "text"),
             NEED_UPLOAD("needUpload", "integer"),
             FILE_URI("fileUri", "text"),
             FILE_ID("fileId", "text");
@@ -80,6 +81,7 @@ public abstract class GalleryDBContent {
                 Columns.IMAGE_NOTES.getName(),
                 Columns.CREATE_DATE.getName(),
                 Columns.IS_SYNCED.getName(),
+                Columns.STATUS.getName(),
                 Columns.NEED_UPLOAD.getName(),
                 Columns.FILE_URI.getName(),
                 Columns.FILE_ID.getName()
@@ -102,6 +104,7 @@ public abstract class GalleryDBContent {
                     Columns.IMAGE_NOTES.getName() + " " + Columns.IMAGE_NOTES.getType() + ", " +
                     Columns.CREATE_DATE.getName() + " " + Columns.CREATE_DATE.getType() + ", " +
                     Columns.IS_SYNCED.getName() + " " + Columns.IS_SYNCED.getType() + ", " +
+                    Columns.STATUS.getName() + " " + Columns.STATUS.getType() + ", " +
                     Columns.NEED_UPLOAD.getName() + " " + Columns.NEED_UPLOAD.getType() + ", " +
                     Columns.FILE_URI.getName() + " " + Columns.FILE_URI.getType() + ", " +
                     Columns.FILE_ID.getName() + " " + Columns.FILE_ID.getType() +
@@ -114,6 +117,7 @@ public abstract class GalleryDBContent {
             db.execSQL("CREATE INDEX galleryImages_imageNotes on " + TABLE_NAME + "(" + Columns.IMAGE_NOTES.getName() + ");");
             db.execSQL("CREATE INDEX galleryImages_createDate on " + TABLE_NAME + "(" + Columns.CREATE_DATE.getName() + ");");
             db.execSQL("CREATE INDEX galleryImages_isSynced on " + TABLE_NAME + "(" + Columns.IS_SYNCED.getName() + ");");
+            db.execSQL("CREATE INDEX galleryImages_status on " + TABLE_NAME + "(" + Columns.STATUS.getName() + ");");
             db.execSQL("CREATE INDEX galleryImages_needUpload on " + TABLE_NAME + "(" + Columns.NEED_UPLOAD.getName() + ");");
             db.execSQL("CREATE INDEX galleryImages_fileUri on " + TABLE_NAME + "(" + Columns.FILE_URI.getName() + ");");
             db.execSQL("CREATE INDEX galleryImages_fileId on " + TABLE_NAME + "(" + Columns.FILE_ID.getName() + ");");
@@ -128,7 +132,7 @@ public abstract class GalleryDBContent {
                 Log.d(LOG_TAG, "GalleryImages | upgradeTable start");
             }
 
-            if (oldVersion < 1) {
+            if (oldVersion < newVersion) {
                 Log.i(LOG_TAG, "Upgrading from version " + oldVersion + " to " + newVersion
                         + ", data will be lost!");
 
@@ -159,10 +163,11 @@ public abstract class GalleryDBContent {
                     .append(Columns.IMAGE_NOTES.getName()).append(", ")
                     .append(Columns.CREATE_DATE.getName()).append(", ")
                     .append(Columns.IS_SYNCED.getName()).append(", ")
+                    .append(Columns.STATUS.getName()).append(", ")
                     .append(Columns.NEED_UPLOAD.getName()).append(", ")
                     .append(Columns.FILE_URI.getName()).append(", ")
                     .append(Columns.FILE_ID.getName())
-                    .append(" ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").toString();
+                    .append(" ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").toString();
         }
 
         static void bindValuesInBulkInsert(SQLiteStatement stmt, ContentValues values) {
@@ -182,6 +187,8 @@ public abstract class GalleryDBContent {
             value = values.getAsString(Columns.CREATE_DATE.getName());
             stmt.bindString(i++, value != null ? value : "");
             stmt.bindLong(i++, values.getAsLong(Columns.IS_SYNCED.getName()));
+            value = values.getAsString(Columns.STATUS.getName());
+            stmt.bindString(i++, value != null ? value : "");
             stmt.bindLong(i++, values.getAsLong(Columns.NEED_UPLOAD.getName()));
             value = values.getAsString(Columns.FILE_URI.getName());
             stmt.bindString(i++, value != null ? value : "");

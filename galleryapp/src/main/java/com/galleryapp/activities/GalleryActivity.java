@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import com.galleryapp.ProgressiveEntityListener;
 import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
+import com.galleryapp.data.model.DocStatusObj;
 import com.galleryapp.data.model.DocSubmittedObj;
 import com.galleryapp.data.model.FileUploadObj;
 import com.galleryapp.data.model.ImageObj;
@@ -155,7 +156,16 @@ public class GalleryActivity extends BaseActivity
     public void onDocSubmitted(DocSubmittedObj response, String id, String name) {
         Log.d("UPLOAD", "onDocSubmitted():: response = " + response.getId());
         if (getApp().updateImageId(response.getId(), id) != 0) {
-            Log.d("UPLOAD", "updateImageId() :: imageId = " + id + "\nImageName = " + name + "\n" + "FileID = " + response.getId());
+            Log.d("UPLOAD", "updateImageId() :: imageId = " + id + "\nImageName = " + name + "\n" + "FileID = " + response.getId() + "\nError=" + response.getErrorMessage());
+            getApp().getDocStatus(this, id, response.getId());
+        }
+    }
+
+    @Override
+    public void onDocStatus(DocStatusObj response, String id, String docId) {
+        Log.d("UPLOAD", "onDocStatus():: response = " + response.getStatus() + " / errorMessage = " + response.getErrorMessage());
+        if (getApp().updateImageStatus(response.getStatus(), id, docId) != 0) {
+            Log.d("UPLOAD", "updateImageStatus() :: imageId = " + id + "\n" + "docID = " + docId + "\nstatus=" + response.getStatus());
         }
     }
 

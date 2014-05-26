@@ -27,6 +27,16 @@
         android:layout_gravity="top|right"
         android:background="@color/white"
         android:contentDescription="@string/image_synced_status"
+        android:padding="8dp"
+        android:visibility="invisible" />
+
+    <TextView
+        android:id="@+id/thumb_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|right"
+        android:background="@color/white"
+        android:contentDescription="@string/image_synced_status"
         android:padding="8dp" />
 
     <ProgressBar

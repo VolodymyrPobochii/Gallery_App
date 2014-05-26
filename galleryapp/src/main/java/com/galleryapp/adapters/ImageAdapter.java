@@ -3,6 +3,7 @@ package com.galleryapp.adapters;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -52,6 +53,7 @@ public class ImageAdapter extends CursorAdapter {
         mHolder.imageView = (ImageView) picturesView.findViewById(R.id.image);
         mHolder.thumbTitle = (TextView) picturesView.findViewById(R.id.thumb_title);
         mHolder.thumbSyncStatus = (TextView) picturesView.findViewById(R.id.thumb_is_synced);
+        mHolder.thumbStatus = (TextView) picturesView.findViewById(R.id.thumb_status);
         mHolder.progressBar = (ProgressBar) picturesView.findViewById(R.id.progress);
 //        picturesView.setTag(mHolder);
 
@@ -82,9 +84,13 @@ public class ImageAdapter extends CursorAdapter {
         Log.d("MediaStore", "bindView::thumbPath = " + thumbPath);
         final String imageTitle = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_TITLE.getName()));
         final String imageDate = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.CREATE_DATE.getName()));
+        final String imageStatus = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.STATUS.getName()));
         final int imageSynced = cursor.getInt(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName()));
         final ViewHolder holder = (ViewHolder) view.getTag();
         holder.thumbTitle.setText(String.format("%s\n%s", imageTitle, imageDate));
+        if (imageStatus != null && !TextUtils.isEmpty(imageStatus)) {
+            holder.thumbStatus.setText(imageStatus);
+        }
         if (imageSynced == 1) {
             holder.thumbSyncStatus.setText("Synced");
         } else {
@@ -147,6 +153,7 @@ public class ImageAdapter extends CursorAdapter {
         TextView thumbTitle;
         TextView thumbSyncStatus;
         ProgressBar progressBar;
+        TextView thumbStatus;
     }
 
     private class CheckableLayout extends FrameLayout implements Checkable {

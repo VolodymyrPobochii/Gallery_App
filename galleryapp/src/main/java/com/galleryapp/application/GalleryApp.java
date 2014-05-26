@@ -25,6 +25,7 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.galleryapp.Config;
+import com.galleryapp.DocumentStatusTask;
 import com.galleryapp.R;
 import com.galleryapp.SubmitDocumentTask;
 import com.galleryapp.UploadFileTask2;
@@ -396,7 +397,6 @@ public class GalleryApp extends Application {
     public int updateImageId(String fileId, String id) {
         ContentValues cv = new ContentValues();
         cv.put(GalleryDBContent.GalleryImages.Columns.FILE_ID.getName(), fileId);
-        cv.put(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName(), 1);
         return getContentResolver().update(GalleryDBContent.GalleryImages.CONTENT_URI, cv,
                 GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?", new String[]{id});
     }
@@ -459,5 +459,21 @@ public class GalleryApp extends Application {
 
         SubmitDocumentTask submitDocumentTask = new SubmitDocumentTask(context, submitDocumentObj, id, name);
         submitDocumentTask.execute();
+    }
+
+    public void getDocStatus(Context context, String id, String docId) {
+        DocumentStatusTask statusTask = new DocumentStatusTask(context, id, docId);
+        statusTask.execute();
+    }
+
+    public int updateImageStatus(String status, String id, String docId) {
+        ContentValues cv = new ContentValues();
+        cv.put(GalleryDBContent.GalleryImages.Columns.STATUS.getName(), status);
+//        cv.put(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName(), 1);
+        return getContentResolver().update(GalleryDBContent.GalleryImages.CONTENT_URI, cv,
+                GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?" + " AND " +
+                        GalleryDBContent.GalleryImages.Columns.FILE_ID.getName() + "=?",
+                new String[]{id, docId}
+        );
     }
 }

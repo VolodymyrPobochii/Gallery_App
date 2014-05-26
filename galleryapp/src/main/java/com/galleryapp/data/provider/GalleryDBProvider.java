@@ -40,7 +40,7 @@ public final class GalleryDBProvider extends ContentProvider {
     }
 
     // Version 1 : Creation of the database
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
 
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 

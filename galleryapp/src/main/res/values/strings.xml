@@ -73,5 +73,6 @@
     <string name="no_internet">No internet connection</string>
     <string name="generic_error">Generic error</string>
     <string name="image_synced_status">Sync status</string>
+    <string name="action_status_item">Status</string>
 
 </resources>

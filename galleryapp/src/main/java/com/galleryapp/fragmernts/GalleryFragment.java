@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.Toast;
 
 import com.galleryapp.R;
 import com.galleryapp.adapters.ImageAdapter;
@@ -173,6 +174,10 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                         mode.finish(); // Action picked, so close the CAB
                         sendSelectedItems();
                         return true;
+                    case R.id.action_status_item:
+                        mode.finish(); // Action picked, so close the CAB
+                        getSelectedItemsStatus();
+                        return true;
                     default:
                         return false;
                 }
@@ -208,6 +213,32 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
             }
         });
         return rootView;
+    }
+
+    private void getSelectedItemsStatus() {
+        ArrayList<Integer> fileIds = new ArrayList<Integer>();
+        ArrayList<String> fileDocIds = new ArrayList<String>();
+
+        Cursor cursor = ((ImageAdapter) mGridView.getAdapter()).getCursor();
+        assert cursor != null;
+        if (cursor.getCount() > 0) {
+            for (Integer id : mCheckedIds) {
+                Log.d("UPLOAD", "ID[" + id + "] = " + id);
+                cursor.moveToPosition(id);
+                fileIds.add(cursor.getInt(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.ID.getName())));
+                fileDocIds.add(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.FILE_ID.getName())));
+                Log.d("UPLOAD", "filePath = " + fileIds + "\nfileName = " + fileDocIds);
+            }
+            cursor.close();
+        }
+        if (GalleryApp.getInstance().isNetworkConnected()) {
+            for (Integer fileId : fileIds) {
+                String docId = fileDocIds.get(fileIds.indexOf(fileId));
+                GalleryApp.getInstance().getDocStatus(getActivity(), String.valueOf(fileId), docId);
+            }
+        } else {
+            Toast.makeText(getActivity(), "No Connection", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void sendSelectedItems() {
