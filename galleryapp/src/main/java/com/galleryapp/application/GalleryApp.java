@@ -433,7 +433,7 @@ public class GalleryApp extends Application {
 
         CaptureItemObj captureItemObj = new CaptureItemObj();
         captureItemObj.setId(UUID.randomUUID().toString().replace("-", ""));
-        captureItemObj.setChannelCode("root_compositescanchannel");
+        captureItemObj.setChannelCode("root_scan");
         captureItemObj.setBatch(batchObj);
         captureItemObj.setIndexData("");
         String parameters = new StringBuilder()

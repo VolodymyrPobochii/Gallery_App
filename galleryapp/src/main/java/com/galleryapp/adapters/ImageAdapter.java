@@ -3,7 +3,6 @@ package com.galleryapp.adapters;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -52,8 +51,11 @@ public class ImageAdapter extends CursorAdapter {
         assert picturesView != null;
         mHolder.imageView = (ImageView) picturesView.findViewById(R.id.image);
         mHolder.thumbTitle = (TextView) picturesView.findViewById(R.id.thumb_title);
+        mHolder.thumbTitle.setText("");
         mHolder.thumbSyncStatus = (TextView) picturesView.findViewById(R.id.thumb_is_synced);
+        mHolder.thumbSyncStatus.setText("");
         mHolder.thumbStatus = (TextView) picturesView.findViewById(R.id.thumb_status);
+        mHolder.thumbStatus.setText("");
         mHolder.progressBar = (ProgressBar) picturesView.findViewById(R.id.progress);
 //        picturesView.setTag(mHolder);
 
@@ -88,9 +90,7 @@ public class ImageAdapter extends CursorAdapter {
         final int imageSynced = cursor.getInt(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName()));
         final ViewHolder holder = (ViewHolder) view.getTag();
         holder.thumbTitle.setText(String.format("%s\n%s", imageTitle, imageDate));
-        if (imageStatus != null && !TextUtils.isEmpty(imageStatus)) {
-            holder.thumbStatus.setText(imageStatus);
-        }
+        holder.thumbStatus.setText(imageStatus);
         if (imageSynced == 1) {
             holder.thumbSyncStatus.setText("Synced");
         } else {
@@ -103,24 +103,24 @@ public class ImageAdapter extends CursorAdapter {
         mImageLoader.displayImage("file://" + thumbPath, holder.imageView, mOptions, new SimpleImageLoadingListener() {
                     @Override
                     public void onLoadingStarted(String imageUri, View view) {
-                        holder.progressBar.setProgress(0);
-                        holder.progressBar.setVisibility(View.VISIBLE);
+//                        holder.progressBar.setProgress(0);
+//                        holder.progressBar.setVisibility(View.VISIBLE);
                     }
 
                     @Override
                     public void onLoadingFailed(String imageUri, View view,
                                                 FailReason failReason) {
-                        holder.progressBar.setVisibility(View.GONE);
+//                        holder.progressBar.setVisibility(View.GONE);
                     }
 
                     @Override
                     public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-                        holder.progressBar.setVisibility(View.GONE);
+//                        holder.progressBar.setVisibility(View.GONE);
                     }
                 }, new ImageLoadingProgressListener() {
                     @Override
                     public void onProgressUpdate(String imageUri, View view, int current, int total) {
-                        holder.progressBar.setProgress(Math.round(100.0f * current / total));
+//                        holder.progressBar.setProgress(Math.round(100.0f * current / total));
                     }
                 }
         );

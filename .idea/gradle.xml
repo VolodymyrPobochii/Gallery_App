@@ -7,12 +7,13 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="D:\Android_Projects\Gallery_App" />
-            <option value="D:\Android_Projects\Gallery_App\galleryapp" />
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/galleryapp" />
           </set>
         </option>
       </GradleProjectSettings>
     </option>
+    <option name="offlineWork" value="true" />
   </component>
 </project>
 

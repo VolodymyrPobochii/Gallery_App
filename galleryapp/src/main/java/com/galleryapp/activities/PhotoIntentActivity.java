@@ -285,6 +285,9 @@ public class PhotoIntentActivity extends Activity {
             image.setImageNotes(comments.getText() != null ? comments.getText().toString() : "-");
             image.setImageTitle(title.getText() != null ? title.getText().toString() : "-");
             image.setIsSynced(0);
+            image.setFileUri(null);
+            image.setFileId(null);
+            image.setStatus("Not synced");
 
             GalleryApp app = (GalleryApp) getApplication();
             app.saveImage(image);

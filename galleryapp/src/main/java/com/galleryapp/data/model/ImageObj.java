@@ -16,8 +16,17 @@ public class ImageObj {
     private Integer needUpload;
     private String fileUri;
     private String fileId;
+    private String status;
 
     public ImageObj() {
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Integer getId() {
@@ -121,6 +130,7 @@ public class ImageObj {
         cv.put(GalleryDBContent.GalleryImages.Columns.NEED_UPLOAD.getName(), getNeedUpload());
         cv.put(GalleryDBContent.GalleryImages.Columns.FILE_URI.getName(), getFileUri());
         cv.put(GalleryDBContent.GalleryImages.Columns.FILE_ID.getName(), getFileId());
+        cv.put(GalleryDBContent.GalleryImages.Columns.STATUS.getName(), getStatus());
 
         return cv;
     }
