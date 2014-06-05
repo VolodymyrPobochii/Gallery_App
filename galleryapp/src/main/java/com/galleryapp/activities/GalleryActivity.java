@@ -192,7 +192,6 @@ public class GalleryActivity extends BaseActivity
         Log.d("UPLOAD", "onDocStatus():: updatedCount = " + updatedCount);
         if (!response.getStatus().equals("Completed")) {
             if (mUpdateTimes != 0) {
-                mUpdateTimes--;
                 new CountDownTimer(mUpdateFreq, TIMER_TICK) {
                     @Override
                     public void onTick(long millisUntilFinished) {
@@ -203,6 +202,7 @@ public class GalleryActivity extends BaseActivity
                         getApp().getDocStatus(GalleryActivity.this, ids, docId);
                     }
                 }.start();
+                mUpdateTimes--;
             } else {
                 AlertDialog dialog = new AlertDialog.Builder(this)
                         .setTitle("File status info")
@@ -215,7 +215,6 @@ public class GalleryActivity extends BaseActivity
                         })
                         .create();
                 dialog.show();
-
             }
         } else {
             mUpdateTimes = 0;
