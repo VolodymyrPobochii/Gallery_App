@@ -4,6 +4,7 @@ import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -38,6 +39,7 @@ public class LoginActivity extends BaseActivity {
     private String mLogin;
     private String mPassword;
     private Intent mOnCreateIntent;
+    private SharedPreferences mPreff;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +48,7 @@ public class LoginActivity extends BaseActivity {
         mOnCreateIntent = getIntent();
         setContentView(R.layout.login_screen);
         setTitle(R.string.authenticate);
+        mPreff = getApp().getPreff();
         initViews();
         initServices();
     }
@@ -74,6 +77,15 @@ public class LoginActivity extends BaseActivity {
                 case LoginService.AUTH_FINISHED:
                     checkAuthResult(data);
                     break;
+            }
+        }
+        if (requestCode == GalleryActivity.REQUEST_SETTINGS) {
+            Log.d("LoginActivity", "onActResult()::requestCode == GalleryActivity.REQUEST_SETTINGS");
+            Log.d("LoginActivity", "onActResult()::resultCode == " + resultCode);
+            if (resultCode == RESULT_OK) {
+                Log.d("LoginActivity", "onActResult()::resultCode == RESULT_OK");
+                getApp().setUpHost();
+                initViews();
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -109,13 +121,17 @@ public class LoginActivity extends BaseActivity {
 
     private void initViews() {
         saveLogin = (CheckBox) findViewById(R.id.save_credentials);
-        saveLogin.setChecked(getApp().getPreff().getBoolean(getString(R.string.save_login), false));
+        saveLogin.setChecked(mPreff.getBoolean(getString(R.string.save_login), false));
 
         login = (EditText) findViewById(R.id.login_txt);
         pass = (EditText) findViewById(R.id.password_txt);
-        if (saveLogin.isChecked()) {
-            login.setText(getApp().getPreff().getString(getString(R.string.login), ""));
-            pass.setText(getApp().getPreff().getString(getString(R.string.password), ""));
+
+        String username = mPreff.getString(getString(R.string.login), "");
+        String password = mPreff.getString(getString(R.string.password), "");
+
+        if (saveLogin.isChecked() || (!TextUtils.isEmpty(username) && !TextUtils.isEmpty(password))) {
+            login.setText(username);
+            pass.setText(password);
         }
         loginButton = (Button) findViewById(R.id.login);
         loginButton.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
@@ -219,8 +235,17 @@ public class LoginActivity extends BaseActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // pass event to supper class
-        return super.onOptionsItemSelected(item);
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.action_settings:
+                startActivityForResult(new Intent(this, PrefActivity.class), GalleryActivity.REQUEST_SETTINGS);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override
@@ -232,18 +257,16 @@ public class LoginActivity extends BaseActivity {
     @Override
     public void finish() {
         if (saveLogin.isChecked()) {
-            getApp().getPreff()
-                    .edit()
+            mPreff.edit()
                     .putBoolean("saveLogin", true)
                     .putString("username", login.getText().toString())
                     .putString("password", pass.getText().toString())
                     .apply();
         } else {
-            getApp().getPreff()
-                    .edit()
+            mPreff.edit()
                     .putBoolean("saveLogin", false)
-                    .putString("username", "")
-                    .putString("password", "")
+//                    .putString("username", "")
+//                    .putString("password", "")
                     .apply();
         }
         super.finish();

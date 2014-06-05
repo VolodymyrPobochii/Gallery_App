@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.DocStatusObj;
 import com.google.gson.Gson;
 import com.squareup.okhttp.OkHttpClient;
@@ -25,11 +24,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class DocumentStatusTask extends AsyncTask<Void, Integer, DocStatusObj> {
+public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStatusObj> {
 
     private static final String HEADER_CONTENT_TYPE = "ContentType";
     private final OkHttpClient client;
@@ -37,11 +37,11 @@ public final class DocumentStatusTask extends AsyncTask<Void, Integer, DocStatus
     private Context mContext;
     private String url;
     private ProgressiveEntityListener mProgressUploadListener;
-    private String mId;
+    private ArrayList<String> mIds;
 
-    public DocumentStatusTask(Context context, String id, String docId) {
+    public DocumentStatusTask(Context context, ArrayList<String> ids, String docId) {
         this.mContext = context;
-        this.mId = id;
+        this.mIds = ids;
         this.mDocId = docId;
         this.client = new OkHttpClient();
         setProgressUploadListener((ProgressiveEntityListener) context);
@@ -51,18 +51,13 @@ public final class DocumentStatusTask extends AsyncTask<Void, Integer, DocStatus
     protected void onPreExecute() {
         super.onPreExecute();
         Log.d("UPLOAD", "onPreExecute()");
-        String domain = Config.DEFAULT_DOMAIN;
-        url = Config.STATUS_GET_REQUEST_RULE + domain;
-        String query = String.format("%s=%s&%s=%s", "t", GalleryApp.getInstance().getToken(), "id", mDocId);
-        url += "?" + query;
-        Log.d("UPLOAD", "url = " + url);
     }
 
     @Override
-    protected DocStatusObj doInBackground(Void... params) {
+    protected DocStatusObj doInBackground(String... params) {
         DocStatusObj response = null;
         try {
-            response = postFile(null);
+            response = postFile(null, params[0]);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -79,11 +74,11 @@ public final class DocumentStatusTask extends AsyncTask<Void, Integer, DocStatus
     protected void onPostExecute(DocStatusObj response) {
         super.onPostExecute(response);
         Log.d("UPLOAD", "onPostExecute()");
-        mProgressUploadListener.onDocStatus(response, String.valueOf(mId), mDocId);
+        mProgressUploadListener.onDocStatus(response, mIds, mDocId);
     }
 
     /*fake*/
-    private DocStatusObj postFile(final byte[] postData) throws IOException {
+    private DocStatusObj postFile(final byte[] postData, String url) throws IOException {
 
         HashMap<String, String> map = new HashMap<String, String>();
         map.put("Host", "soldevqa06.eccentex.com:9004");

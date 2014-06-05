@@ -273,6 +273,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                 }
 //                files.add(new TypedFile("application/binary", uploadFile));
             }
+            mListener.onStartUploadImages(filePaths.size());
             GalleryApp.getInstance().uploadFile(getActivity(), mUploadHandler, fileBytes, filePaths, fileNames, fileIds);
         }
     }
@@ -369,5 +370,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         public void onDeleteItemsOperation(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs);
+
+        public void onStartUploadImages(int uploadCount);
     }
 }

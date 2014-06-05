@@ -57,6 +57,8 @@ public class GalleryApp extends Application {
 
     private static GalleryApp instance;
 
+    private String login;
+    private String password;
     private String token;
     private String domain;
     private SharedPreferences preff;
@@ -66,6 +68,8 @@ public class GalleryApp extends Application {
     private String loginBaseUrl;
     private String cmsBaseUrl;
     private String appVersion;
+    private ArrayList<Document> mDocuments;
+    private ArrayList<String> mIds;
 //    private static RestAdapter mRestAdapter;
 
     public GalleryApp() {
@@ -230,10 +234,12 @@ public class GalleryApp extends Application {
         return customAlertDialog(getApplicationContext(), getString(R.string.no_connection), getString(R.string.close), false, null, false, false);
     }
 
-    private void setUpHost() {
+    public void setUpHost() {
         setHostName(getPreff().getString("hostName", Config.DEFAULT_HOST));
         setPort(getPreff().getString("port", Config.DEFAULT_PORT));
         setDomain(getPreff().getString("domain", Config.DEFAULT_DOMAIN));
+        setLogin(getPreff().getString("username", Config.DEFAULT_USERNAME));
+        setPassword(getPreff().getString("password", Config.DEFAULT_PASSWORD));
         setLoginBaseUrl(Config.URL_PREFIX + getHostName() + ":" + getPort());
         setBaseUrl(Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.DEFAULT_URL_BODY + getDomain());
         setCmsBaseUrl(Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.DEFAULT_CSM_URL_BODY);
@@ -248,6 +254,22 @@ public class GalleryApp extends Application {
 
     public static GalleryApp getInstance() {
         return instance;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getDomain() {
@@ -342,7 +364,7 @@ public class GalleryApp extends Application {
         assert file != null;
         captureServiceRest.uploadFile(
                 Config.METHOD_UPLOAD,
-                Config.DEFAULT_PARAM_DOMAIN,
+                Config.DEFAULT_DOMAIN,
                 GalleryApp.getInstance().getToken(),
                 file,
                 String.valueOf(file.length()),
@@ -371,7 +393,10 @@ public class GalleryApp extends Application {
 
 //        Volley block
 //        new UploadFileVolley(context, fileBytes).execute();
-
+        String url = Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.UPLOAD_POST_REQUEST_RULE + getDomain();
+        String query = String.format("%s=%s", "t", getToken());
+        url += "?" + query;
+        Log.d("UPLOAD", "url = " + url);
         assert filePaths != null;
         if (isNetworkConnected()) {
             for (String filePath : filePaths) {
@@ -380,8 +405,10 @@ public class GalleryApp extends Application {
                 int id = ids.get(filePaths.indexOf(filePath));
                 String name = fileNames.get(filePaths.indexOf(filePath));
                 UploadFileTask2 uploadFileTask = new UploadFileTask2(context, fileEntity, id, name);
-                uploadFileTask.execute();
+                uploadFileTask.execute(url);
             }
+            mDocuments = new ArrayList<Document>();
+            mIds = new ArrayList<String>();
         } else {
             Toast.makeText(context, "No Connection", Toast.LENGTH_SHORT).show();
         }
@@ -394,19 +421,20 @@ public class GalleryApp extends Application {
                 GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?", new String[]{id});
     }
 
-    public int updateImageId(String fileId, String id) {
+    public int updateImageId(String fileId, ArrayList<String> ids) {
+        int updatedCount = 0;
         ContentValues cv = new ContentValues();
         cv.put(GalleryDBContent.GalleryImages.Columns.FILE_ID.getName(), fileId);
-        return getContentResolver().update(GalleryDBContent.GalleryImages.CONTENT_URI, cv,
-                GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?", new String[]{id});
+        for (String id : ids) {
+            Log.d("UPLOAD", "updateImageId():: id = " + id);
+            updatedCount += getContentResolver().update(GalleryDBContent.GalleryImages.CONTENT_URI, cv,
+                    GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?", new String[]{id});
+        }
+        return updatedCount;
     }
 
-    public void submitDocs(Context context, FileUploadObj response, String id, String name, long length) {
-        ArrayList<DocumentError> documentErrors = new ArrayList<DocumentError>();
-        DocumentError documentError = new DocumentError();
-        documentErrors.add(documentError);
-
-        ArrayList<Document> documents = new ArrayList<Document>();
+    public void prepareSubmitDocs(Context context, FileUploadObj response, String id, String name, long length, int uploadCount) {
+        mIds.add(id);
         Document document = new Document();
         document.setIndexSchema("");
         document.setOriginalFileName(name);
@@ -416,12 +444,33 @@ public class GalleryApp extends Application {
         document.setExistingCMSUri(null);
         document.setIsEmailManifest(false);
         document.setBody(null);
-        documents.add(document);
+        mDocuments.add(document);
+        if (uploadCount == 0) {
+            submitDocs(context);
+        }
+    }
+
+    public void submitDocs(Context context) {
+        ArrayList<DocumentError> documentErrors = new ArrayList<DocumentError>();
+        DocumentError documentError = new DocumentError();
+        documentErrors.add(documentError);
+
+//        ArrayList<Document> mDocuments = new ArrayList<Document>();
+//        Document document = new Document();
+//        document.setIndexSchema("");
+//        document.setOriginalFileName(name);
+//        document.setContentType("image/jpg");
+//        document.setContentLength((int) length);
+//        document.setUri(response.getUrl());
+//        document.setExistingCMSUri(null);
+//        document.setIsEmailManifest(false);
+//        document.setBody(null);
+//        mDocuments.add(document);
 
         ArrayList<Folder> folders = new ArrayList<Folder>();
         Folder folder = new Folder();
         folder.setIndexSchema("");
-        folder.setDocuments(documents);
+        folder.setDocuments(mDocuments);
         folder.setDocumentErrors(documentErrors);
         folders.add(folder);
 
@@ -438,14 +487,14 @@ public class GalleryApp extends Application {
         captureItemObj.setIndexData("");
         String parameters = new StringBuilder()
                 .append("controller=composite").append("&")
-                .append("baseuri=").append(Config.DEFAULT_HOST).append(":").append(Config.DEFAULT_PORT).append("&")
+                .append("baseuri=").append(getHostName()).append(":").append(getPort()).append("&")
                 .append("stampsenabled=false").append("&")
                 .append("hidescancontrols=false").append("&")
                 .append("dataroot=UserStamps").append("&")
                 .append("capturechannelcode=root_CompositeScanChannel").append("&")
                 .append("uri=").append("&")
                 .append("t=").append(getToken()).append("&")
-                .append("d=").append(Config.DEFAULT_PARAM_DOMAIN).append("&")
+                .append("d=").append(getDomain()).append("&")
                 .append("sync=true").append("&")
                 .append("scheme=http")
                 .toString();
@@ -453,27 +502,44 @@ public class GalleryApp extends Application {
         captureItemObj.setChannelType(3);
 
         SubmitDocumentObj submitDocumentObj = new SubmitDocumentObj();
-        submitDocumentObj.setDomain(Config.DEFAULT_PARAM_DOMAIN);
+        submitDocumentObj.setDomain(getDomain());
         submitDocumentObj.setCaptureItem(captureItemObj);
         submitDocumentObj.setToken(getToken());
 
-        SubmitDocumentTask submitDocumentTask = new SubmitDocumentTask(context, submitDocumentObj, id, name);
-        submitDocumentTask.execute();
+        String url = Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.SUBMITT_POST_REQUEST_RULE + getDomain();
+        String query = String.format("%s=%s", "t", getToken());
+        url += "?" + query;
+
+        SubmitDocumentTask submitDocumentTask = new SubmitDocumentTask(context, submitDocumentObj, mIds);
+        submitDocumentTask.execute(url);
+    }
+
+    public void getDocStatus(Context context, ArrayList<String> ids, String docId) {
+        String url = Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.STATUS_GET_REQUEST_RULE + getDomain();
+        String query = String.format("%s=%s&%s=%s", "t", getToken(), "id", docId);
+        url += "?" + query;
+        DocumentStatusTask statusTask = new DocumentStatusTask(context, ids, docId);
+        statusTask.execute(url);
     }
 
     public void getDocStatus(Context context, String id, String docId) {
-        DocumentStatusTask statusTask = new DocumentStatusTask(context, id, docId);
-        statusTask.execute();
+        ArrayList<String> ids = new ArrayList<String>();
+        ids.add(id);
+        getDocStatus(context, ids, docId);
     }
 
-    public int updateImageStatus(String status, String id, String docId) {
+    public int updateImageStatus(String status, ArrayList<String> ids, String docId) {
+        int updatedCount = 0;
         ContentValues cv = new ContentValues();
         cv.put(GalleryDBContent.GalleryImages.Columns.STATUS.getName(), status);
 //        cv.put(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName(), 1);
-        return getContentResolver().update(GalleryDBContent.GalleryImages.CONTENT_URI, cv,
-                GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?" + " AND " +
-                        GalleryDBContent.GalleryImages.Columns.FILE_ID.getName() + "=?",
-                new String[]{id, docId}
-        );
+        for (String id : ids) {
+            updatedCount += getContentResolver().update(GalleryDBContent.GalleryImages.CONTENT_URI, cv,
+                    GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?" + " AND " +
+                            GalleryDBContent.GalleryImages.Columns.FILE_ID.getName() + "=?",
+                    new String[]{id, docId}
+            );
+        }
+        return updatedCount;
     }
 }

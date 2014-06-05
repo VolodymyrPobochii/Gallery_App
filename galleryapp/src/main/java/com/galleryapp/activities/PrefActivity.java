@@ -28,6 +28,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.galleryapp.Config;
 import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
 
@@ -64,9 +65,11 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
 
     private void updatePreffSummaries() {
         getPreferenceScreen().getPreference(0)
-                .setSummary(getPrefs(this).getString("hostName", getString(R.string.default_value_host_preference)));
+                .setSummary(getPrefs(this).getString("hostName", Config.DEFAULT_HOST));
         getPreferenceScreen().getPreference(1)
-                .setSummary(getPrefs(this).getString("port", getString(R.string.default_value_port_preference)));
+                .setSummary(getPrefs(this).getString("port", Config.DEFAULT_PORT));
+        getPreferenceScreen().getPreference(2)
+                .setSummary(getPrefs(this).getString("domain", Config.DEFAULT_DOMAIN));
     }
 
     public static SharedPreferences getPrefs(Context context) {
@@ -107,9 +110,15 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         Log.d("PREFF", "Changed : preff = " + sharedPreferences.toString() + " key = " + key);
         updatePreffSummaries();
+        setResult(RESULT_OK);
     }
 
     private GalleryApp getApp() {
         return (GalleryApp) getApplication();
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
     }
 }

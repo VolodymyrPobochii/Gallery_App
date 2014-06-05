@@ -1,12 +1,9 @@
 package com.galleryapp;
 
-import android.app.NotificationManager;
 import android.content.Context;
 import android.os.AsyncTask;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.DocSubmittedObj;
 import com.galleryapp.data.model.SubmitDocumentObj;
 import com.google.gson.Gson;
@@ -30,30 +27,24 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class SubmitDocumentTask extends AsyncTask<Void, Integer, DocSubmittedObj> {
+public final class SubmitDocumentTask extends AsyncTask<String, Integer, DocSubmittedObj> {
 
     private static final String HEADER_CONTENT_TYPE = "ContentType";
     private final OkHttpClient client;
-    private final String mName;
-    private Context mContext;
+    private final ArrayList<String> mIds;
     private SubmitDocumentObj mPostData;
     private String url;
     private ProgressiveEntityListener mProgressUploadListener;
-    private NotificationManager mNotifyManager;
-    private NotificationCompat.Builder mBuilder;
-    private String mId;
-    private int mLength;
     private byte[] mPostJson;
 
-    public SubmitDocumentTask(Context context, SubmitDocumentObj postData, String id, String name) {
-        this.mContext = context;
+    public SubmitDocumentTask(Context context, SubmitDocumentObj postData, ArrayList<String> ids) {
         this.mPostData = postData;
-        this.mId = id;
-        this.mName = name;
+        this.mIds = ids;
         this.client = new OkHttpClient();
         setProgressUploadListener((ProgressiveEntityListener) context);
     }
@@ -62,22 +53,17 @@ public final class SubmitDocumentTask extends AsyncTask<Void, Integer, DocSubmit
     protected void onPreExecute() {
         super.onPreExecute();
         Log.d("UPLOAD", "onPreExecute()");
-        String domain = Config.DEFAULT_DOMAIN;
-        url = Config.SUBMITT_POST_REQUEST_RULE + domain;
-        String query = String.format("%s=%s", "t", GalleryApp.getInstance().getToken());
-        url += "?" + query;
-        Log.d("UPLOAD", "url = " + url);
     }
 
     @Override
-    protected DocSubmittedObj doInBackground(Void... params) {
+    protected DocSubmittedObj doInBackground(String... params) {
         DocSubmittedObj response = null;
         Gson gson = new Gson();
         try {
             String json = gson.toJson(mPostData);
             Log.d("UPLOAD", "DocSubmittedObj = " + json);
             mPostJson = json.getBytes();
-            response = postFile(mPostJson);
+            response = postFile(mPostJson, params[0]);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -95,11 +81,11 @@ public final class SubmitDocumentTask extends AsyncTask<Void, Integer, DocSubmit
         super.onPostExecute(response);
         Log.d("UPLOAD", "onPostExecute()");
 
-        mProgressUploadListener.onDocSubmitted(response, String.valueOf(mId), mName);
+        mProgressUploadListener.onDocSubmitted(response, mIds);
     }
 
     /*fake*/
-    private DocSubmittedObj postFile(final byte[] postData) throws IOException {
+    private DocSubmittedObj postFile(final byte[] postData, String url) throws IOException {
 
         HashMap<String, String> map = new HashMap<String, String>();
         map.put("Host", "soldevqa06.eccentex.com:9004");

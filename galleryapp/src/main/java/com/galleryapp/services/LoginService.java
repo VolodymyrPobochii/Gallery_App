@@ -105,6 +105,7 @@ public final class LoginService extends IntentService {
             HttpClient httpclient = new DefaultHttpClient();
             HttpGet get = new HttpGet(url);
             get.addHeader("Host", hostName + ":" + port);
+            Log.d("PostLoginServiceReceiver", "OpenHttpGETConnection::addHeader = " + "Host::" + hostName + ":" + port);
             get.addHeader("Content-Type", "application/json");
             HttpResponse httpResponse = httpclient.execute(get);
             inputStream = httpResponse.getEntity().getContent();

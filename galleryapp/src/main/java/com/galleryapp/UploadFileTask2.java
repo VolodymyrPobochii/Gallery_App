@@ -33,14 +33,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class UploadFileTask2 extends AsyncTask<Void, Integer, FileUploadObj> {
+public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUploadObj> {
 
     private static final String HEADER_CONTENT_TYPE = "ContentType";
     private final OkHttpClient client;
     private final String mName;
     private Context mContext;
     private FileEntity fileEntity;
-    private String url;
     private ProgressiveEntityListener mProgressUploadListener;
     private NotificationManager mNotifyManager;
     private NotificationCompat.Builder mBuilder;
@@ -60,11 +59,6 @@ public final class UploadFileTask2 extends AsyncTask<Void, Integer, FileUploadOb
     protected void onPreExecute() {
         super.onPreExecute();
         Log.d("UPLOAD", "onPreExecute()");
-        String domain = Config.DEFAULT_DOMAIN;
-        url = Config.UPLOAD_POST_REQUEST_RULE + domain;
-        String query = String.format("%s=%s", "t", GalleryApp.getInstance().getToken());
-        url += "?" + query;
-        Log.d("UPLOAD", "url = " + url);
         mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
         mBuilder = new NotificationCompat.Builder(mContext);
         mBuilder.setTicker("Upload begin")
@@ -75,10 +69,10 @@ public final class UploadFileTask2 extends AsyncTask<Void, Integer, FileUploadOb
     }
 
     @Override
-    protected FileUploadObj doInBackground(Void... params) {
+    protected FileUploadObj doInBackground(String... params) {
         FileUploadObj response = null;
         try {
-            response = postFile(fileEntity, url);
+            response = postFile(fileEntity, params[0]);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -118,7 +112,7 @@ public final class UploadFileTask2 extends AsyncTask<Void, Integer, FileUploadOb
     private FileUploadObj postFile(final FileEntity fileEntity, String url) throws IOException {
 
         HashMap<String, String> map = new HashMap<String, String>();
-        map.put("Host", "soldevqa06.eccentex.com:9004");
+        map.put("Host", GalleryApp.getInstance().getHostName() + ":" + GalleryApp.getInstance().getPort());
         map.put("ContentType", "application/binary");
         map.put("Method", "POST");
         map.put("ContentLength", String.valueOf(fileEntity.getContentLength()));

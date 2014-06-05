@@ -19,22 +19,28 @@
     <string name="summary_host_preference">Value for default host</string>
     <string name="title_port_preference">Port preference</string>
     <string name="summary_port_preference">Value for default port</string>
+    <string name="title_domain_preference">Domain preference</string>
+    <string name="summary_domain_preference">Value for default domain</string>
     <string name="title_username_preference">Username preference</string>
     <string name="summary_username_preference">Value for default Username</string>
     <string name="title_password_preference">Password preference</string>
     <string name="summary_password_preference">Value for default Password</string>
     <string name="dialog_title_host_preference">Enter Host name</string>
     <string name="dialog_title_port_preference">Enter Port</string>
+    <string name="dialog_title_domain_preference">Enter Domain</string>
     <string name="dialog_title_username_preference">Enter Username</string>
     <string name="dialog_title_password_preference">Enter Password</string>
+    <string name="dialog_update_times_preference">Enter Update Times</string>
+    <string name="dialog_update_freq_preference">Enter Update Frequency</string>
     <string name="title_list_preference">List preference</string>
     <string name="summary_list_preference">An example that uses a list dialog</string>
     <string name="dialog_title_list_preference">Choose one</string>
     <string name="default_value_list_preference">beta</string>
     <string name="default_value_host_preference">soldevqa06.eccentex.com</string>
-    <string name="default_value_port_preference">9004</string>
-    <string name="default_value_username_preference">super</string>
-    <string name="default_value_password_preference">super</string>
+    <string name="default_value_port_preference">8086</string>
+    <string name="default_value_domain_preference">UA103_Production.tenant62</string>
+    <string name="default_value_username_preference">serge.kazakov@staging</string>
+    <string name="default_value_password_preference">1</string>
     <string name="preferences">Preferences</string>
     <string name="action_delete_photo_item">Delete</string>
     <string name="action_send_photo_item">Send</string>
@@ -74,5 +80,13 @@
     <string name="generic_error">Generic error</string>
     <string name="image_synced_status">Sync status</string>
     <string name="action_status_item">Status</string>
+    <string name="summary_update_times_preference">How many times to perform status update</string>
+    <string name="summary_update_freq_preference">How frequently to perform status update</string>
+    <string name="default_value_update_times_preference">2</string>
+    <string name="update_times_preference">Status check times</string>
+    <string name="update_freq_preference">Status check frequency</string>
+    <string name="default_value_update_freq_preference">10</string>
+    <string name="updateTimes">updateTimes</string>
+    <string name="updateFreq">updateFreq</string>
 
 </resources>

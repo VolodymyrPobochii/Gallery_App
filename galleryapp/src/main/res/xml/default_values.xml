@@ -33,6 +33,13 @@
         android:title="@string/title_port_preference" />
 
     <EditTextPreference
+        android:defaultValue="@string/default_value_domain_preference"
+        android:dialogTitle="@string/dialog_title_domain_preference"
+        android:key="domain"
+        android:summary="@string/summary_domain_preference"
+        android:title="@string/title_domain_preference" />
+
+    <EditTextPreference
         android:defaultValue="@string/default_value_username_preference"
         android:dialogTitle="@string/dialog_title_username_preference"
         android:key="username"
@@ -46,5 +53,21 @@
         android:key="password"
         android:summary="@string/summary_password_preference"
         android:title="@string/title_password_preference" />
+
+    <EditTextPreference
+        android:defaultValue="@string/default_value_update_times_preference"
+        android:dialogTitle="@string/dialog_update_times_preference"
+        android:inputType="number"
+        android:key="updateTimes"
+        android:summary="@string/summary_update_times_preference"
+        android:title="@string/update_times_preference" />
+
+    <EditTextPreference
+        android:defaultValue="@string/default_value_update_freq_preference"
+        android:dialogTitle="@string/dialog_update_freq_preference"
+        android:inputType="number"
+        android:key="updateFreq"
+        android:summary="@string/summary_update_freq_preference"
+        android:title="@string/update_freq_preference" />
 
 </PreferenceScreen>

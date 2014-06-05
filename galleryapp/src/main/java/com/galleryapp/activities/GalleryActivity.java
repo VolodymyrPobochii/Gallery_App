@@ -1,8 +1,11 @@
 package com.galleryapp.activities;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
@@ -26,9 +29,15 @@ import java.util.Date;
 public class GalleryActivity extends BaseActivity
         implements GalleryFragment.OnFragmentInteractionListener, ProgressiveEntityListener {
 
-    private static final int REQUEST_SETTINGS = 1000;
+    public static final int REQUEST_SETTINGS = 1000;
     private static final int REQUEST_CAMERA_PHOTO = 1100;
     private static final int REQUEST_LOAD_IMAGE = 1200;
+    private static final long TIMER_TICK = 100l;
+    private int mUploadCount;
+    private int mUpdateTimes;
+    private int mUpdateFreq;
+    private ArrayList<String> mIds;
+    private String mId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +59,11 @@ public class GalleryActivity extends BaseActivity
                 Log.d("Image", "GalleryEncodedPath:" + data.getData().getEncodedPath());
                 Log.d("Image", "GalleryPath:" + data.getData().getPath());
                 queryImageData(data);
+            }
+        }
+        if (requestCode == REQUEST_SETTINGS) {
+            if (resultCode == RESULT_OK) {
+                getApp().setUpHost();
             }
         }
     }
@@ -144,28 +158,67 @@ public class GalleryActivity extends BaseActivity
     }
 
     @Override
+    public void onStartUploadImages(int uploadCount) {
+        this.mUploadCount = uploadCount;
+    }
+
+    @Override
     public void onFileUploaded(FileUploadObj response, String id, String name, long length) {
         Log.d("UPLOAD", "onFileUploaded():: response = " + response.getUrl());
+        mUploadCount--;
         if (getApp().updateImageUri(response.getUrl(), id) != 0) {
-            Log.d("UPLOAD", "updateImageUri():: imageId = " + id + "\nImageName = " + name + "\n" + "FileURI = " + response.getUrl());
-            getApp().submitDocs(this, response, id, name, length);
+            Log.d("UPLOAD", "updateImageUri():: imageId = " + id + "\nImageName = " + name + "\n" + "FileURI = " + response.getUrl() +
+                    "\nmUploadCount = " + mUploadCount);
+            getApp().prepareSubmitDocs(this, response, id, name, length, mUploadCount);
         }
     }
 
     @Override
-    public void onDocSubmitted(DocSubmittedObj response, String id, String name) {
+    public void onDocSubmitted(DocSubmittedObj response, ArrayList<String> ids) {
         Log.d("UPLOAD", "onDocSubmitted():: response = " + response.getId());
-        if (getApp().updateImageId(response.getId(), id) != 0) {
-            Log.d("UPLOAD", "updateImageId() :: imageId = " + id + "\nImageName = " + name + "\n" + "FileID = " + response.getId() + "\nError=" + response.getErrorMessage());
-            getApp().getDocStatus(this, id, response.getId());
+        int updatedCount = getApp().updateImageId(response.getId(), ids);
+        Log.d("UPLOAD", "onDocSubmitted():: updatedCount = " + updatedCount);
+        if (updatedCount != 0) {
+            mUpdateTimes = Integer.parseInt(getApp().getPreff().getString(getString(R.string.updateTimes), "2"));
+            mUpdateFreq = Integer.parseInt(getApp().getPreff().getString(getString(R.string.updateFreq), "10")) * 1000;
+            getApp().getDocStatus(this, ids, response.getId());
         }
     }
 
     @Override
-    public void onDocStatus(DocStatusObj response, String id, String docId) {
+    public void onDocStatus(DocStatusObj response, final ArrayList<String> ids, final String docId) {
         Log.d("UPLOAD", "onDocStatus():: response = " + response.getStatus() + " / errorMessage = " + response.getErrorMessage());
-        if (getApp().updateImageStatus(response.getStatus(), id, docId) != 0) {
-            Log.d("UPLOAD", "updateImageStatus() :: imageId = " + id + "\n" + "docID = " + docId + "\nstatus=" + response.getStatus());
+        int updatedCount = getApp().updateImageStatus(response.getStatus(), ids, docId);
+        Log.d("UPLOAD", "onDocStatus():: updatedCount = " + updatedCount);
+        if (!response.getStatus().equals("Completed")) {
+            if (mUpdateTimes != 0) {
+                mUpdateTimes--;
+                new CountDownTimer(mUpdateFreq, TIMER_TICK) {
+                    @Override
+                    public void onTick(long millisUntilFinished) {
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        getApp().getDocStatus(GalleryActivity.this, ids, docId);
+                    }
+                }.start();
+            } else {
+                AlertDialog dialog = new AlertDialog.Builder(this)
+                        .setTitle("File status info")
+                        .setMessage("Please check document status manually letter")
+                        .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .create();
+                dialog.show();
+
+            }
+        } else {
+            mUpdateTimes = 0;
         }
     }
 
