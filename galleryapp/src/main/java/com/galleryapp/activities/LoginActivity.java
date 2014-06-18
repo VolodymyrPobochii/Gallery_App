@@ -17,10 +17,12 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 
 import com.galleryapp.Config;
+import com.galleryapp.GetChannelsEventListener;
 import com.galleryapp.R;
+import com.galleryapp.data.model.ChannelsObj;
 import com.galleryapp.services.LoginService;
 
-public class LoginActivity extends BaseActivity {
+public class LoginActivity extends BaseActivity implements GetChannelsEventListener {
 
     private static final String LOG_TAG = LoginActivity.class.getSimpleName();
     private static final int TOKEN_LENGTH = 80;
@@ -59,7 +61,9 @@ public class LoginActivity extends BaseActivity {
             switch (resultCode) {
                 case LoginService.CONNECTION_START:
                     loginProgress = getApp().customProgressDialog(LoginActivity.this, getResources().getString(R.string.authentication_progress));
-                    loginProgress.show();
+                    if (!loginProgress.isShowing()) {
+                        loginProgress.show();
+                    }
                     break;
                 case LoginService.CONNECTION_SUCCESS:
                     if (loginProgress != null && loginProgress.isShowing()) {
@@ -104,7 +108,8 @@ public class LoginActivity extends BaseActivity {
             getApp().setToken(responseToken);
             Log.d("PostLoginReceiver", "onReceive()" + "TOKEN = " + responseToken);
             tokenReceived = true;
-            completeAuth();
+//            completeAuth();
+            getApp().getChannels(this);
         } else if (intent.hasExtra(Config.SERVER_CONNECTION)) {
             if (LoginService.AUTH_PROBLEM.equalsIgnoreCase(intent.getStringExtra(Config.SERVER_CONNECTION))) {
                 if (loginProgress != null && loginProgress.isShowing()) loginProgress.dismiss();
@@ -270,5 +275,11 @@ public class LoginActivity extends BaseActivity {
                     .apply();
         }
         super.finish();
+    }
+
+    @Override
+    public void onGetChannels(ChannelsObj response) {
+        Log.d("UPLOAD", "onGetChannels()" + "ChannelsObj = " + response.toString());
+        completeAuth();
     }
 }

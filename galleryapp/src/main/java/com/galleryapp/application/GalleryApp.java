@@ -26,6 +26,7 @@ import android.widget.Toast;
 
 import com.galleryapp.Config;
 import com.galleryapp.DocumentStatusTask;
+import com.galleryapp.GetChannelsTask;
 import com.galleryapp.R;
 import com.galleryapp.SubmitDocumentTask;
 import com.galleryapp.UploadFileTask2;
@@ -526,6 +527,14 @@ public class GalleryApp extends Application {
         ArrayList<String> ids = new ArrayList<String>();
         ids.add(id);
         getDocStatus(context, ids, docId);
+    }
+
+    public void getChannels(Context context) {
+        String url = Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.GET_CHANNELS_RULE;
+        String query = String.format("%s=%s", "t", getToken());
+        url += "?" + query;
+        GetChannelsTask statusTask = new GetChannelsTask(context);
+        statusTask.execute(url);
     }
 
     public int updateImageStatus(String status, ArrayList<String> ids, String docId) {
