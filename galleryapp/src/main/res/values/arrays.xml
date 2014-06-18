@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="dummy_channels">
+        <item>ScanCHANNELA9004</item>
+        <item>ScanCHANNELA8086</item>
+        <item>ScanCHANNELAAAA</item>
+        <item>CompositeScanChannel</item>
+    </string-array>
+    <string-array name="dummy_channels_codes">
+        <item>root_CompositeScanChannel</item>
+        <item>root_CompositeScanChannel</item>
+        <item>root_ScanCHANNELAAAA</item>
+        <item>root_CompositeScanChannel</item>
+    </string-array>
+    <string-array name="dummy_channels_domains">
+        <item>103_FixedBoNames_Production.tenant41</item>
+        <item>UA103_Production.tenant62</item>
+        <item>TestOcrCreateNew_Production.54</item>
+        <item>das_Production.54</item>
+    </string-array>
+</resources>

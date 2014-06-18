@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.galleryapp.R;
@@ -151,12 +152,15 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                     mCheckedIds.remove((Integer) position);
                 }
                 int selectCount = mGridView.getCheckedItemCount();
+                TextView subtitle = (TextView) mode.getCustomView().findViewById(R.id.cab_subtitle);
                 switch (selectCount) {
                     case 1:
-                        mode.setSubtitle("One item selected");
+//                        mode.setSubtitle("One item selected");
+                        subtitle.setText("One item selected");
                         break;
                     default:
-                        mode.setSubtitle("" + selectCount + " items selected");
+//                        mode.setSubtitle("" + selectCount + " items selected");
+                        subtitle.setText("" + selectCount + " items selected");
                         break;
                 }
             }
@@ -190,8 +194,13 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                 MenuInflater inflater = mode.getMenuInflater();
                 assert inflater != null;
                 inflater.inflate(R.menu.context, menu);
-                mode.setTitle("Select Items");
-                mode.setSubtitle("One item selected");
+                mode.setCustomView(getActivity().getLayoutInflater().inflate(R.layout.cab_layout, null));
+                ((TextView) mode.getCustomView().findViewById(R.id.cab_title)).setText("Select Items");
+                ((TextView) mode.getCustomView().findViewById(R.id.cab_subtitle)).setText("One item selected");
+//                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), R.layout.spinner_item, new String[]{"Cannel 1", "Channel 2", "Channel 3"});
+//                (Spinner) mode.getCustomView().findViewById(R.id.cab_channels);
+//                mode.setTitle("Select Items");
+//                mode.setSubtitle("One item selected");
                 return true;
             }
 
