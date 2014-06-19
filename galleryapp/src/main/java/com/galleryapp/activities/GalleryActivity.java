@@ -214,7 +214,9 @@ public class GalleryActivity extends BaseActivity
                             }
                         })
                         .create();
-                dialog.show();
+                if (getApp().getRunningActivities().contains("ComponentInfo{com.galleryapp.activities/com.galleryapp.activities.GalleryActivity}")) {
+                    dialog.show();
+                }
             }
         } else {
             mUpdateTimes = 0;

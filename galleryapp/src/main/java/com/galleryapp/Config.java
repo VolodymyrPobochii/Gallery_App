@@ -8,11 +8,14 @@ public class Config {
     }
 
     public static final String DEFAULT_USERNAME = "serge.kazakov@staging";
-    public static final String DEFAULT_PASSWORD = "1";
 
+    public static final String DEFAULT_PASSWORD = "1";
     public static final String DEFAULT_HOST = "soldevqa06.eccentex.com";
+
     public static final String USER = "u";
     public static final String PASS = "p";
+
+    public static final String DEFAULT_CAPTURE_CHANNEL_CODE = "root_CompositeScanChannel";
 
 //    public static final String DEFAULT_DOMAIN = "103_FixedBoNames_Production.tenant41";
 //    public static final String DEFAULT_PORT = "9004";

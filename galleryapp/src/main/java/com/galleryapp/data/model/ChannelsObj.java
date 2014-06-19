@@ -1,5 +1,10 @@
 package com.galleryapp.data.model;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+
+import com.galleryapp.data.provider.GalleryDBContent;
+
 import java.util.ArrayList;
 
 public class ChannelsObj {
@@ -43,7 +48,7 @@ public class ChannelsObj {
                 + " ErrorMessage = " + ErrorMessage;
     }
 
-    private static class ChannelObj {
+    public static class ChannelObj {
 
         private String Code;
         private String Domain;
@@ -71,6 +76,19 @@ public class ChannelsObj {
 
         public void setName(String name) {
             Name = name;
+        }
+
+        public ContentValues toContentValues() {
+            ContentValues cv = new ContentValues();
+            cv.put(GalleryDBContent.Channels.Columns.CODE.getName(), Code);
+            cv.put(GalleryDBContent.Channels.Columns.DOMAIN.getName(), Domain);
+            cv.put(GalleryDBContent.Channels.Columns.NAME.getName(), Name);
+            return cv;
+        }
+
+        public ChannelObj fromCursor(Cursor cursor) {
+            ChannelObj channel = new ChannelObj();
+            return channel;
         }
 
         @Override

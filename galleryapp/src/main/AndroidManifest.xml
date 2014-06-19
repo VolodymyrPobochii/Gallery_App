@@ -6,13 +6,14 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
 
     <application
         android:name="com.galleryapp.application.GalleryApp"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme">
+        android:theme="@style/ScanAppTheme">
         <activity
             android:name="com.galleryapp.activities.GalleryActivity"
             android:label="@string/app_name"
@@ -20,8 +21,8 @@
         <activity
             android:name="com.galleryapp.activities.PrefActivity"
             android:label="@string/action_settings"
-            android:screenOrientation="landscape"
-            android:parentActivityName="com.galleryapp.activities.GalleryActivity">
+            android:parentActivityName="com.galleryapp.activities.GalleryActivity"
+            android:screenOrientation="landscape">
 
             <!-- Parent activity meta-data to support 4.0 and lower -->
             <meta-data
@@ -31,8 +32,8 @@
         <activity
             android:name="com.galleryapp.activities.PhotoIntentActivity"
             android:label="@string/photo"
-            android:screenOrientation="landscape"
-            android:parentActivityName="com.galleryapp.activities.GalleryActivity">
+            android:parentActivityName="com.galleryapp.activities.GalleryActivity"
+            android:screenOrientation="landscape">
 
             <!-- Parent activity meta-data to support 4.0 and lower -->
             <meta-data

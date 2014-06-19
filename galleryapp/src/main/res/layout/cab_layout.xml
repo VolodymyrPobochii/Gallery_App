@@ -26,9 +26,6 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_marginLeft="15dp"
-        android:layout_toRightOf="@id/cab_subtitle"
-        android:entries="@array/dummy_channels"
-        style="@android:style/Widget.TextView.SpinnerItem"
-        android:background="@color/white" />
+        android:layout_toRightOf="@id/cab_subtitle" />
 
 </RelativeLayout>

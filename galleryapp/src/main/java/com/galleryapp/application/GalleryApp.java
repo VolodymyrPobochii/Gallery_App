@@ -1,10 +1,12 @@
 package com.galleryapp.application;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.app.ProgressDialog;
 import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -32,6 +34,8 @@ import com.galleryapp.SubmitDocumentTask;
 import com.galleryapp.UploadFileTask2;
 import com.galleryapp.activities.GalleryActivity;
 import com.galleryapp.activities.PrefActivity;
+import com.galleryapp.data.model.ChannelsObj;
+import com.galleryapp.data.model.ChannelsObj.ChannelObj;
 import com.galleryapp.data.model.FileUploadObj;
 import com.galleryapp.data.model.ImageObj;
 import com.galleryapp.data.model.SubmitDocumentObj;
@@ -52,6 +56,7 @@ import org.apache.http.entity.FileEntity;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class GalleryApp extends Application {
@@ -62,6 +67,7 @@ public class GalleryApp extends Application {
     private String password;
     private String token;
     private String domain;
+    private String captureChannelCode;
     private SharedPreferences preff;
     private String hostName;
     private String port;
@@ -101,7 +107,7 @@ public class GalleryApp extends Application {
                 .build();
         ImageLoader.getInstance().init(config);
 
-        setPreff(PrefActivity.getPrefs(getApplicationContext()));
+        preff = PrefActivity.getPrefs(getApplicationContext());
         setUpHost();
 //        initRestAdapter();
 //        initVolley();
@@ -170,11 +176,7 @@ public class GalleryApp extends Application {
     public boolean isNetworkConnected() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
-        if (ni == null) {
-            // There are no active networks.
-            return false;
-        } else
-            return true;
+        return ni != null;
     }
 
     public AlertDialog customAlertDialog(final Context activity, String message,
@@ -236,17 +238,20 @@ public class GalleryApp extends Application {
     }
 
     public void setUpHost() {
-        setHostName(getPreff().getString("hostName", Config.DEFAULT_HOST));
-        setPort(getPreff().getString("port", Config.DEFAULT_PORT));
-        setDomain(getPreff().getString("domain", Config.DEFAULT_DOMAIN));
-        setLogin(getPreff().getString("username", Config.DEFAULT_USERNAME));
-        setPassword(getPreff().getString("password", Config.DEFAULT_PASSWORD));
-        setLoginBaseUrl(Config.URL_PREFIX + getHostName() + ":" + getPort());
-        setBaseUrl(Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.DEFAULT_URL_BODY + getDomain());
-        setCmsBaseUrl(Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.DEFAULT_CSM_URL_BODY);
+        hostName = preff.getString("hostName", Config.DEFAULT_HOST);
+        port = preff.getString("port", Config.DEFAULT_PORT);
+        domain = preff.getString("domain", Config.DEFAULT_DOMAIN);
+        captureChannelCode = preff.getString("capturechannelcode", Config.DEFAULT_CAPTURE_CHANNEL_CODE);
+        login = preff.getString("username", Config.DEFAULT_USERNAME);
+        password = preff.getString("password", Config.DEFAULT_PASSWORD);
+        loginBaseUrl = Config.URL_PREFIX + getHostName() + ":" + getPort();
+        baseUrl = Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.DEFAULT_URL_BODY + getDomain();
+        cmsBaseUrl = Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.DEFAULT_CSM_URL_BODY;
 
-        Log.d("BaseActivity", "BaseActivity::LoginBaseURL=" + getLoginBaseUrl());
-        Log.d("BaseActivity", "BaseActivity::BaseURL=" + getBaseUrl());
+        Log.d("GalleryApp", "setUpHost()::host=" + getHostName());
+        Log.d("GalleryApp", "setUpHost()::port=" + getPort());
+        Log.d("GalleryApp", "setUpHost()::domain=" + getDomain());
+        Log.d("GalleryApp", "setUpHost()::channelCode=" + getCaptureChannelCode());
     }
 
 //    public static RestAdapter getRestAdapter() {
@@ -256,101 +261,6 @@ public class GalleryApp extends Application {
     public static GalleryApp getInstance() {
         return instance;
     }
-
-    public String getLogin() {
-        return login;
-    }
-
-    public void setLogin(String login) {
-        this.login = login;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getDomain() {
-        return domain;
-    }
-
-    public void setDomain(String domain) {
-        this.domain = domain;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public SharedPreferences getPreff() {
-        return preff;
-    }
-
-    public void setPreff(SharedPreferences preff) {
-        this.preff = preff;
-    }
-
-    public String getHostName() {
-        return hostName;
-    }
-
-    public void setHostName(String hostName) {
-        this.hostName = hostName;
-    }
-
-    public String getPort() {
-        return port;
-    }
-
-    public void setPort(String port) {
-        this.port = port;
-    }
-
-    public String getBaseUrl() {
-        return baseUrl;
-    }
-
-    // TODO: Fix this
-    public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
-    }
-
-    public String getLoginBaseUrl() {
-        return loginBaseUrl;
-    }
-
-    public void setLoginBaseUrl(String loginBaseUrl) {
-        this.loginBaseUrl = loginBaseUrl;
-    }
-
-    public String getCmsBaseUrl() {
-        return cmsBaseUrl;
-    }
-
-    public void setCmsBaseUrl(String cmsBaseUrl) {
-        this.cmsBaseUrl = cmsBaseUrl;
-    }
-
-    public String getAppVersion() {
-        try {
-            return "v." + getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_CONFIGURATIONS).versionName;
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            return getString(R.string.version_unavailable);
-        }
-    }
-
-    public void setAppVersion(String appVersion) {
-        this.appVersion = appVersion;
-    }
-
 
     public void uploadFile(Context context, final Handler uploadHandler,
                            ArrayList<byte[]> fileBytes, ArrayList<String> filePaths,
@@ -492,7 +402,7 @@ public class GalleryApp extends Application {
                 .append("stampsenabled=false").append("&")
                 .append("hidescancontrols=false").append("&")
                 .append("dataroot=UserStamps").append("&")
-                .append("capturechannelcode=root_CompositeScanChannel").append("&")
+                .append("capturechannelcode=").append(getCaptureChannelCode()).append("&")
                 .append("uri=").append("&")
                 .append("t=").append(getToken()).append("&")
                 .append("d=").append(getDomain()).append("&")
@@ -537,6 +447,27 @@ public class GalleryApp extends Application {
         statusTask.execute(url);
     }
 
+    public int updateChannels(ChannelsObj channels) {
+        getContentResolver().delete(GalleryDBContent.Channels.CONTENT_URI, null, null);
+        ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
+        for (ChannelObj channel : channels.getChannels()) {
+            operations.add(ContentProviderOperation.newInsert(GalleryDBContent.Channels.CONTENT_URI)
+                    .withValues(channel.toContentValues())
+                    .build());
+        }
+        ContentProviderResult[] results = new ContentProviderResult[0];
+        if (operations.size() > 0) {
+            try {
+                results = getContentResolver().applyBatch(GalleryDBProvider.AUTHORITY, operations);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            } catch (OperationApplicationException e) {
+                e.printStackTrace();
+            }
+        }
+        return results.length;
+    }
+
     public int updateImageStatus(String status, ArrayList<String> ids, String docId) {
         int updatedCount = 0;
         ContentValues cv = new ContentValues();
@@ -550,5 +481,117 @@ public class GalleryApp extends Application {
             );
         }
         return updatedCount;
+    }
+
+    public ArrayList<String> getRunningActivities() {
+        ArrayList<String> runningactivities = new ArrayList<String>();
+        ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningTaskInfo> services = activityManager.getRunningTasks(Integer.MAX_VALUE);
+        for (ActivityManager.RunningTaskInfo service : services) {
+            runningactivities.add(0, service.topActivity.toString());
+        }
+        return runningactivities;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public String getCaptureChannelCode() {
+        return captureChannelCode;
+    }
+
+    public void setCaptureChannelCode(String captureChannelCode) {
+        this.captureChannelCode = captureChannelCode;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public SharedPreferences getPreff() {
+        return preff;
+    }
+
+    public void setPreff(SharedPreferences preff) {
+        this.preff = preff;
+    }
+
+    public String getHostName() {
+        return hostName;
+    }
+
+    public void setHostName(String hostName) {
+        this.hostName = hostName;
+    }
+
+    public String getPort() {
+        return port;
+    }
+
+    public void setPort(String port) {
+        this.port = port;
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    // TODO: Fix this
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
+
+    public String getLoginBaseUrl() {
+        return loginBaseUrl;
+    }
+
+    public void setLoginBaseUrl(String loginBaseUrl) {
+        this.loginBaseUrl = loginBaseUrl;
+    }
+
+    public String getCmsBaseUrl() {
+        return cmsBaseUrl;
+    }
+
+    public void setCmsBaseUrl(String cmsBaseUrl) {
+        this.cmsBaseUrl = cmsBaseUrl;
+    }
+
+    public String getAppVersion() {
+        try {
+            return "v." + getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_CONFIGURATIONS).versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return getString(R.string.version_unavailable);
+        }
+    }
+
+    public void setAppVersion(String appVersion) {
+        this.appVersion = appVersion;
     }
 }

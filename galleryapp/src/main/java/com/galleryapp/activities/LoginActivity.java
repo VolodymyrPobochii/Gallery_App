@@ -19,6 +19,7 @@ import android.widget.EditText;
 import com.galleryapp.Config;
 import com.galleryapp.GetChannelsEventListener;
 import com.galleryapp.R;
+import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ChannelsObj;
 import com.galleryapp.services.LoginService;
 
@@ -42,6 +43,7 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
     private String mPassword;
     private Intent mOnCreateIntent;
     private SharedPreferences mPreff;
+    private GalleryApp mScanApp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +52,8 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
         mOnCreateIntent = getIntent();
         setContentView(R.layout.login_screen);
         setTitle(R.string.authenticate);
-        mPreff = getApp().getPreff();
+        mScanApp = getApp();
+        mPreff = mScanApp.getPreff();
         initViews();
         initServices();
     }
@@ -60,7 +63,7 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
         if (requestCode == LOGIN_REQUEST) {
             switch (resultCode) {
                 case LoginService.CONNECTION_START:
-                    loginProgress = getApp().customProgressDialog(LoginActivity.this, getResources().getString(R.string.authentication_progress));
+                    loginProgress = mScanApp.customProgressDialog(LoginActivity.this, getResources().getString(R.string.authentication_progress));
                     if (!loginProgress.isShowing()) {
                         loginProgress.show();
                     }
@@ -74,7 +77,7 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
                     if (loginProgress != null && loginProgress.isShowing()) {
                         loginProgress.setMessage(getResources().getString(R.string.server_connection_problem));
                         loginProgress.dismiss();
-                        getApp().customAlertDialog(LoginActivity.this, getResources().getString(R.string.server_connection_problem),
+                        mScanApp.customAlertDialog(LoginActivity.this, getResources().getString(R.string.server_connection_problem),
                                 getString(R.string.close), false, null, false, false).show();
                     }
                     break;
@@ -88,7 +91,7 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
             Log.d("LoginActivity", "onActResult()::resultCode == " + resultCode);
             if (resultCode == RESULT_OK) {
                 Log.d("LoginActivity", "onActResult()::resultCode == RESULT_OK");
-                getApp().setUpHost();
+                mScanApp.setUpHost();
                 initViews();
             }
         }
@@ -100,20 +103,20 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
             String responseToken = intent.getStringExtra(getString(R.string.response_token));
             if (responseToken != null && responseToken.length() > TOKEN_LENGTH) {
                 if (loginProgress != null && loginProgress.isShowing()) loginProgress.dismiss();
-                getApp().customAlertDialog(LoginActivity.this, getResources().getString(R.string.login_pass_problem),
+                mScanApp.customAlertDialog(LoginActivity.this, getResources().getString(R.string.login_pass_problem),
                         getString(R.string.close), false, null, false, false).show();
                 tokenReceived = true;
                 return;
             }
-            getApp().setToken(responseToken);
+            mScanApp.setToken(responseToken);
             Log.d("PostLoginReceiver", "onReceive()" + "TOKEN = " + responseToken);
             tokenReceived = true;
 //            completeAuth();
-            getApp().getChannels(this);
+            mScanApp.getChannels(this);
         } else if (intent.hasExtra(Config.SERVER_CONNECTION)) {
             if (LoginService.AUTH_PROBLEM.equalsIgnoreCase(intent.getStringExtra(Config.SERVER_CONNECTION))) {
                 if (loginProgress != null && loginProgress.isShowing()) loginProgress.dismiss();
-                getApp().customAlertDialog(LoginActivity.this, getResources().getString(R.string.auth_problem),
+                mScanApp.customAlertDialog(LoginActivity.this, getResources().getString(R.string.auth_problem),
                         getString(R.string.close), false, null, false, false).show();
             }
         }
@@ -143,10 +146,10 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (getApp().isNetworkConnected()) {
+                if (mScanApp.isNetworkConnected()) {
                     attemptLogin();
                 } else {
-                    getApp().noConnectionDialog();
+                    mScanApp.noConnectionDialog();
                 }
             }
         });
@@ -193,9 +196,9 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
             mServiceLoginIntent.putExtra("loginProgressIntent", loginProgressIntent);
             mServiceLoginIntent.putExtra("login", login.getText().toString());
             mServiceLoginIntent.putExtra("pass", pass.getText().toString());
-            mServiceLoginIntent.putExtra("baseUrl", getApp().getLoginBaseUrl());
-            mServiceLoginIntent.putExtra("hostName", getApp().getHostName());
-            mServiceLoginIntent.putExtra("port", getApp().getPort());
+            mServiceLoginIntent.putExtra("baseUrl", mScanApp.getLoginBaseUrl());
+            mServiceLoginIntent.putExtra("hostName", mScanApp.getHostName());
+            mServiceLoginIntent.putExtra("port", mScanApp.getPort());
             startService(mServiceLoginIntent);
         }
     }
@@ -278,8 +281,10 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
     }
 
     @Override
-    public void onGetChannels(ChannelsObj response) {
-        Log.d("UPLOAD", "onGetChannels()" + "ChannelsObj = " + response.toString());
+    public void onGetChannels(ChannelsObj channels) {
+        Log.d("UPLOAD", "onGetChannels()" + "ChannelsObj = " + channels.toString());
+        int channelsUpdated = mScanApp.updateChannels(channels);
+        Log.d("UPLOAD", "onGetChannels()" + "channelsUpdated = " + channelsUpdated);
         completeAuth();
     }
 }

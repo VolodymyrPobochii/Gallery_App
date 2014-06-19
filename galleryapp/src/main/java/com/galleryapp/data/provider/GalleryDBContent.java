@@ -196,5 +196,131 @@ public abstract class GalleryDBContent {
             stmt.bindString(i++, value != null ? value : "");
         }
     }
+
+    /**
+     * Created in version 1
+     */
+    public static final class Channels extends GalleryDBContent {
+
+        private static final String LOG_TAG = Channels.class.getSimpleName();
+
+        public static final String TABLE_NAME = "channels";
+        public static final String TYPE_ELEM_TYPE = "vnd.android.cursor.item/gallerydb-channels";
+        public static final String TYPE_DIR_TYPE = "vnd.android.cursor.dir/gallerydb-channels";
+
+        public static final Uri CONTENT_URI = Uri.parse(GalleryDBContent.CONTENT_URI + "/" + TABLE_NAME);
+
+        public static enum Columns implements ColumnMetadata {
+            ID(BaseColumns._ID, "integer"),
+            CODE("code", "text"),
+            DOMAIN("domain", "text"),
+            NAME("name", "text");
+
+            private final String mName;
+            private final String mType;
+
+            private Columns(String name, String type) {
+                mName = name;
+                mType = type;
+            }
+
+            @Override
+            public int getIndex() {
+                return ordinal();
+            }
+
+            @Override
+            public String getName() {
+                return mName;
+            }
+
+            @Override
+            public String getType() {
+                return mType;
+            }
+        }
+
+        public static final String[] PROJECTION = new String[]{
+                Columns.ID.getName(),
+                Columns.CODE.getName(),
+                Columns.DOMAIN.getName(),
+                Columns.NAME.getName()
+        };
+
+        private Channels() {
+            // No private constructor
+        }
+
+        public static void createTable(SQLiteDatabase db) {
+            if (GalleryDBProvider.ACTIVATE_ALL_LOGS) {
+                Log.d(LOG_TAG, "Channels | createTable start");
+            }
+            db.execSQL("CREATE TABLE " + TABLE_NAME + " (" +
+                    Columns.ID.getName() + " " + Columns.ID.getType() + ", " +
+                    Columns.CODE.getName() + " " + Columns.CODE.getType() + ", " +
+                    Columns.DOMAIN.getName() + " " + Columns.DOMAIN.getType() + ", " +
+                    Columns.NAME.getName() + " " + Columns.NAME.getType() +
+                    ", PRIMARY KEY (" + Columns.ID.getName() + ")" + ");");
+
+            db.execSQL("CREATE INDEX channels_code on " + TABLE_NAME + "(" + Columns.CODE.getName() + ");");
+            db.execSQL("CREATE INDEX channels_domain on " + TABLE_NAME + "(" + Columns.DOMAIN.getName() + ");");
+            db.execSQL("CREATE INDEX channels_name on " + TABLE_NAME + "(" + Columns.NAME.getName() + ");");
+            if (GalleryDBProvider.ACTIVATE_ALL_LOGS) {
+                Log.d(LOG_TAG, "Channels | createTable end");
+            }
+        }
+
+        // Version 1 : Creation of the table
+        public static void upgradeTable(SQLiteDatabase db, int oldVersion, int newVersion) {
+            if (GalleryDBProvider.ACTIVATE_ALL_LOGS) {
+                Log.d(LOG_TAG, "Channels | upgradeTable start");
+            }
+
+            if (oldVersion < newVersion) {
+                Log.i(LOG_TAG, "Upgrading from version " + oldVersion + " to " + newVersion
+                        + ", data will be lost!");
+
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME + ";");
+                createTable(db);
+                return;
+            }
+
+
+            if (oldVersion != newVersion) {
+                throw new IllegalStateException("Error upgrading the database to version "
+                        + newVersion);
+            }
+
+            if (GalleryDBProvider.ACTIVATE_ALL_LOGS) {
+                Log.d(LOG_TAG, "Channels | upgradeTable end");
+            }
+        }
+
+        static String getBulkInsertString() {
+            StringBuilder sb = new StringBuilder();
+            Columns[] columns = Columns.values();
+            for (Columns column : columns) {
+                sb.append(column.getName()).append(", ");
+            }
+            return new StringBuilder("INSERT INTO ")
+                    .append(TABLE_NAME).append(" ( ")
+                    .append(sb.toString())
+                    .append(" ) VALUES (?, ?, ?, ?)").toString();
+        }
+
+        static void bindValuesInBulkInsert(SQLiteStatement stmt, ContentValues values) {
+            int i = 1;
+            String value;
+            Columns[] columns = Columns.values();
+            for (Columns column : columns) {
+                if (column.getType().intern().equals("text")) {
+                    value = values.getAsString(column.getName());
+                    stmt.bindString(i++, value != null ? value : "");
+                } else {
+                    stmt.bindLong(i++, values.getAsLong(column.getName()));
+                }
+            }
+        }
+    }
 }
 

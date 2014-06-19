@@ -5,8 +5,10 @@ import android.app.Fragment;
 import android.app.LoaderManager;
 import android.content.CursorLoader;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,6 +24,8 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.SimpleCursorAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -70,10 +74,31 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     private List<Integer> mCheckedIds = new ArrayList<Integer>();
     private GridView mGridView;
     private Handler mUploadHandler;
+    private SimpleCursorAdapter mChannelsAdapter;
+    private LoaderManager.LoaderCallbacks<Cursor> mChannelsLoader = new LoaderManager.LoaderCallbacks<Cursor>() {
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            return new CursorLoader(getActivity(), GalleryDBContent.Channels.CONTENT_URI, GalleryDBContent.Channels.PROJECTION, null, null, null);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            if (data != null && data.getCount() > 0) {
+                mChannelsAdapter.changeCursor(data);
+            }
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+            mChannelsAdapter.changeCursor(null);
+        }
+    };
+    private Spinner mChannels;
 
     public ImageAdapter getGalleryAdapter() {
         return mGalleryAdapter;
     }
+
 
     /**
      * Use this factory method to create a new instance of
@@ -119,11 +144,23 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                 .bitmapConfig(Bitmap.Config.RGB_565)
                 .build();
         initThumbLoader();
+        initChannelsLoader();
+    }
+
+    private void initThumbLoader() {
+//        Bundle b = new Bundle();
+//        b.putInt(LIMIT, limit);
+        getLoaderManager().restartLoader(R.id.gallery_thumbs_loader, null, this);
+    }
+
+    private void initChannelsLoader() {
+        getLoaderManager().restartLoader(R.id.channels_loader, null, mChannelsLoader);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        final SharedPreferences preff = GalleryApp.getInstance().getPreff();
         final View rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
         // Inflate the layout for this fragment
         // Set up an array of the Thumbnail Image ID column we want
@@ -197,8 +234,34 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                 mode.setCustomView(getActivity().getLayoutInflater().inflate(R.layout.cab_layout, null));
                 ((TextView) mode.getCustomView().findViewById(R.id.cab_title)).setText("Select Items");
                 ((TextView) mode.getCustomView().findViewById(R.id.cab_subtitle)).setText("One item selected");
-//                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), R.layout.spinner_item, new String[]{"Cannel 1", "Channel 2", "Channel 3"});
-//                (Spinner) mode.getCustomView().findViewById(R.id.cab_channels);
+                mChannels = (Spinner) mode.getCustomView().findViewById(R.id.cab_channels);
+                mChannels.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        ((TextView) view).setTextColor(Color.WHITE);
+                        Cursor channelCursor = (Cursor) mChannels.getSelectedItem();
+                        preff.edit()
+                                .putString("domain", channelCursor.getString(channelCursor.getColumnIndex(GalleryDBContent.Channels.Columns.DOMAIN.getName())))
+                                .putString("capturechannelcode", channelCursor.getString(channelCursor.getColumnIndex(GalleryDBContent.Channels.Columns.CODE.getName())))
+                                .apply();
+                        GalleryApp.getInstance().setUpHost();
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+
+                    }
+                });
+                mChannels.setAdapter(mChannelsAdapter);
+                Cursor data = mChannelsAdapter.getCursor();
+                while (data.moveToNext()) {
+                    if (data.getString(data.getColumnIndex(GalleryDBContent.Channels.Columns.DOMAIN.getName())).intern()
+                            .equals(preff.getString("domain", getString(R.string.default_value_domain_preference)))) {
+                        if (mChannels != null) {
+                            mChannels.setSelection(data.getPosition());
+                        }
+                    }
+                }
 //                mode.setTitle("Select Items");
 //                mode.setSubtitle("One item selected");
                 return true;
@@ -221,6 +284,10 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                 return true;
             }
         });
+        mChannelsAdapter = new SimpleCursorAdapter(getActivity(), android.R.layout.simple_spinner_item, null,
+                new String[]{GalleryDBContent.Channels.Columns.NAME.getName()}, new int[]{android.R.id.text1}, 0);
+        // Specify the layout to use when the list of choices appears
+        mChannelsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         return rootView;
     }
 
@@ -304,12 +371,6 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
             cursor.close();
         }
         mListener.onDeleteItemsOperation(checkedCursorIds, checkedImages, checkedThumbs);
-    }
-
-    public final void initThumbLoader() {
-//        Bundle b = new Bundle();
-//        b.putInt(LIMIT, limit);
-        getLoaderManager().restartLoader(R.id.gallery_thumbs_loader, null, this);
     }
 
     // TODO: Rename method, update argument and hook method into UI event

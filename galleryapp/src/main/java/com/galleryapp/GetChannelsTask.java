@@ -111,7 +111,11 @@ public final class GetChannelsTask extends AsyncTask<String, Void, ChannelsObj> 
         Log.d("UPLOAD", "BasicHttpResponse() :: END");
         String channels = getContent(response);
         Log.d("UPLOAD", "BasicHttpResponse() :: channels = " + channels);
-        channels = "{\"Channels\":[{\"Code\":\"root_ScanCHANNELAAAA\",\"Domain\":\"TestOcrCreateNew_Production.54\",\"Name\":\"ScanCHANNELAAAA\"},{\"Code\":\"root_CompositeScanChannel\",\"Domain\":\"das_Production.54\",\"Name\":\"CompositeScanChannel\"}],\"ErrorCode\":0,\"ErrorMessage\":null}";
+        channels = "{\"Channels\":[{\"Code\":\"root_ScanCHANNELAAAA\",\"Domain\":\"TestOcrCreateNew_Production.54\",\"Name\":\"ScanCHANNELAAAA\"}," +
+                "{\"Code\":\"root_CompositeScanChannel\",\"Domain\":\"das_Production.54\",\"Name\":\"CompositeScanChannel\"}," +
+                "{\"Code\":\"root_CompositeScanChannel\",\"Domain\":\"103_FixedBoNames_Production.tenant41\",\"Name\":\"103FixedBoNames\"}," +
+                "{\"Code\":\"root_CompositeScanChannel\",\"Domain\":\"UA103_Production.tenant62\",\"Name\":\"UA103Production\"}]," +
+                "\"ErrorCode\":0,\"ErrorMessage\":null}";
         JSONObject jo = null;
         try {
             jo = new JSONObject(channels);

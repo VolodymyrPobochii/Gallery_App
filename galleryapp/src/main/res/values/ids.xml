@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="gallery_thumbs_loader" type="id">gallery_loader</item>
+    <item name="channels_loader" type="id">channels_loader</item>
 </resources>

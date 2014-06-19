@@ -16,6 +16,7 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 import android.util.Log;
 
+import com.galleryapp.data.provider.GalleryDBContent.Channels;
 import com.galleryapp.data.provider.GalleryDBContent.GalleryImages;
 
 import java.util.ArrayList;
@@ -40,13 +41,15 @@ public final class GalleryDBProvider extends ContentProvider {
     }
 
     // Version 1 : Creation of the database
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 3;
 
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     private enum UriType {
         GALLERY_IMAGES(GalleryImages.TABLE_NAME, GalleryImages.TABLE_NAME, GalleryImages.TYPE_ELEM_TYPE),
-        GALLERY_IMAGES_ID(GalleryImages.TABLE_NAME + "/#", GalleryImages.TABLE_NAME, GalleryImages.TYPE_DIR_TYPE);
+        GALLERY_IMAGES_ID(GalleryImages.TABLE_NAME + "/#", GalleryImages.TABLE_NAME, GalleryImages.TYPE_DIR_TYPE),
+        CHANNELS(Channels.TABLE_NAME, Channels.TABLE_NAME, Channels.TYPE_ELEM_TYPE),
+        CHANNELS_ID(Channels.TABLE_NAME + "/#", Channels.TABLE_NAME, Channels.TYPE_DIR_TYPE);
 
         private String mTableName;
         private String mType;
@@ -107,6 +110,7 @@ public final class GalleryDBProvider extends ContentProvider {
 
             // Create all tables here; each class has its own method
             GalleryImages.createTable(db);
+            Channels.createTable(db);
         }
 
         @Override
@@ -114,6 +118,7 @@ public final class GalleryDBProvider extends ContentProvider {
 
             // Upgrade all tables here; each class has its own method
             GalleryImages.upgradeTable(db, oldVersion, newVersion);
+            Channels.upgradeTable(db, oldVersion, newVersion);
         }
 
         @Override
@@ -139,11 +144,13 @@ public final class GalleryDBProvider extends ContentProvider {
 
         switch (uriType) {
             case GALLERY_IMAGES_ID:
+            case CHANNELS_ID:
                 id = uri.getPathSegments().get(1);
                 result = db.delete(uriType.getTableName(), whereWithId(selection),
                         addIdToSelectionArgs(id, selectionArgs));
                 break;
             case GALLERY_IMAGES:
+            case CHANNELS:
                 result = db.delete(uriType.getTableName(), selection, selectionArgs);
                 break;
         }
@@ -175,6 +182,7 @@ public final class GalleryDBProvider extends ContentProvider {
 
         switch (uriType) {
             case GALLERY_IMAGES:
+            case CHANNELS:
                 id = db.insert(uriType.getTableName(), "foo", values);
                 resultUri = id == -1 ? null : ContentUris.withAppendedId(uri, id);
                 break;
@@ -243,6 +251,21 @@ public final class GalleryDBProvider extends ContentProvider {
                         Log.d(LOG_TAG, "bulkInsert: uri=" + uri + " | nb inserts : " + numberInserted);
                     }
                     break;
+                case CHANNELS:
+                    insertStmt = db.compileStatement(Channels.getBulkInsertString());
+                    for (ContentValues value : values) {
+                        Channels.bindValuesInBulkInsert(insertStmt, value);
+                        insertStmt.execute();
+                        insertStmt.clearBindings();
+                    }
+                    insertStmt.close();
+                    db.setTransactionSuccessful();
+                    numberInserted = values.length;
+
+                    if (ACTIVATE_ALL_LOGS) {
+                        Log.d(LOG_TAG, "bulkInsert: uri=" + uri + " | nb inserts : " + numberInserted);
+                    }
+                    break;
 
                 default:
                     throw new IllegalArgumentException("Unknown URI " + uri);
@@ -274,11 +297,13 @@ public final class GalleryDBProvider extends ContentProvider {
 
         switch (uriType) {
             case GALLERY_IMAGES_ID:
+            case CHANNELS_ID:
                 id = uri.getPathSegments().get(1);
                 c = db.query(uriType.getTableName(), projection, whereWithId(selection),
                         addIdToSelectionArgs(id, selectionArgs), null, null, sortOrder);
                 break;
             case GALLERY_IMAGES:
+            case CHANNELS:
                 c = db.query(uriType.getTableName(), projection, selection, selectionArgs,
                         null, null, sortOrder);
                 break;
@@ -332,11 +357,13 @@ public final class GalleryDBProvider extends ContentProvider {
 
         switch (uriType) {
             case GALLERY_IMAGES_ID:
+            case CHANNELS_ID:
                 String id = uri.getPathSegments().get(1);
                 result = db.update(uriType.getTableName(), values, whereWithId(selection),
                         addIdToSelectionArgs(id, selectionArgs));
                 break;
             case GALLERY_IMAGES:
+            case CHANNELS:
                 result = db.update(uriType.getTableName(), values, selection, selectionArgs);
                 break;
         }
