@@ -49,7 +49,7 @@ public class Config {
     private static final String METHOD_GET_CHANNELS = "getscancahnnels";
     private static final String METHOD_SUBMITT_DOC = "submitdocument";
     public static final String STATUS_GET_REQUEST_RULE = CAPTURE_SERVICE + "/" + METHOD_DOC_STATUS + "/";
-    public static final String GET_CHANNELS_RULE = CAPTURE_SERVICE + "/" + METHOD_GET_CHANNELS + "/";
+    public static final String GET_CHANNELS_RULE = CAPTURE_SERVICE + "/" + METHOD_GET_CHANNELS;
     public static final String SUBMITT_POST_REQUEST_RULE = CAPTURE_SERVICE + "/" + METHOD_SUBMITT_DOC + "/";
     public static final String CAPTURE_SERVICE_UPLOAD_URL = UPLOAD_POST_REQUEST_RULE + DEFAULT_DOMAIN;
 }

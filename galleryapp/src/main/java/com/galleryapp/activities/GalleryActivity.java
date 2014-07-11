@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.galleryapp.ProgressiveEntityListener;
 import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.DocStatusObj;
@@ -19,6 +18,7 @@ import com.galleryapp.data.model.DocSubmittedObj;
 import com.galleryapp.data.model.FileUploadObj;
 import com.galleryapp.data.model.ImageObj;
 import com.galleryapp.fragmernts.GalleryFragment;
+import com.galleryapp.interfaces.ProgressiveEntityListener;
 
 import java.io.File;
 import java.text.SimpleDateFormat;

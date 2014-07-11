@@ -1,11 +1,11 @@
-package com.galleryapp;
+package com.galleryapp.asynctasks;
 
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.galleryapp.application.GalleryApp;
-import com.galleryapp.data.model.ChannelsObj;
+import com.galleryapp.data.model.DocStatusObj;
+import com.galleryapp.interfaces.ProgressiveEntityListener;
 import com.google.gson.Gson;
 import com.squareup.okhttp.OkHttpClient;
 
@@ -18,8 +18,6 @@ import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,18 +30,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class GetChannelsTask extends AsyncTask<String, Void, ChannelsObj> {
+public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStatusObj> {
 
     private final OkHttpClient client;
+    private final String mDocId;
     private Context mContext;
     private String url;
-    private GetChannelsEventListener mChannelsEventListener;
+    private ProgressiveEntityListener mProgressUploadListener;
     private ArrayList<String> mIds;
 
-    public GetChannelsTask(Context context) {
+    public DocumentStatusTask(Context context, ArrayList<String> ids, String docId) {
         this.mContext = context;
+        this.mIds = ids;
+        this.mDocId = docId;
         this.client = new OkHttpClient();
-        setChannelsEventListener((GetChannelsEventListener) context);
+        setProgressUploadListener((ProgressiveEntityListener) context);
     }
 
     @Override
@@ -53,10 +54,10 @@ public final class GetChannelsTask extends AsyncTask<String, Void, ChannelsObj> 
     }
 
     @Override
-    protected ChannelsObj doInBackground(String... params) {
-        ChannelsObj response = null;
+    protected DocStatusObj doInBackground(String... params) {
+        DocStatusObj response = null;
         try {
-            response = postFile(params[0]);
+            response = postFile(null, params[0]);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -64,17 +65,23 @@ public final class GetChannelsTask extends AsyncTask<String, Void, ChannelsObj> 
     }
 
     @Override
-    protected void onPostExecute(ChannelsObj response) {
+    protected void onProgressUpdate(Integer... progress) {
+        super.onProgressUpdate(progress[0]);
+//        Log.d("UPLOAD", "onProgressUpdate() :: progress:" + progress[0]);
+    }
+
+    @Override
+    protected void onPostExecute(DocStatusObj response) {
         super.onPostExecute(response);
         Log.d("UPLOAD", "onPostExecute()");
-        mChannelsEventListener.onGetChannels(response);
+        mProgressUploadListener.onDocStatus(response, mIds, mDocId);
     }
 
     /*fake*/
-    private ChannelsObj postFile(String url) throws IOException {
-        GalleryApp app = GalleryApp.getInstance();
+    private DocStatusObj postFile(final byte[] postData, String url) throws IOException {
+
         HashMap<String, String> map = new HashMap<String, String>();
-        map.put("Host", app.getDomain() + ":" + app.getPort());
+        map.put("Host", "soldevqa06.eccentex.com:9004");
         map.put("ContentType", "application/binary");
         map.put("Method", "GET");
         URL parsedUrl = new URL(url);
@@ -109,21 +116,8 @@ public final class GetChannelsTask extends AsyncTask<String, Void, ChannelsObj> 
             }
         }
         Log.d("UPLOAD", "BasicHttpResponse() :: END");
-        String channels = getContent(response);
-        Log.d("UPLOAD", "BasicHttpResponse() :: channels = " + channels);
-        channels = "{\"Channels\":[{\"Code\":\"root_ScanCHANNELAAAA\",\"Domain\":\"TestOcrCreateNew_Production.54\",\"Name\":\"ScanCHANNELAAAA\"}," +
-                "{\"Code\":\"root_CompositeScanChannel\",\"Domain\":\"das_Production.54\",\"Name\":\"CompositeScanChannel\"}," +
-                "{\"Code\":\"root_CompositeScanChannel\",\"Domain\":\"103_FixedBoNames_Production.tenant41\",\"Name\":\"103FixedBoNames\"}," +
-                "{\"Code\":\"root_CompositeScanChannel\",\"Domain\":\"UA103_Production.tenant62\",\"Name\":\"UA103Production\"}]," +
-                "\"ErrorCode\":0,\"ErrorMessage\":null}";
-        JSONObject jo = null;
-        try {
-            jo = new JSONObject(channels);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        assert jo != null;
-        return new Gson().fromJson(jo.toString(), ChannelsObj.class);
+        String docStatus = getContent(response);
+        return new Gson().fromJson(docStatus, DocStatusObj.class);
     }
 
     public String getContent(HttpResponse response) {
@@ -197,7 +191,7 @@ public final class GetChannelsTask extends AsyncTask<String, Void, ChannelsObj> 
         return entity;
     }
 
-    public void setChannelsEventListener(GetChannelsEventListener mChannelsEventListener) {
-        this.mChannelsEventListener = mChannelsEventListener;
+    public void setProgressUploadListener(ProgressiveEntityListener mProgressUploadListener) {
+        this.mProgressUploadListener = mProgressUploadListener;
     }
 }

@@ -17,10 +17,10 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 
 import com.galleryapp.Config;
-import com.galleryapp.GetChannelsEventListener;
 import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ChannelsObj;
+import com.galleryapp.interfaces.GetChannelsEventListener;
 import com.galleryapp.services.LoginService;
 
 public class LoginActivity extends BaseActivity implements GetChannelsEventListener {

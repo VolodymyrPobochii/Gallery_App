@@ -1,11 +1,13 @@
-package com.galleryapp;
+package com.galleryapp.asynctasks;
 
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.galleryapp.R;
 import com.galleryapp.data.model.FileUploadObj;
+import com.galleryapp.interfaces.ProgressiveEntityListener;
 import com.google.gson.Gson;
 
 import org.apache.http.Header;

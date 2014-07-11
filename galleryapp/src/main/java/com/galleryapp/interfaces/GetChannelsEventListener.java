@@ -1,4 +1,4 @@
-package com.galleryapp;
+package com.galleryapp.interfaces;
 
 import com.galleryapp.data.model.ChannelsObj;
 

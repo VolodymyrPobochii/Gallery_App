@@ -1,10 +1,12 @@
-package com.galleryapp;
+package com.galleryapp.asynctasks;
 
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.galleryapp.data.model.DocStatusObj;
+import com.galleryapp.application.GalleryApp;
+import com.galleryapp.data.model.ChannelsObj;
+import com.galleryapp.interfaces.GetChannelsEventListener;
 import com.google.gson.Gson;
 import com.squareup.okhttp.OkHttpClient;
 
@@ -17,6 +19,8 @@ import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,34 +33,35 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStatusObj> {
+public final class GetChannelsTask extends AsyncTask<String, Void, ChannelsObj> {
+
+    private static final String TAG = GetChannelsTask.class.getSimpleName();
+    private static final int TIMEOUT = 60 * 1000;
 
     private final OkHttpClient client;
-    private final String mDocId;
     private Context mContext;
     private String url;
-    private ProgressiveEntityListener mProgressUploadListener;
+    private GetChannelsEventListener mChannelsEventListener;
     private ArrayList<String> mIds;
 
-    public DocumentStatusTask(Context context, ArrayList<String> ids, String docId) {
+    public GetChannelsTask(Context context) {
         this.mContext = context;
-        this.mIds = ids;
-        this.mDocId = docId;
         this.client = new OkHttpClient();
-        setProgressUploadListener((ProgressiveEntityListener) context);
+        setChannelsEventListener((GetChannelsEventListener) context);
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        Log.d("UPLOAD", "onPreExecute()");
+        Log.d(TAG, "onPreExecute()");
     }
 
     @Override
-    protected DocStatusObj doInBackground(String... params) {
-        DocStatusObj response = null;
+    protected ChannelsObj doInBackground(String... params) {
+        Log.d(TAG, "doInBackground():: URL = " + params[0]);
+        ChannelsObj response = null;
         try {
-            response = postFile(null, params[0]);
+            response = postFile(params[0]);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -64,23 +69,17 @@ public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStat
     }
 
     @Override
-    protected void onProgressUpdate(Integer... progress) {
-        super.onProgressUpdate(progress[0]);
-//        Log.d("UPLOAD", "onProgressUpdate() :: progress:" + progress[0]);
-    }
-
-    @Override
-    protected void onPostExecute(DocStatusObj response) {
+    protected void onPostExecute(ChannelsObj response) {
         super.onPostExecute(response);
-        Log.d("UPLOAD", "onPostExecute()");
-        mProgressUploadListener.onDocStatus(response, mIds, mDocId);
+        Log.d(TAG, "onPostExecute()");
+        mChannelsEventListener.onGetChannels(response);
     }
 
     /*fake*/
-    private DocStatusObj postFile(final byte[] postData, String url) throws IOException {
-
+    private ChannelsObj postFile(String url) throws IOException {
+        GalleryApp app = GalleryApp.getInstance();
         HashMap<String, String> map = new HashMap<String, String>();
-        map.put("Host", "soldevqa06.eccentex.com:9004");
+        map.put("Host", app.getDomain() + ":" + app.getPort());
         map.put("ContentType", "application/binary");
         map.put("Method", "GET");
         URL parsedUrl = new URL(url);
@@ -89,11 +88,11 @@ public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStat
         for (String headerName : map.keySet()) {
             connection.addRequestProperty(headerName, map.get(headerName));
         }
-        Log.d("UPLOAD", "setConnectionParametersForRequest() :: BEGIN");
+        Log.d(TAG, "setConnectionParametersForRequest() :: BEGIN");
         setConnectionParametersForRequest(connection);
-        Log.d("UPLOAD", "setConnectionParametersForRequest() :: END");
+        Log.d(TAG, "setConnectionParametersForRequest() :: END");
         // Initialize HttpResponse with data from the HttpURLConnection.
-        Log.d("UPLOAD", "ProtocolVersion() :: BEGIN");
+        Log.d(TAG, "ProtocolVersion() :: BEGIN");
         ProtocolVersion protocolVersion = new ProtocolVersion("HTTP", 1, 1);
         int responseCode = connection.getResponseCode();
         if (responseCode == -1) {
@@ -101,11 +100,11 @@ public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStat
             // Signal to the caller that something was wrong with the connection.
             throw new IOException("Could not retrieve response code from HttpUrlConnection.");
         }
-        Log.d("UPLOAD", "ProtocolVersion() :: END");
-        Log.d("UPLOAD", "BasicStatusLine() :: BEGIN");
+        Log.d(TAG, "ProtocolVersion() :: END");
+        Log.d(TAG, "BasicStatusLine() :: BEGIN");
         StatusLine responseStatus = new BasicStatusLine(protocolVersion, connection.getResponseCode(), connection.getResponseMessage());
-        Log.d("UPLOAD", "BasicStatusLine() :: END");
-        Log.d("UPLOAD", "BasicHttpResponse() :: BEGIN");
+        Log.d(TAG, "BasicStatusLine() :: END");
+        Log.d(TAG, "BasicHttpResponse() :: BEGIN");
         BasicHttpResponse response = new BasicHttpResponse(responseStatus);
         response.setEntity(entityFromConnection(connection));
         for (Map.Entry<String, List<String>> header : connection.getHeaderFields().entrySet()) {
@@ -114,9 +113,23 @@ public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStat
                 response.addHeader(h);
             }
         }
-        Log.d("UPLOAD", "BasicHttpResponse() :: END");
-        String docStatus = getContent(response);
-        return new Gson().fromJson(docStatus, DocStatusObj.class);
+        Log.d(TAG, "BasicHttpResponse() :: END");
+        String channels = getContent(response);
+        Log.d(TAG, "BasicHttpResponse() :: channels = " + channels);
+        /*channels = "{\"Channels\":[{\"Code\":\"root_ScanCHANNELAAAA\",\"Domain\":\"TestOcrCreateNew_Production.54\",\"Name\":\"ScanCHANNELAAAA\"}," +
+                "{\"Code\":\"root_CompositeScanChannel\",\"Domain\":\"das_Production.54\",\"Name\":\"CompositeScanChannel\"}," +
+                "{\"Code\":\"root_CompositeScanChannel\",\"Domain\":\"103_FixedBoNames_Production.tenant41\",\"Name\":\"103FixedBoNames\"}," +
+                "{\"Code\":\"root_CompositeScanChannel\",\"Domain\":\"UA103_Production.tenant62\",\"Name\":\"UA103Production\"}]," +
+                "\"ErrorCode\":0,\"ErrorMessage\":null}";*/
+        Log.d(TAG, "Channels :" + channels);
+        JSONObject jo = null;
+        try {
+            jo = new JSONObject(channels);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        assert jo != null;
+        return new Gson().fromJson(jo.toString(), ChannelsObj.class);
     }
 
     public String getContent(HttpResponse response) {
@@ -150,7 +163,7 @@ public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStat
     private HttpURLConnection openConnection(URL url) throws IOException {
         HttpURLConnection connection = createConnection(url);
 
-        int timeoutMs = 60 * 1000;
+        int timeoutMs = TIMEOUT;
         connection.setConnectTimeout(timeoutMs);
         connection.setReadTimeout(timeoutMs);
         connection.setUseCaches(false);
@@ -174,7 +187,7 @@ public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStat
      * @return an HttpEntity populated with data from <code>connection</code>.
      */
     private HttpEntity entityFromConnection(HttpURLConnection connection) {
-        Log.d("UPLOAD", "entityFromConnection() :: BEGIN");
+        Log.d(TAG, "entityFromConnection() :: BEGIN");
         BasicHttpEntity entity = new BasicHttpEntity();
         InputStream inputStream;
         try {
@@ -186,11 +199,11 @@ public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStat
         entity.setContentLength(connection.getContentLength());
         entity.setContentEncoding(connection.getContentEncoding());
         entity.setContentType(connection.getContentType());
-        Log.d("UPLOAD", "entityFromConnection() :: END");
+        Log.d(TAG, "entityFromConnection() :: END");
         return entity;
     }
 
-    public void setProgressUploadListener(ProgressiveEntityListener mProgressUploadListener) {
-        this.mProgressUploadListener = mProgressUploadListener;
+    public void setChannelsEventListener(GetChannelsEventListener mChannelsEventListener) {
+        this.mChannelsEventListener = mChannelsEventListener;
     }
 }

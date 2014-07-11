@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -27,13 +28,13 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.galleryapp.Config;
-import com.galleryapp.DocumentStatusTask;
-import com.galleryapp.GetChannelsTask;
 import com.galleryapp.R;
-import com.galleryapp.SubmitDocumentTask;
-import com.galleryapp.UploadFileTask2;
 import com.galleryapp.activities.GalleryActivity;
 import com.galleryapp.activities.PrefActivity;
+import com.galleryapp.asynctasks.DocumentStatusTask;
+import com.galleryapp.asynctasks.GetChannelsTask;
+import com.galleryapp.asynctasks.SubmitDocumentTask;
+import com.galleryapp.asynctasks.UploadFileTask2;
 import com.galleryapp.data.model.ChannelsObj;
 import com.galleryapp.data.model.ChannelsObj.ChannelObj;
 import com.galleryapp.data.model.FileUploadObj;
@@ -60,6 +61,8 @@ import java.util.List;
 import java.util.UUID;
 
 public class GalleryApp extends Application {
+
+    public final static String TAG = GalleryApp.class.getSimpleName();
 
     private static GalleryApp instance;
 
@@ -106,15 +109,16 @@ public class GalleryApp extends Application {
                 .writeDebugLogs()
                 .build();
         ImageLoader.getInstance().init(config);
-
         preff = PrefActivity.getPrefs(getApplicationContext());
         setUpHost();
 //        initRestAdapter();
-//        initVolley();
     }
 
-    private void initVolley() {
-//        ScanVolley.init(this);
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Log.d(TAG, "width=" + newConfig.screenWidthDp +
+                "height=" + newConfig.screenHeightDp);
     }
 
     private void initRestAdapter() {
@@ -172,16 +176,15 @@ public class GalleryApp extends Application {
                 .insert(GalleryDBContent.GalleryImages.CONTENT_URI, image.toContentValues());
     }
 
-
     public boolean isNetworkConnected() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
         return ni != null;
     }
 
-    public AlertDialog customAlertDialog(final Context activity, String message,
-                                         String posText, final boolean posFinish,
-                                         String negatText, final boolean negFinish, final boolean logOut) {
+    public final AlertDialog customAlertDialog(final Context activity, String message,
+                                               String posText, final boolean posFinish,
+                                               String negatText, final boolean negFinish, final boolean logOut) {
         AlertDialog dialog = new AlertDialog.Builder(activity).create();
         dialog.setIcon(R.drawable.ic_launcher);
         dialog.setTitle(activity.getResources().getString(R.string.app_name));
@@ -196,7 +199,6 @@ public class GalleryApp extends Application {
                         if (activity instanceof GalleryActivity) {
                             if (logOut) setToken(null);
                             ((GalleryActivity) activity).finish();
-//                        android.os.Process.killProcess(Process.myPid());
                         } else {
                             Intent intent = new Intent(activity, GalleryActivity.class);
                             intent.putExtra("logout", logOut);
@@ -217,19 +219,16 @@ public class GalleryApp extends Application {
                 }
             });
         }
-
         return dialog;
     }
 
     public ProgressDialog customProgressDialog(final Context context, String message) {
-
         ProgressDialog progressDialog = new ProgressDialog(context);
         progressDialog.setTitle(context.getResources().getString(R.string.app_name));
         progressDialog.setMessage(message);
         progressDialog.setIndeterminate(true);
         progressDialog.setCancelable(false);
         progressDialog.setCanceledOnTouchOutside(false);
-
         return progressDialog;
     }
 
@@ -244,14 +243,14 @@ public class GalleryApp extends Application {
         captureChannelCode = preff.getString("capturechannelcode", Config.DEFAULT_CAPTURE_CHANNEL_CODE);
         login = preff.getString("username", Config.DEFAULT_USERNAME);
         password = preff.getString("password", Config.DEFAULT_PASSWORD);
-        loginBaseUrl = Config.URL_PREFIX + getHostName() + ":" + getPort();
-        baseUrl = Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.DEFAULT_URL_BODY + getDomain();
-        cmsBaseUrl = Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.DEFAULT_CSM_URL_BODY;
+        loginBaseUrl = Config.URL_PREFIX + hostName + ":" + port;
+        baseUrl = Config.URL_PREFIX + hostName + ":" + port + Config.DEFAULT_URL_BODY + domain;
+        cmsBaseUrl = Config.URL_PREFIX + hostName + ":" + port + Config.DEFAULT_CSM_URL_BODY;
 
-        Log.d("GalleryApp", "setUpHost()::host=" + getHostName());
-        Log.d("GalleryApp", "setUpHost()::port=" + getPort());
-        Log.d("GalleryApp", "setUpHost()::domain=" + getDomain());
-        Log.d("GalleryApp", "setUpHost()::channelCode=" + getCaptureChannelCode());
+        Log.d("GalleryApp", "setUpHost()::host=" + hostName);
+        Log.d("GalleryApp", "setUpHost()::port=" + port);
+        Log.d("GalleryApp", "setUpHost()::domain=" + domain);
+        Log.d("GalleryApp", "setUpHost()::channelCode=" + captureChannelCode);
     }
 
 //    public static RestAdapter getRestAdapter() {
@@ -266,46 +265,13 @@ public class GalleryApp extends Application {
                            ArrayList<byte[]> fileBytes, ArrayList<String> filePaths,
                            ArrayList<String> fileNames, ArrayList<Integer> ids) {
         //        Retrofit block
-       /* RestAdapter restAdapter = GalleryApp.getRestAdapter();
+        /*RestAdapter restAdapter = new RestAdapter.Builder()
+                .setClient(new OkClient())
+                .setEndpoint("")
+                .build();*/
 
-        final Message msg = uploadHandler.obtainMessage();
-        // Create an instance of our FileUpload API interface.
-        final CaptureServiceRestClient.CaptureServiceRest captureServiceRest = restAdapter.create(CaptureServiceRestClient.CaptureServiceRest.class);
-        // Fetch and print a FileUploadObj.
-        assert file != null;
-        captureServiceRest.uploadFile(
-                Config.METHOD_UPLOAD,
-                Config.DEFAULT_DOMAIN,
-                GalleryApp.getInstance().getToken(),
-                file,
-                String.valueOf(file.length()),
-                new Callback<CaptureServiceRestClient.FileUploadObj>() {
-                    @Override
-                    public void success(CaptureServiceRestClient.FileUploadObj fileUploadObj, Response response) {
-                        msg.obj = response.getReason();
-                        Log.d("UPLOAD", "success() :: responseReason = " + response.getReason() +
-                                "\nresponseBody = " + response.getBody().toString() +
-                                "\nurl = " + response.getUrl() +
-                                "\nURI = " + fileUploadObj.Url);
-                        uploadHandler.sendMessageDelayed(msg, 500);
-                    }
-
-                    @Override
-                    public void failure(RetrofitError retrofitError) {
-                        msg.obj = retrofitError.getResponse().getReason();
-                        Log.d("UPLOAD", "failure() :: response : Message = " + retrofitError.getMessage()
-                                + "\nLocalizedMessage = " + retrofitError.getLocalizedMessage()
-                                + "\nReason = " + retrofitError.getResponse().getReason()
-                                + "\nurl=" + retrofitError.getUrl());
-                        uploadHandler.sendMessageDelayed(msg, 500);
-                    }
-                }
-        );*/
-
-//        Volley block
-//        new UploadFileVolley(context, fileBytes).execute();
-        String url = Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.UPLOAD_POST_REQUEST_RULE + getDomain();
-        String query = String.format("%s=%s", "t", getToken());
+        String url = Config.URL_PREFIX + hostName + ":" + port + Config.UPLOAD_POST_REQUEST_RULE + domain;
+        String query = String.format("%s=%s", "t", token);
         url += "?" + query;
         Log.d("UPLOAD", "url = " + url);
         assert filePaths != null;
@@ -366,18 +332,6 @@ public class GalleryApp extends Application {
         DocumentError documentError = new DocumentError();
         documentErrors.add(documentError);
 
-//        ArrayList<Document> mDocuments = new ArrayList<Document>();
-//        Document document = new Document();
-//        document.setIndexSchema("");
-//        document.setOriginalFileName(name);
-//        document.setContentType("image/jpg");
-//        document.setContentLength((int) length);
-//        document.setUri(response.getUrl());
-//        document.setExistingCMSUri(null);
-//        document.setIsEmailManifest(false);
-//        document.setBody(null);
-//        mDocuments.add(document);
-
         ArrayList<Folder> folders = new ArrayList<Folder>();
         Folder folder = new Folder();
         folder.setIndexSchema("");
@@ -398,14 +352,14 @@ public class GalleryApp extends Application {
         captureItemObj.setIndexData("");
         String parameters = new StringBuilder()
                 .append("controller=composite").append("&")
-                .append("baseuri=").append(getHostName()).append(":").append(getPort()).append("&")
+                .append("baseuri=").append(hostName).append(":").append(port).append("&")
                 .append("stampsenabled=false").append("&")
                 .append("hidescancontrols=false").append("&")
                 .append("dataroot=UserStamps").append("&")
-                .append("capturechannelcode=").append(getCaptureChannelCode()).append("&")
+                .append("capturechannelcode=").append(captureChannelCode).append("&")
                 .append("uri=").append("&")
-                .append("t=").append(getToken()).append("&")
-                .append("d=").append(getDomain()).append("&")
+                .append("t=").append(token).append("&")
+                .append("d=").append(domain).append("&")
                 .append("sync=true").append("&")
                 .append("scheme=http")
                 .toString();
@@ -413,12 +367,12 @@ public class GalleryApp extends Application {
         captureItemObj.setChannelType(3);
 
         SubmitDocumentObj submitDocumentObj = new SubmitDocumentObj();
-        submitDocumentObj.setDomain(getDomain());
+        submitDocumentObj.setDomain(domain);
         submitDocumentObj.setCaptureItem(captureItemObj);
-        submitDocumentObj.setToken(getToken());
+        submitDocumentObj.setToken(token);
 
-        String url = Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.SUBMITT_POST_REQUEST_RULE + getDomain();
-        String query = String.format("%s=%s", "t", getToken());
+        String url = Config.URL_PREFIX + hostName + ":" + port + Config.SUBMITT_POST_REQUEST_RULE + domain;
+        String query = String.format("%s=%s", "t", token);
         url += "?" + query;
 
         SubmitDocumentTask submitDocumentTask = new SubmitDocumentTask(context, submitDocumentObj, mIds);
@@ -484,13 +438,13 @@ public class GalleryApp extends Application {
     }
 
     public ArrayList<String> getRunningActivities() {
-        ArrayList<String> runningactivities = new ArrayList<String>();
+        ArrayList<String> runningActivities = new ArrayList<String>();
         ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningTaskInfo> services = activityManager.getRunningTasks(Integer.MAX_VALUE);
         for (ActivityManager.RunningTaskInfo service : services) {
-            runningactivities.add(0, service.topActivity.toString());
+            runningActivities.add(0, service.topActivity.toString());
         }
-        return runningactivities;
+        return runningActivities;
     }
 
     public String getLogin() {

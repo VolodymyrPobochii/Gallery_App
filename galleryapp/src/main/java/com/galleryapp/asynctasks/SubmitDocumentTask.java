@@ -1,4 +1,4 @@
-package com.galleryapp;
+package com.galleryapp.asynctasks;
 
 import android.content.Context;
 import android.os.AsyncTask;
@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.galleryapp.data.model.DocSubmittedObj;
 import com.galleryapp.data.model.SubmitDocumentObj;
+import com.galleryapp.interfaces.ProgressiveEntityListener;
 import com.google.gson.Gson;
 import com.squareup.okhttp.OkHttpClient;
 

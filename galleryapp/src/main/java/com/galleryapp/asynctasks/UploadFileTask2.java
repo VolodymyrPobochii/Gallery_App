@@ -1,4 +1,4 @@
-package com.galleryapp;
+package com.galleryapp.asynctasks;
 
 import android.app.NotificationManager;
 import android.content.Context;
@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.FileUploadObj;
+import com.galleryapp.interfaces.ProgressiveEntityListener;
 import com.google.gson.Gson;
 import com.squareup.okhttp.OkHttpClient;
 
