@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.DocStatusObj;
 import com.galleryapp.interfaces.ProgressiveEntityListener;
 import com.google.gson.Gson;
@@ -34,6 +35,7 @@ public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStat
 
     private final OkHttpClient client;
     private final String mDocId;
+    private final GalleryApp app;
     private Context mContext;
     private String url;
     private ProgressiveEntityListener mProgressUploadListener;
@@ -44,6 +46,7 @@ public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStat
         this.mIds = ids;
         this.mDocId = docId;
         this.client = new OkHttpClient();
+        this.app = GalleryApp.getInstance();
         setProgressUploadListener((ProgressiveEntityListener) context);
     }
 
@@ -77,14 +80,12 @@ public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStat
         mProgressUploadListener.onDocStatus(response, mIds, mDocId);
     }
 
-    /*fake*/
     private DocStatusObj postFile(final byte[] postData, String url) throws IOException {
-
+        URL parsedUrl = new URL(url);
         HashMap<String, String> map = new HashMap<String, String>();
-        map.put("Host", "soldevqa06.eccentex.com:9004");
+        map.put("Host", parsedUrl.getAuthority());
         map.put("ContentType", "application/binary");
         map.put("Method", "GET");
-        URL parsedUrl = new URL(url);
 
         HttpURLConnection connection = openConnection(parsedUrl);
         for (String headerName : map.keySet()) {

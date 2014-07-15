@@ -68,8 +68,8 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
                 .setSummary(getPrefs(this).getString("hostName", Config.DEFAULT_HOST));
         getPreferenceScreen().getPreference(1)
                 .setSummary(getPrefs(this).getString("port", Config.DEFAULT_PORT));
-        getPreferenceScreen().getPreference(2)
-                .setSummary(getPrefs(this).getString("domain", Config.DEFAULT_DOMAIN));
+       /* getPreferenceScreen().getPreference(2)
+                .setSummary(getPrefs(this).getString("domain", Config.DEFAULT_DOMAIN));*/
     }
 
     public static SharedPreferences getPrefs(Context context) {

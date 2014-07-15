@@ -10,7 +10,7 @@ public class Config {
     public static final String DEFAULT_USERNAME = "serge.kazakov@staging";
 
     public static final String DEFAULT_PASSWORD = "1";
-    public static final String DEFAULT_HOST = "soldevqa06.eccentex.com";
+    public static final String DEFAULT_HOST = "http://soldevqa06.eccentex.com";
 
     public static final String USER = "u";
     public static final String PASS = "p";
@@ -30,7 +30,8 @@ public class Config {
     public static final String DEFAULT_UPDATE_FREQ = "30";
     public static final String DEFAULT_SYNC_PERIOD = "3";
 
-    public static final String URL_PREFIX = "http://";
+    public static final String URL_HTTP_PREFIX = "http://";
+    public static final String URL_SSL_PREFIX = "https://";
     public static final String LOGIN_SUFFIX = "/Security.WebService/AuthenticationServiceRest.svc/login";
 
     public static final String MOBILE_CREATE_RESOURCE_RULE = "/createResource";

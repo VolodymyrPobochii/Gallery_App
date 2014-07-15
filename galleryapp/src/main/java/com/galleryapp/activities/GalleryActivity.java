@@ -26,8 +26,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 
-public class GalleryActivity extends BaseActivity
-        implements GalleryFragment.OnFragmentInteractionListener, ProgressiveEntityListener {
+public class GalleryActivity extends BaseActivity {
 
     public static final int REQUEST_SETTINGS = 1000;
     private static final int REQUEST_CAMERA_PHOTO = 1100;
@@ -141,7 +140,7 @@ public class GalleryActivity extends BaseActivity
         }
     }
 
-    @Override
+   /* @Override
     public void onDeleteItemsOperation(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs) {
         if (ids != null && ids.size() > 0) {
             for (String id : ids) {
@@ -221,7 +220,5 @@ public class GalleryActivity extends BaseActivity
         } else {
             mUpdateTimes = 0;
         }
-    }
-
-
+    }*/
 }

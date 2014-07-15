@@ -39,6 +39,7 @@ public final class GetChannelsTask extends AsyncTask<String, Void, ChannelsObj> 
     private static final int TIMEOUT = 60 * 1000;
 
     private final OkHttpClient client;
+    private final GalleryApp app;
     private Context mContext;
     private String url;
     private GetChannelsEventListener mChannelsEventListener;
@@ -47,6 +48,7 @@ public final class GetChannelsTask extends AsyncTask<String, Void, ChannelsObj> 
     public GetChannelsTask(Context context) {
         this.mContext = context;
         this.client = new OkHttpClient();
+        this.app = GalleryApp.getInstance();
         setChannelsEventListener((GetChannelsEventListener) context);
     }
 
@@ -77,12 +79,11 @@ public final class GetChannelsTask extends AsyncTask<String, Void, ChannelsObj> 
 
     /*fake*/
     private ChannelsObj postFile(String url) throws IOException {
-        GalleryApp app = GalleryApp.getInstance();
+        URL parsedUrl = new URL(url);
         HashMap<String, String> map = new HashMap<String, String>();
-        map.put("Host", app.getDomain() + ":" + app.getPort());
+        map.put("Host", parsedUrl.getAuthority());
         map.put("ContentType", "application/binary");
         map.put("Method", "GET");
-        URL parsedUrl = new URL(url);
 
         HttpURLConnection connection = openConnection(parsedUrl);
         for (String headerName : map.keySet()) {

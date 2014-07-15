@@ -32,12 +32,12 @@
         android:summary="@string/summary_port_preference"
         android:title="@string/title_port_preference" />
 
-    <EditTextPreference
+    <!--<EditTextPreference
         android:defaultValue="@string/default_value_domain_preference"
         android:dialogTitle="@string/dialog_title_domain_preference"
         android:key="domain"
         android:summary="@string/summary_domain_preference"
-        android:title="@string/title_domain_preference" />
+        android:title="@string/title_domain_preference" />-->
 
     <EditTextPreference
         android:defaultValue="@string/default_value_username_preference"

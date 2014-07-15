@@ -36,9 +36,11 @@ import java.util.Map;
 
 public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUploadObj> {
 
+    private final String TAG = this.getClass().getSimpleName();
     private static final String HEADER_CONTENT_TYPE = "ContentType";
     private final OkHttpClient client;
     private final String mName;
+    private final GalleryApp app;
     private Context mContext;
     private FileEntity fileEntity;
     private ProgressiveEntityListener mProgressUploadListener;
@@ -53,13 +55,14 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
         this.mId = id;
         this.mName = name;
         this.client = new OkHttpClient();
+        this.app = GalleryApp.getInstance();
         setProgressUploadListener((ProgressiveEntityListener) context);
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        Log.d("UPLOAD", "onPreExecute()");
+        Log.d(TAG, "onPreExecute()");
         mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
         mBuilder = new NotificationCompat.Builder(mContext);
         mBuilder.setTicker("Upload begin")
@@ -83,7 +86,7 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
     @Override
     protected void onProgressUpdate(Integer... progress) {
         super.onProgressUpdate(progress[0]);
-//        Log.d("UPLOAD", "onProgressUpdate() :: progress:" + progress[0]);
+        Log.d(TAG, "onProgressUpdate() :: progress:" + progress[0]);
         // Sets the progress indicator to a max value, the
         // current completion percentage, and "determinate"
         // state
@@ -96,7 +99,7 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
     @Override
     protected void onPostExecute(FileUploadObj response) {
         super.onPostExecute(response);
-        Log.d("UPLOAD", "onPostExecute()");
+        Log.d(TAG, "onPostExecute()");
 
         // When the loop is finished, updates the notification
         mBuilder.setContentText("Upload complete")
@@ -106,29 +109,26 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
         mNotifyManager.notify(mId, mBuilder.build());
         mProgressUploadListener.onFileUploaded(response, String.valueOf(mId), mName, mLength);
         fileEntity = null;
-
     }
 
-    /*fake*/
     private FileUploadObj postFile(final FileEntity fileEntity, String url) throws IOException {
-
+        URL parsedUrl = new URL(url);
         HashMap<String, String> map = new HashMap<String, String>();
-        map.put("Host", GalleryApp.getInstance().getHostName() + ":" + GalleryApp.getInstance().getPort());
+        map.put("Host", parsedUrl.getAuthority());
         map.put("ContentType", "application/binary");
         map.put("Method", "POST");
         map.put("ContentLength", String.valueOf(fileEntity.getContentLength()));
-        Log.d("UPLOAD", "postFile() :: ContentLength:" + String.valueOf(fileEntity.getContentLength()));
-        URL parsedUrl = new URL(url);
+        Log.d(TAG, "postFile() :: ContentLength:" + String.valueOf(fileEntity.getContentLength()));
 
         HttpURLConnection connection = openConnection(parsedUrl);
         for (String headerName : map.keySet()) {
             connection.addRequestProperty(headerName, map.get(headerName));
         }
-        Log.d("UPLOAD", "setConnectionParametersForRequest() :: BEGIN");
+        Log.d(TAG, "setConnectionParametersForRequest() :: BEGIN");
         setConnectionParametersForRequest(connection);
-        Log.d("UPLOAD", "setConnectionParametersForRequest() :: END");
+        Log.d(TAG, "setConnectionParametersForRequest() :: END");
         // Initialize HttpResponse with data from the HttpURLConnection.
-        Log.d("UPLOAD", "ProtocolVersion() :: BEGIN");
+        Log.d(TAG, "ProtocolVersion() :: BEGIN");
         ProtocolVersion protocolVersion = new ProtocolVersion("HTTP", 1, 1);
         int responseCode = connection.getResponseCode();
         if (responseCode == -1) {
@@ -136,11 +136,11 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
             // Signal to the caller that something was wrong with the connection.
             throw new IOException("Could not retrieve response code from HttpUrlConnection.");
         }
-        Log.d("UPLOAD", "ProtocolVersion() :: END");
-        Log.d("UPLOAD", "BasicStatusLine() :: BEGIN");
+        Log.d(TAG, "ProtocolVersion() :: END");
+        Log.d(TAG, "BasicStatusLine() :: BEGIN");
         StatusLine responseStatus = new BasicStatusLine(protocolVersion, connection.getResponseCode(), connection.getResponseMessage());
-        Log.d("UPLOAD", "BasicStatusLine() :: END");
-        Log.d("UPLOAD", "BasicHttpResponse() :: BEGIN");
+        Log.d(TAG, "BasicStatusLine() :: END");
+        Log.d(TAG, "BasicHttpResponse() :: BEGIN");
         BasicHttpResponse response = new BasicHttpResponse(responseStatus);
         response.setEntity(entityFromConnection(connection));
         for (Map.Entry<String, List<String>> header : connection.getHeaderFields().entrySet()) {
@@ -149,11 +149,10 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
                 response.addHeader(h);
             }
         }
-        Log.d("UPLOAD", "BasicHttpResponse() :: END");
+        Log.d(TAG, "BasicHttpResponse() :: END");
         String uploadedFile = getContent(response);
         Gson gson = new Gson();
-        FileUploadObj uploadObj = gson.fromJson(uploadedFile, FileUploadObj.class);
-        return uploadObj;
+        return gson.fromJson(uploadedFile, FileUploadObj.class);
     }
 
     public String getContent(HttpResponse response) {

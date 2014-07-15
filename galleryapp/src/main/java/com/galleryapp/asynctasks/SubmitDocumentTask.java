@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.DocSubmittedObj;
 import com.galleryapp.data.model.SubmitDocumentObj;
 import com.galleryapp.interfaces.ProgressiveEntityListener;
@@ -38,6 +39,7 @@ public final class SubmitDocumentTask extends AsyncTask<String, Integer, DocSubm
     private static final String HEADER_CONTENT_TYPE = "ContentType";
     private final OkHttpClient client;
     private final ArrayList<String> mIds;
+    private final GalleryApp app;
     private SubmitDocumentObj mPostData;
     private String url;
     private ProgressiveEntityListener mProgressUploadListener;
@@ -47,6 +49,7 @@ public final class SubmitDocumentTask extends AsyncTask<String, Integer, DocSubm
         this.mPostData = postData;
         this.mIds = ids;
         this.client = new OkHttpClient();
+        this.app = GalleryApp.getInstance();
         setProgressUploadListener((ProgressiveEntityListener) context);
     }
 
@@ -87,14 +90,13 @@ public final class SubmitDocumentTask extends AsyncTask<String, Integer, DocSubm
 
     /*fake*/
     private DocSubmittedObj postFile(final byte[] postData, String url) throws IOException {
-
+        URL parsedUrl = new URL(url);
         HashMap<String, String> map = new HashMap<String, String>();
-        map.put("Host", "soldevqa06.eccentex.com:9004");
+        map.put("Host", parsedUrl.getAuthority());
         map.put("ContentType", "application/binary");
         map.put("Method", "POST");
         map.put("ContentLength", String.valueOf(postData.length));
         Log.d("UPLOAD", "postFile() :: ContentLength:" + String.valueOf(postData.length));
-        URL parsedUrl = new URL(url);
 
         HttpURLConnection connection = openConnection(parsedUrl);
         for (String headerName : map.keySet()) {

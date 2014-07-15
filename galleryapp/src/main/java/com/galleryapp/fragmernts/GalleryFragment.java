@@ -73,7 +73,6 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     private ImageLoader mImageLoader;
     private List<Integer> mCheckedIds = new ArrayList<Integer>();
     private GridView mGridView;
-    private Handler mUploadHandler;
     private SimpleCursorAdapter mChannelsAdapter;
     private LoaderManager.LoaderCallbacks<Cursor> mChannelsLoader = new LoaderManager.LoaderCallbacks<Cursor>() {
         @Override
@@ -129,14 +128,6 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
-        mUploadHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                if (msg.obj != null) {
-                    Log.d("UPLOAD", "handleMessage() :: msg.obj = " + msg.obj);
-                }
-            }
-        };
         mImageLoader = ImageLoader.getInstance();
         mOptions = new DisplayImageOptions.Builder()
                 .cacheInMemory(true)
@@ -254,11 +245,13 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                 });
                 mChannels.setAdapter(mChannelsAdapter);
                 Cursor data = mChannelsAdapter.getCursor();
-                while (data.moveToNext()) {
-                    if (data.getString(data.getColumnIndex(GalleryDBContent.Channels.Columns.DOMAIN.getName())).intern()
-                            .equals(preff.getString("domain", getString(R.string.default_value_domain_preference)))) {
-                        if (mChannels != null) {
-                            mChannels.setSelection(data.getPosition());
+                if (data != null) {
+                    while (data.moveToNext()) {
+                        if (data.getString(data.getColumnIndex(GalleryDBContent.Channels.Columns.DOMAIN.getName())).intern()
+                                .equals(preff.getString("domain", getString(R.string.default_value_domain_preference)))) {
+                            if (mChannels != null) {
+                                mChannels.setSelection(data.getPosition());
+                            }
                         }
                     }
                 }
@@ -310,7 +303,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
         if (GalleryApp.getInstance().isNetworkConnected()) {
             for (Integer fileId : fileIds) {
                 String docId = fileDocIds.get(fileIds.indexOf(fileId));
-                GalleryApp.getInstance().getDocStatus(getActivity(), String.valueOf(fileId), docId);
+                GalleryApp.getInstance().getDocStatus(getActivity().getApplicationContext(), String.valueOf(fileId), docId);
             }
         } else {
             Toast.makeText(getActivity(), "No Connection", Toast.LENGTH_SHORT).show();
@@ -349,8 +342,8 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                 }
 //                files.add(new TypedFile("application/binary", uploadFile));
             }
-            mListener.onStartUploadImages(filePaths.size());
-            GalleryApp.getInstance().uploadFile(getActivity(), mUploadHandler, fileBytes, filePaths, fileNames, fileIds);
+//            mListener.onStartUploadImages(filePaths.size());
+            GalleryApp.getInstance().uploadFile(getActivity(), fileBytes, filePaths, fileNames, fileIds);
         }
     }
 
@@ -384,7 +377,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            mListener = (OnFragmentInteractionListener) activity;
+            mListener = (OnFragmentInteractionListener) activity.getApplication();
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
@@ -394,8 +387,8 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
 
     @Override
     public void onDetach() {
-        super.onDetach();
         mListener = null;
+        super.onDetach();
     }
 
     @Override

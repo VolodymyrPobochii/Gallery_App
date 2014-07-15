@@ -264,6 +264,12 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
 
     @Override
     public void finish() {
+        if (loginProgress != null) {
+            if (loginProgress.isShowing()) {
+                loginProgress.dismiss();
+            }
+            loginProgress = null;
+        }
         if (saveLogin.isChecked()) {
             mPreff.edit()
                     .putBoolean("saveLogin", true)

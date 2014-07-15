@@ -13,12 +13,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
+import android.content.pm.ComponentInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.util.DisplayMetrics;
@@ -37,6 +39,8 @@ import com.galleryapp.asynctasks.SubmitDocumentTask;
 import com.galleryapp.asynctasks.UploadFileTask2;
 import com.galleryapp.data.model.ChannelsObj;
 import com.galleryapp.data.model.ChannelsObj.ChannelObj;
+import com.galleryapp.data.model.DocStatusObj;
+import com.galleryapp.data.model.DocSubmittedObj;
 import com.galleryapp.data.model.FileUploadObj;
 import com.galleryapp.data.model.ImageObj;
 import com.galleryapp.data.model.SubmitDocumentObj;
@@ -47,6 +51,8 @@ import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj.Folde
 import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj.Folder.DocumentError;
 import com.galleryapp.data.provider.GalleryDBContent;
 import com.galleryapp.data.provider.GalleryDBProvider;
+import com.galleryapp.fragmernts.GalleryFragment;
+import com.galleryapp.interfaces.ProgressiveEntityListener;
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
 import com.nostra13.universalimageloader.cache.memory.impl.LruMemoryCache;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -60,9 +66,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class GalleryApp extends Application {
+import retrofit.RestAdapter;
+import retrofit.client.OkClient;
 
-    public final static String TAG = GalleryApp.class.getSimpleName();
+public class GalleryApp extends Application implements ProgressiveEntityListener, GalleryFragment.OnFragmentInteractionListener {
+
+    public static final String TAG = GalleryApp.class.getSimpleName();
+    private static final long TIMER_TICK = 100l;
 
     private static GalleryApp instance;
 
@@ -80,6 +90,9 @@ public class GalleryApp extends Application {
     private String appVersion;
     private ArrayList<Document> mDocuments;
     private ArrayList<String> mIds;
+    private int mUpdateTimes;
+    private int mUpdateFreq;
+    private int mUploadCount;
 //    private static RestAdapter mRestAdapter;
 
     public GalleryApp() {
@@ -123,10 +136,10 @@ public class GalleryApp extends Application {
 
     private void initRestAdapter() {
         // Create a very simple REST adapter which points the FileUpload API endpoint.
-     /*   mRestAdapter = new RestAdapter.Builder()
+        RestAdapter mRestAdapter = new RestAdapter.Builder()
                 .setClient(new OkClient())
-                .setEndpoint(CaptureServiceRestClient.API_URL)
-                .build();*/
+                .setEndpoint("http://")
+                .build();
     }
 
     @Override
@@ -243,9 +256,9 @@ public class GalleryApp extends Application {
         captureChannelCode = preff.getString("capturechannelcode", Config.DEFAULT_CAPTURE_CHANNEL_CODE);
         login = preff.getString("username", Config.DEFAULT_USERNAME);
         password = preff.getString("password", Config.DEFAULT_PASSWORD);
-        loginBaseUrl = Config.URL_PREFIX + hostName + ":" + port;
-        baseUrl = Config.URL_PREFIX + hostName + ":" + port + Config.DEFAULT_URL_BODY + domain;
-        cmsBaseUrl = Config.URL_PREFIX + hostName + ":" + port + Config.DEFAULT_CSM_URL_BODY;
+        loginBaseUrl = hostName + ":" + port;
+        baseUrl = hostName + ":" + port + Config.DEFAULT_URL_BODY + domain;
+        cmsBaseUrl = hostName + ":" + port + Config.DEFAULT_CSM_URL_BODY;
 
         Log.d("GalleryApp", "setUpHost()::host=" + hostName);
         Log.d("GalleryApp", "setUpHost()::port=" + port);
@@ -253,24 +266,19 @@ public class GalleryApp extends Application {
         Log.d("GalleryApp", "setUpHost()::channelCode=" + captureChannelCode);
     }
 
-//    public static RestAdapter getRestAdapter() {
-//        return mRestAdapter;
-//    }
-
     public static GalleryApp getInstance() {
         return instance;
     }
 
-    public void uploadFile(Context context, final Handler uploadHandler,
-                           ArrayList<byte[]> fileBytes, ArrayList<String> filePaths,
+    public void uploadFile(Context context, ArrayList<byte[]> fileBytes, ArrayList<String> filePaths,
                            ArrayList<String> fileNames, ArrayList<Integer> ids) {
         //        Retrofit block
         /*RestAdapter restAdapter = new RestAdapter.Builder()
                 .setClient(new OkClient())
                 .setEndpoint("")
                 .build();*/
-
-        String url = Config.URL_PREFIX + hostName + ":" + port + Config.UPLOAD_POST_REQUEST_RULE + domain;
+        mUploadCount = filePaths.size();
+        String url = hostName + ":" + port + Config.UPLOAD_POST_REQUEST_RULE + domain;
         String query = String.format("%s=%s", "t", token);
         url += "?" + query;
         Log.d("UPLOAD", "url = " + url);
@@ -281,7 +289,7 @@ public class GalleryApp extends Application {
                 FileEntity fileEntity = new FileEntity(uploadFile, "application/binary");
                 int id = ids.get(filePaths.indexOf(filePath));
                 String name = fileNames.get(filePaths.indexOf(filePath));
-                UploadFileTask2 uploadFileTask = new UploadFileTask2(context, fileEntity, id, name);
+                UploadFileTask2 uploadFileTask = new UploadFileTask2(getApplicationContext(), fileEntity, id, name);
                 uploadFileTask.execute(url);
             }
             mDocuments = new ArrayList<Document>();
@@ -371,7 +379,7 @@ public class GalleryApp extends Application {
         submitDocumentObj.setCaptureItem(captureItemObj);
         submitDocumentObj.setToken(token);
 
-        String url = Config.URL_PREFIX + hostName + ":" + port + Config.SUBMITT_POST_REQUEST_RULE + domain;
+        String url = hostName + ":" + port + Config.SUBMITT_POST_REQUEST_RULE + domain;
         String query = String.format("%s=%s", "t", token);
         url += "?" + query;
 
@@ -380,7 +388,7 @@ public class GalleryApp extends Application {
     }
 
     public void getDocStatus(Context context, ArrayList<String> ids, String docId) {
-        String url = Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.STATUS_GET_REQUEST_RULE + getDomain();
+        String url = hostName + ":" + port + Config.STATUS_GET_REQUEST_RULE + domain;
         String query = String.format("%s=%s&%s=%s", "t", getToken(), "id", docId);
         url += "?" + query;
         DocumentStatusTask statusTask = new DocumentStatusTask(context, ids, docId);
@@ -394,7 +402,7 @@ public class GalleryApp extends Application {
     }
 
     public void getChannels(Context context) {
-        String url = Config.URL_PREFIX + getHostName() + ":" + getPort() + Config.GET_CHANNELS_RULE;
+        String url = hostName + ":" + port + Config.GET_CHANNELS_RULE;
         String query = String.format("%s=%s", "t", getToken());
         url += "?" + query;
         GetChannelsTask statusTask = new GetChannelsTask(context);
@@ -547,5 +555,93 @@ public class GalleryApp extends Application {
 
     public void setAppVersion(String appVersion) {
         this.appVersion = appVersion;
+    }
+
+    @Override
+    public void onFileUploaded(FileUploadObj response, String id, String name, long length) {
+        if (response.getUrl() != null) {
+            Log.d("UPLOAD", "onFileUploaded():: response = " + response.getUrl());
+            mUploadCount--;
+            if (updateImageUri(response.getUrl(), id) != 0) {
+                Log.d("UPLOAD", "updateImageUri():: imageId = " + id + "\nImageName = " + name + "\n" + "FileURI = " + response.getUrl() +
+                        "\nmUploadCount = " + mUploadCount);
+                prepareSubmitDocs(this, response, id, name, length, mUploadCount);
+            }
+        }
+    }
+
+    @Override
+    public void onDocSubmitted(DocSubmittedObj response, ArrayList<String> ids) {
+        if (response.getId() != null) {
+            Log.d("UPLOAD", "onDocSubmitted():: response = " + response.getId());
+            int updatedCount = updateImageId(response.getId(), ids);
+            Log.d("UPLOAD", "onDocSubmitted():: updatedCount = " + updatedCount);
+            if (updatedCount != 0) {
+                mUpdateTimes = Integer.parseInt(preff.getString(getString(R.string.updateTimes), "2"));
+                mUpdateFreq = Integer.parseInt(preff.getString(getString(R.string.updateFreq), "10")) * 1000;
+                getDocStatus(this, ids, response.getId());
+            }
+        }
+    }
+
+    @Override
+    public void onDocStatus(DocStatusObj response, final ArrayList<String> ids, final String docId) {
+        if (response.getStatus() != null) {
+            Log.d("UPLOAD", "onDocStatus():: response = " + response.getStatus() + " / errorMessage = " + response.getErrorMessage());
+            int updatedCount = updateImageStatus(response.getStatus(), ids, docId);
+            Log.d("UPLOAD", "onDocStatus():: updatedCount = " + updatedCount);
+            if (!response.getStatus().equals("Completed")) {
+                if (mUpdateTimes != 0) {
+                    new CountDownTimer(mUpdateFreq, TIMER_TICK) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            getDocStatus(getApplicationContext(), ids, docId);
+                        }
+                    }.start();
+                    mUpdateTimes--;
+                } else {
+                    AlertDialog dialog = new AlertDialog.Builder(this)
+                            .setTitle("File status info")
+                            .setMessage("Please check document status manually letter")
+                            .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            })
+                            .create();
+                    if (getRunningActivities().contains("ComponentInfo{com.galleryapp.activities/com.galleryapp.activities.GalleryActivity}")) {
+                        dialog.show();
+                    }
+                }
+            } else {
+                mUpdateTimes = 0;
+            }
+        }
+    }
+
+    @Override
+    public void onDeleteItemsOperation(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs) {
+        if (ids != null && ids.size() > 0) {
+            for (String id : ids) {
+                Log.d("CHECKED_IDS", "ID[delete] = " + id);
+            }
+            for (File checkedImage : checkedImages) {
+                Log.d("CHECKED_IDS", "checkedImage[delete] = " + checkedImage);
+            }
+            for (File checkedThumb : checkedThumbs) {
+                Log.d("CHECKED_IDS", "checkedThumb[delete] = " + checkedThumb);
+            }
+            deleteImage(ids, checkedImages, checkedThumbs);
+        }
+    }
+
+    @Override
+    public void onStartUploadImages(int uploadCount) {
+//        this.mUploadCount = uploadCount;
     }
 }

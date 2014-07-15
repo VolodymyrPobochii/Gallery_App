@@ -1,0 +1,8 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">4dp</dimen>
+    <dimen name="activity_vertical_margin">4dp</dimen>
+    <dimen name="grid_item">156dp</dimen>
+    <dimen name="buttons_layout_width">240dp</dimen>
+    <dimen name="login_screen_form_width">300dp</dimen>
+</resources>

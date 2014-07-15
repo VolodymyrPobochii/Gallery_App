@@ -36,7 +36,7 @@
     <string name="summary_list_preference">An example that uses a list dialog</string>
     <string name="dialog_title_list_preference">Choose one</string>
     <string name="default_value_list_preference">beta</string>
-    <string name="default_value_host_preference">soldevqa06.eccentex.com</string>
+    <string name="default_value_host_preference">http://soldevqa06.eccentex.com</string>
     <string name="default_value_port_preference">8086</string>
     <string name="default_value_domain_preference">UA103_Production.tenant62</string>
     <string name="default_value_username_preference">serge.kazakov@staging</string>
