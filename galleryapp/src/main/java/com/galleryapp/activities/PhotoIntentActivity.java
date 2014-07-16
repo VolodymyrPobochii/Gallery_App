@@ -289,8 +289,8 @@ public class PhotoIntentActivity extends Activity {
             image.setFileId(null);
             image.setStatus("Not synced");
 
-            GalleryApp app = (GalleryApp) getApplication();
-            app.saveImage(image);
+            /*GalleryApp app = (GalleryApp) getApplication();
+            app.saveImage(image);*/
             Log.d("Image", "Path:" + mCurrentPhotoPath);
 
             Intent data = new Intent();
@@ -301,6 +301,7 @@ public class PhotoIntentActivity extends Activity {
             data.putExtra("createDate", currentCreateDate);
             data.putExtra("description", comments.getText() != null ? comments.getText().toString() : "-");
             data.putExtra("title", title.getText() != null ? title.getText().toString() : "-");
+            data.putExtra("image", image);
             setResult(RESULT_OK, data);
             mCurrentPhotoPath = null;
             finish();

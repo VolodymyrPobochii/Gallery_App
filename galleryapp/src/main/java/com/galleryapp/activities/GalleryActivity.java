@@ -4,12 +4,15 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
@@ -28,6 +31,7 @@ import java.util.Date;
 
 public class GalleryActivity extends BaseActivity {
 
+    private static final String TAG = GalleryActivity.class.getSimpleName();
     public static final int REQUEST_SETTINGS = 1000;
     private static final int REQUEST_CAMERA_PHOTO = 1100;
     private static final int REQUEST_LOAD_IMAGE = 1200;
@@ -52,32 +56,61 @@ public class GalleryActivity extends BaseActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_LOAD_IMAGE) {
-            if (resultCode == RESULT_OK) {
-                Log.d("Image", "GalleryURI:" + data.getData().toString());
-                Log.d("Image", "GalleryEncodedPath:" + data.getData().getEncodedPath());
-                Log.d("Image", "GalleryPath:" + data.getData().getPath());
-                queryImageData(data);
-            }
-        }
-        if (requestCode == REQUEST_SETTINGS) {
-            if (resultCode == RESULT_OK) {
-                getApp().setUpHost();
-            }
+        GalleryApp app = getApp();
+        switch (requestCode) {
+            case REQUEST_CAMERA_PHOTO:
+                if (resultCode == RESULT_OK) {
+                    if (data != null && data.hasExtra("image")) {
+                        ImageObj image = data.getParcelableExtra("image");
+                        Log.d(TAG, "ImagePath_CAMERA:" + image.getImagePath());
+                        Log.d(TAG, "ThumbPath_CAMERA:" + image.getThumbPath());
+                        app.saveImage(image);
+                    }
+                }
+                break;
+            case REQUEST_LOAD_IMAGE:
+                if (resultCode == RESULT_OK) {
+                    if (data != null) {
+                        if (data.getData().getAuthority().intern().equalsIgnoreCase("media")) {
+                            ImageObj image = queryImageData(data);
+                            if (image != null) {
+                                Log.d(TAG, "ImagePath_GALL:" + image.getImagePath());
+                                Log.d(TAG, "ThumbPath_GALL:" + image.getThumbPath());
+                                app.saveImage(image);
+                            }else {
+                                app.customAlertDialog(this, "Error retrieving image data. Please choose another one.",
+                                        "Close", false, null, false, false).show();
+                            }
+                        }else {
+                            app.customAlertDialog(this, "Image is not on the device storage. Please choose another one.",
+                                    "Close", false, null, false, false).show();
+                        }
+                    }
+                }
+                break;
+            case REQUEST_SETTINGS:
+                if (resultCode == RESULT_OK) {
+                    app.setUpHost();
+                }
+                break;
+            default:
         }
     }
 
-    private void queryImageData(Intent data) {
-        Cursor c = getContentResolver().query(data.getData(), new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA}, null, null, null);
+    private ImageObj queryImageData(Intent data) {
+        Log.d(TAG, "queryImageData()_GALL::URI: " + data.getData().toString());
+        Log.d(TAG, "queryImageData()_GALL::Authority: " + data.getData().getAuthority());
+        Cursor c = getContentResolver().query(data.getData(), null, null, null, null);
+//                new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA}, null, null, null);
         assert c != null;
+        Log.d(TAG, "queryImageData()_GALL::CursorCount: " + c.getCount());
+        ImageObj imageObj = null;
         if (c.getCount() > 0) {
             c.moveToNext();
             String imageId = c.getString(c.getColumnIndex(MediaStore.Images.Media._ID));
             String thumbData = queryImageThumbData(imageId);
-            Log.d("Image", "GalleryFilePath:" + c.getString(c.getColumnIndex(MediaStore.Images.Media.DATA)));
-            Log.d("Image", "GalleryFileId:" + imageId);
 
-            ImageObj imageObj = new ImageObj();
+            imageObj = new ImageObj();
             imageObj.setImagePath(c.getString(c.getColumnIndex(MediaStore.Images.Media.DATA)));
             imageObj.setThumbPath(thumbData);
             imageObj.setCreateDate(new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").format(new Date()));
@@ -85,13 +118,15 @@ public class GalleryActivity extends BaseActivity {
             imageObj.setImageNotes("Image from gallery");
             imageObj.setImageName("Image.jpg");
 
-            GalleryApp app = (GalleryApp) getApplication();
-            app.saveImage(imageObj);
             c.close();
         }
+        return imageObj;
     }
 
     private String queryImageThumbData(String imageId) {
+        if (imageId == null) {
+            return "";
+        }
         Cursor c = getContentResolver()
                 .query(
                         MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI,
@@ -133,7 +168,12 @@ public class GalleryActivity extends BaseActivity {
                 return true;
             case R.id.action_add_gallery_item:
                 Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(i, REQUEST_LOAD_IMAGE);
+                // Verify the intent will resolve to at least one activity
+                if (i.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(i, REQUEST_LOAD_IMAGE);
+                }else {
+                    Toast.makeText(this, "There is no appropriate application to perform this action", Toast.LENGTH_SHORT).show();
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

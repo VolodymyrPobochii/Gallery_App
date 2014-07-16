@@ -1,10 +1,12 @@
 package com.galleryapp.data.model;
 
 import android.content.ContentValues;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.galleryapp.data.provider.GalleryDBContent;
 
-public class ImageObj {
+public class ImageObj implements Parcelable {
     private Integer id;
     private String imageNmae;
     private String imagePath;
@@ -134,4 +136,50 @@ public class ImageObj {
 
         return cv;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(this.id);
+        dest.writeString(this.imageNmae);
+        dest.writeString(this.imagePath);
+        dest.writeString(this.thumbPath);
+        dest.writeString(this.createDate);
+        dest.writeString(this.imageTitle);
+        dest.writeString(this.imageNotes);
+        dest.writeValue(this.isSynced);
+        dest.writeValue(this.needUpload);
+        dest.writeString(this.fileUri);
+        dest.writeString(this.fileId);
+        dest.writeString(this.status);
+    }
+
+    private ImageObj(Parcel in) {
+        this.id = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.imageNmae = in.readString();
+        this.imagePath = in.readString();
+        this.thumbPath = in.readString();
+        this.createDate = in.readString();
+        this.imageTitle = in.readString();
+        this.imageNotes = in.readString();
+        this.isSynced = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.needUpload = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.fileUri = in.readString();
+        this.fileId = in.readString();
+        this.status = in.readString();
+    }
+
+    public static final Parcelable.Creator<ImageObj> CREATOR = new Parcelable.Creator<ImageObj>() {
+        public ImageObj createFromParcel(Parcel source) {
+            return new ImageObj(source);
+        }
+
+        public ImageObj[] newArray(int size) {
+            return new ImageObj[size];
+        }
+    };
 }
