@@ -272,26 +272,27 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
         return instance;
     }
 
-    public void uploadFile(Context context, ArrayList<byte[]> fileBytes, ArrayList<String> filePaths,
-                           ArrayList<String> fileNames, ArrayList<Integer> ids) {
+    public void uploadFile(Context context, List<byte[]> fileBytes, List<String> filePaths, List<String> thumbPaths,
+                           List<String> fileNames, List<Integer> ids) {
         //        Retrofit block
         /*RestAdapter restAdapter = new RestAdapter.Builder()
                 .setClient(new OkClient())
                 .setEndpoint("")
                 .build();*/
-        mUploadCount = filePaths.size();
         String url = hostName + ":" + port + Config.UPLOAD_POST_REQUEST_RULE + domain;
         String query = String.format("%s=%s", "t", token);
         url += "?" + query;
         Log.d("UPLOAD", "url = " + url);
         assert filePaths != null;
+        mUploadCount = filePaths.size();
         if (isNetworkConnected()) {
             for (String filePath : filePaths) {
                 File uploadFile = new File(filePath);
                 FileEntity fileEntity = new FileEntity(uploadFile, "application/binary");
                 int id = ids.get(filePaths.indexOf(filePath));
+                String thumbPath = thumbPaths.get(filePaths.indexOf(filePath));
                 String name = fileNames.get(filePaths.indexOf(filePath));
-                UploadFileTask2 uploadFileTask = new UploadFileTask2(getApplicationContext(), fileEntity, id, name);
+                UploadFileTask2 uploadFileTask = new UploadFileTask2(getApplicationContext(), fileEntity, thumbPath, id, name);
                 uploadFileTask.execute(url);
             }
             mDocuments = new ArrayList<Document>();
@@ -569,7 +570,7 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
 
     @Override
     public void onFileUploaded(FileUploadObj response, String id, String name, long length) {
-        if (response.getUrl() != null) {
+        if (response != null && response.getUrl() != null) {
             Log.d("UPLOAD", "onFileUploaded():: response = " + response.getUrl());
             mUploadCount--;
             if (updateImageUri(response.getUrl(), id) != 0) {

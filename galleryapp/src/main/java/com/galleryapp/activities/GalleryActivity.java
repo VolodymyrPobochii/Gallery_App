@@ -90,6 +90,7 @@ public class GalleryActivity extends BaseActivity {
                 break;
             case REQUEST_SETTINGS:
                 if (resultCode == RESULT_OK) {
+                    Log.d(TAG, "onActivityResult():REQUEST_SETTINGS");
                     app.setUpHost();
                 }
                 break;

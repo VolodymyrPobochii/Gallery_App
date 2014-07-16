@@ -8,6 +8,7 @@ import android.content.Loader;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -311,9 +312,10 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     private void sendSelectedItems() {
-        ArrayList<String> filePaths = new ArrayList<String>();
-        ArrayList<String> fileNames = new ArrayList<String>();
-        ArrayList<Integer> fileIds = new ArrayList<Integer>();
+        List<String> filePaths = new ArrayList<String>();
+        List<String> thumbPaths = new ArrayList<String>();
+        List<String> fileNames = new ArrayList<String>();
+        List<Integer> fileIds = new ArrayList<Integer>();
 
         Cursor cursor = ((ImageAdapter) mGridView.getAdapter()).getCursor();
         assert cursor != null;
@@ -323,6 +325,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
                 cursor.moveToPosition(id);
                 fileIds.add(cursor.getInt(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.ID.getName())));
                 filePaths.add(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_PATH.getName())));
+                thumbPaths.add(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.THUMB_PATH.getName())));
                 fileNames.add(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_NAME.getName())));
                 Log.d("UPLOAD", "filePath = " + filePaths + "\nfileName = " + fileNames);
             }
@@ -343,7 +346,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
 //                files.add(new TypedFile("application/binary", uploadFile));
             }
 //            mListener.onStartUploadImages(filePaths.size());
-            GalleryApp.getInstance().uploadFile(getActivity(), fileBytes, filePaths, fileNames, fileIds);
+            GalleryApp.getInstance().uploadFile(getActivity(), fileBytes, filePaths, thumbPaths, fileNames, fileIds);
         }
     }
 

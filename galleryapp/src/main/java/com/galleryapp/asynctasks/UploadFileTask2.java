@@ -1,12 +1,19 @@
 package com.galleryapp.asynctasks;
 
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.location.Location;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
+import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.FileUploadObj;
 import com.galleryapp.interfaces.ProgressiveEntityListener;
@@ -26,6 +33,7 @@ import org.apache.http.message.BasicStatusLine;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -34,6 +42,11 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUploadObj> {
 
@@ -42,6 +55,7 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
     private final OkHttpClient client;
     private final String mName;
     private final GalleryApp app;
+    private final String thumbPath;
     private Context mContext;
     private FileEntity fileEntity;
     private ProgressiveEntityListener mProgressUploadListener;
@@ -50,9 +64,10 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
     private int mId;
     private long mLength;
 
-    public UploadFileTask2(Context context, FileEntity fileEntity, int id, String name) {
+    public UploadFileTask2(Context context, FileEntity fileEntity, String thumbPath, int id, String name) {
         this.mContext = context;
         this.fileEntity = fileEntity;
+        this.thumbPath = thumbPath;
         this.mId = id;
         this.mName = name;
         this.client = new OkHttpClient();
@@ -64,12 +79,26 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
     protected void onPreExecute() {
         super.onPreExecute();
         Log.d(TAG, "onPreExecute()");
-//        mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        /*ExecutorService service = Executors.newFixedThreadPool(1);
+        Callable<Bitmap> bitmapCallable = new Callable<Bitmap>() {
+            @Override
+            public Bitmap call() throws Exception {
+                return BitmapFactory.decodeFile(thumbPath);
+            }
+        };
+        Future<Bitmap> future = service.submit(bitmapCallable);*/
+       /* while (!future.isDone()){
+            Log.d(TAG, "FUTURE waiting for decode bitmap....");
+        }*/
+        // Specify the 'big view' content to display the long
+        // event description that may not fit the normal content text.
+        /*NotificationCompat.BigTextStyle bigStyle = new NotificationCompat.BigTextStyle();
+        bigStyle.bigText("Image upload complete");*/
         // Get an instance of the NotificationManager service
         mNotifyManager = NotificationManagerCompat.from(mContext);
         mBuilder = new NotificationCompat.Builder(mContext);
         mBuilder.setTicker("Upload begin")
-                .setContentTitle("Uploading " + mName)
+                .setContentTitle(mName)
                 .setContentText("Upload in progress")
                 .setSmallIcon(android.R.drawable.stat_sys_upload);
         mNotifyManager.notify(mId, mBuilder.build());
@@ -78,6 +107,8 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
     @Override
     protected FileUploadObj doInBackground(String... params) {
         FileUploadObj response = null;
+//        mBuilder.setLargeIcon(BitmapFactory.decodeFile(thumbPath));
+//        mNotifyManager.notify(mId, mBuilder.build());
         try {
             response = postFile(fileEntity, params[0]);
         } catch (IOException e) {

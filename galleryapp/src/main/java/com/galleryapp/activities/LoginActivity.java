@@ -90,7 +90,7 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
         }
         if (requestCode == GalleryActivity.REQUEST_SETTINGS) {
             Log.d("LoginActivity", "onActResult()::requestCode == GalleryActivity.REQUEST_SETTINGS");
-            Log.d("LoginActivity", "onActResult()::resultCode == " + resultCode);
+            Log.d("LoginActivity", "onActResult()::resultCode == " + String.valueOf(resultCode));
             if (resultCode == RESULT_OK) {
                 Log.d("LoginActivity", "onActResult()::resultCode == RESULT_OK");
                 mScanApp.setUpHost();
@@ -215,7 +215,7 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        Toast.makeText(this, TAG + "onConfigurationChanged()", Toast.LENGTH_SHORT).show();
+//        Toast.makeText(this, TAG + "onConfigurationChanged()", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -280,15 +280,15 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
         }
         if (saveLogin.isChecked()) {
             mPreff.edit()
-                    .putBoolean("saveLogin", true)
-                    .putString("username", login.getText().toString())
-                    .putString("password", pass.getText().toString())
+                    .putBoolean(getString(R.string.save_login), true)
+                    .putString(getString(R.string.login), login.getText().toString())
+                    .putString(getString(R.string.password), pass.getText().toString())
                     .apply();
         } else {
             mPreff.edit()
-                    .putBoolean("saveLogin", false)
-//                    .putString("username", "")
-//                    .putString("password", "")
+                    .putBoolean(getString(R.string.save_login), false)
+//                    .putString(getString(R.string.login), "")
+//                    .putString(getString(R.string.password), "")
                     .apply();
         }
         super.finish();
