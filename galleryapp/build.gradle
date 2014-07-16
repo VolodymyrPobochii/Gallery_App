@@ -27,10 +27,10 @@ dependencies {
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.1'
     // You must install or update the Support Repository through the SDK manager to use this dependency.
     // The Support Repository (separate from the corresponding library) can be found in the Extras category.
-    compile 'com.android.support:support-v4:19.+'
+//    compile 'com.android.support:support-v4:19.+'
     // You must install or update the Support Repository through the SDK manager to use this dependency.
     // The Support Repository (separate from the corresponding library) can be found in the Extras category.
-//    compile 'com.android.support:appcompat-v7:19.+'
+    //    compile 'com.android.support:appcompat-v7:19.+'
     // You must install or update the Google Repository through the SDK manager to use this dependency.
     // The Google Repository (separate from the corresponding library) can be found in the Extras category.
     // compile 'com.google.android.gms:play-services:4.2.42'
@@ -44,6 +44,7 @@ dependencies {
     compile 'com.squareup.okhttp:okhttp:1.5.4'
     compile 'com.google.guava:guava:17.0'
     compile 'com.google.code.gson:gson:2.2.4'
-//    compile project(':retrofit')
+    //    compile project(':retrofit')
     compile 'com.squareup.retrofit:retrofit:1.+'
+    compile files('libs/android-support-v4.jar')
 }
