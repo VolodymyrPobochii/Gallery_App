@@ -4,6 +4,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.galleryapp.application.GalleryApp;
@@ -44,7 +45,7 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
     private Context mContext;
     private FileEntity fileEntity;
     private ProgressiveEntityListener mProgressUploadListener;
-    private NotificationManager mNotifyManager;
+    private NotificationManagerCompat mNotifyManager;
     private NotificationCompat.Builder mBuilder;
     private int mId;
     private long mLength;
@@ -63,7 +64,9 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
     protected void onPreExecute() {
         super.onPreExecute();
         Log.d(TAG, "onPreExecute()");
-        mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+//        mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        // Get an instance of the NotificationManager service
+        mNotifyManager = NotificationManagerCompat.from(mContext);
         mBuilder = new NotificationCompat.Builder(mContext);
         mBuilder.setTicker("Upload begin")
                 .setContentTitle("Uploading " + mName)
@@ -107,6 +110,7 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
                         // Removes the progress bar
                 .setProgress(0, 0, false);
         mNotifyManager.notify(mId, mBuilder.build());
+        mNotifyManager.cancel(mId);
         mProgressUploadListener.onFileUploaded(response, String.valueOf(mId), mName, mLength);
         fileEntity = null;
     }
