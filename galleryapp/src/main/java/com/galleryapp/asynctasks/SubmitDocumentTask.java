@@ -50,7 +50,7 @@ public final class SubmitDocumentTask extends AsyncTask<String, Integer, DocSubm
         this.mIds = ids;
         this.client = new OkHttpClient();
         this.app = GalleryApp.getInstance();
-        setProgressUploadListener((ProgressiveEntityListener) context);
+        this.mProgressUploadListener = (ProgressiveEntityListener) context;
     }
 
     @Override

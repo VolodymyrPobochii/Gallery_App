@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -15,6 +16,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.galleryapp.Config;
 import com.galleryapp.R;
@@ -25,7 +27,7 @@ import com.galleryapp.services.LoginService;
 
 public class LoginActivity extends BaseActivity implements GetChannelsEventListener {
 
-    private static final String LOG_TAG = LoginActivity.class.getSimpleName();
+    private static final String TAG = LoginActivity.class.getSimpleName();
     private static final int TOKEN_LENGTH = 80;
     public static final int LOGIN_REQUEST = 108;
     private IntentFilter mFilter;
@@ -208,6 +210,12 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
             startActivity(new Intent(LoginActivity.this, GalleryActivity.class));
             finish();
         }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Toast.makeText(this, TAG + "onConfigurationChanged()", Toast.LENGTH_SHORT).show();
     }
 
     @Override

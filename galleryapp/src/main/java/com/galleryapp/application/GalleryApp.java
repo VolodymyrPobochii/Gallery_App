@@ -62,6 +62,8 @@ import com.nostra13.universalimageloader.utils.StorageUtils;
 import org.apache.http.entity.FileEntity;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -353,14 +355,21 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
         batchObj.setOperationType(1);
         batchObj.setFolders(folders);
 
+        URL hostUrl = null;
+        try {
+            hostUrl = new URL(hostName);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
         CaptureItemObj captureItemObj = new CaptureItemObj();
         captureItemObj.setId(UUID.randomUUID().toString().replace("-", ""));
-        captureItemObj.setChannelCode("root_scan");
+        captureItemObj.setChannelCode(captureChannelCode);
         captureItemObj.setBatch(batchObj);
         captureItemObj.setIndexData("");
         String parameters = new StringBuilder()
                 .append("controller=composite").append("&")
-                .append("baseuri=").append(hostName).append(":").append(port).append("&")
+                .append("baseuri=").append(hostUrl != null ? hostUrl.getAuthority() + ":" + port : hostName + ":" + port).append("&")
                 .append("stampsenabled=false").append("&")
                 .append("hidescancontrols=false").append("&")
                 .append("dataroot=UserStamps").append("&")
@@ -369,8 +378,9 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
                 .append("t=").append(token).append("&")
                 .append("d=").append(domain).append("&")
                 .append("sync=true").append("&")
-                .append("scheme=http")
+                .append("scheme=").append(hostUrl != null ? hostUrl.getProtocol() : "http")
                 .toString();
+        Log.d(TAG, "PARAMETERS: " + parameters);
         captureItemObj.setParameters(parameters);
         captureItemObj.setChannelType(3);
 
