@@ -17,14 +17,18 @@
      See DefaultValues.java for more information. -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="Server">
-        <com.galleryapp.ScanPreff android:key="hostName" />
+        <com.galleryapp.ScanPreff
+            android:defaultValue="@string/default_value_host_preference"
+            android:key="hostName" />
         <!--<Preference
             android:defaultValue="@string/default_value_host_preference"
             android:key="hostName"
             android:layout="@layout/common_layout"
             android:summary=""
             android:title="@string/title_host_preference" />-->
-        <com.galleryapp.ScanPreff android:key="port" />
+        <com.galleryapp.ScanPreff
+            android:defaultValue="@string/default_value_port_preference"
+            android:key="port" />
         <!--<Preference
             android:defaultValue="@string/default_value_port_preference"
             android:key="port"
@@ -55,14 +59,18 @@
             android:title="@string/title_domain_preference" />-->
     </PreferenceCategory>
     <PreferenceCategory android:title="User">
-        <com.galleryapp.ScanPreff android:key="username" />
+        <com.galleryapp.ScanPreff
+            android:defaultValue="@string/default_value_username_preference"
+            android:key="username" />
         <!-- <Preference
              android:defaultValue="@string/default_value_username_preference"
              android:key="username"
              android:layout="@layout/common_layout"
              android:summary=""
              android:title="@string/title_username_preference" />-->
-        <com.galleryapp.ScanPreff android:key="password" />
+        <com.galleryapp.ScanPreff
+            android:defaultValue="@string/default_value_password_preference"
+            android:key="password" />
         <!-- <Preference
              android:defaultValue="@string/default_value_password_preference"
              android:inputType="textPassword"
@@ -70,7 +78,9 @@
              android:layout="@layout/common_layout"
              android:summary=""
              android:title="@string/title_password_preference" />-->
-        <com.galleryapp.ScanPreff android:key="updateTimes" />
+        <com.galleryapp.ScanPreff
+            android:defaultValue="@string/default_value_update_times_preference"
+            android:key="updateTimes" />
         <!--<Preference
             android:defaultValue="@string/default_value_update_times_preference"
             android:inputType="number"
@@ -78,7 +88,9 @@
             android:layout="@layout/common_layout"
             android:summary=""
             android:title="@string/update_times_preference" />-->
-        <com.galleryapp.ScanPreff android:key="updateFreq" />
+        <com.galleryapp.ScanPreff
+            android:defaultValue="@string/default_value_update_freq_preference"
+            android:key="updateFreq" />
         <!--<Preference
             android:defaultValue="@string/default_value_update_freq_preference"
             android:inputType="number"

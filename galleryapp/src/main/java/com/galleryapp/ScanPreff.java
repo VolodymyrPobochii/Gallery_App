@@ -84,6 +84,7 @@ public class ScanPreff extends Preference {
     @Override
     public void setDefaultValue(Object defaultValue) {
         super.setDefaultValue(defaultValue);
+        if (mSummary.getText().length() == 0) mSummary.setText(defaultValue.toString());
     }
 
 

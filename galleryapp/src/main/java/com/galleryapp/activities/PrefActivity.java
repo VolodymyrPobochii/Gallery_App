@@ -65,8 +65,8 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
         getPreferenceManager().setSharedPreferencesName(PREFS_NAME);
         addPreferencesFromResource(R.xml.default_values);
 
-        initViews();
         updatePreffSummaries();
+        initViews();
     }
 
 
@@ -209,7 +209,7 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
         sBindPreferenceSummaryToValueListener.onPreferenceChange(
                 preference,
                 this.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-                        .getString(preference.getKey(), "null")
+                        .getString(preference.getKey(), "")
         );
     }
 
