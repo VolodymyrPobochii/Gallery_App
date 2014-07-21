@@ -8,7 +8,7 @@ import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.DocStatusObj;
 import com.galleryapp.interfaces.ProgressiveEntityListener;
 import com.google.gson.Gson;
-import com.squareup.okhttp.OkHttpClient;
+//import com.squareup.okhttp.OkHttpClient;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -33,7 +33,7 @@ import java.util.Map;
 
 public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStatusObj> {
 
-    private final OkHttpClient client;
+//    private final OkHttpClient client;
     private final String mDocId;
     private final GalleryApp app;
     private Context mContext;
@@ -45,7 +45,7 @@ public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStat
         this.mContext = context;
         this.mIds = ids;
         this.mDocId = docId;
-        this.client = new OkHttpClient();
+//        this.client = new OkHttpClient();
         this.app = GalleryApp.getInstance();
         setProgressUploadListener((ProgressiveEntityListener) context);
     }
@@ -162,7 +162,8 @@ public final class DocumentStatusTask extends AsyncTask<String, Integer, DocStat
     }
 
     private HttpURLConnection createConnection(URL url) throws IOException {
-        return client.open(url);
+//        return client.open(url);
+        return (HttpURLConnection) url.openConnection();
     }
 
     private void setConnectionParametersForRequest(HttpURLConnection connection) throws IOException {

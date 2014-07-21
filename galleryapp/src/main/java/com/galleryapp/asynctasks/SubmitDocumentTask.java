@@ -9,7 +9,7 @@ import com.galleryapp.data.model.DocSubmittedObj;
 import com.galleryapp.data.model.SubmitDocumentObj;
 import com.galleryapp.interfaces.ProgressiveEntityListener;
 import com.google.gson.Gson;
-import com.squareup.okhttp.OkHttpClient;
+//import com.squareup.okhttp.OkHttpClient;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -37,7 +37,7 @@ import java.util.Map;
 public final class SubmitDocumentTask extends AsyncTask<String, Integer, DocSubmittedObj> {
 
     private static final String HEADER_CONTENT_TYPE = "ContentType";
-    private final OkHttpClient client;
+//    private final OkHttpClient client;
     private final ArrayList<String> mIds;
     private final GalleryApp app;
     private SubmitDocumentObj mPostData;
@@ -48,7 +48,7 @@ public final class SubmitDocumentTask extends AsyncTask<String, Integer, DocSubm
     public SubmitDocumentTask(Context context, SubmitDocumentObj postData, ArrayList<String> ids) {
         this.mPostData = postData;
         this.mIds = ids;
-        this.client = new OkHttpClient();
+//        this.client = new OkHttpClient();
         this.app = GalleryApp.getInstance();
         this.mProgressUploadListener = (ProgressiveEntityListener) context;
     }
@@ -175,7 +175,8 @@ public final class SubmitDocumentTask extends AsyncTask<String, Integer, DocSubm
     }
 
     private HttpURLConnection createConnection(URL url) throws IOException {
-        return client.open(url);
+//        return client.open(url);
+        return (HttpURLConnection) url.openConnection();
     }
 
     private void setConnectionParametersForRequest(HttpURLConnection connection) throws IOException {

@@ -8,7 +8,7 @@ import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ChannelsObj;
 import com.galleryapp.interfaces.GetChannelsEventListener;
 import com.google.gson.Gson;
-import com.squareup.okhttp.OkHttpClient;
+//import com.squareup.okhttp.OkHttpClient;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -38,7 +38,7 @@ public final class GetChannelsTask extends AsyncTask<String, Void, ChannelsObj> 
     private static final String TAG = GetChannelsTask.class.getSimpleName();
     private static final int TIMEOUT = 60 * 1000;
 
-    private final OkHttpClient client;
+//    private final OkHttpClient client;
     private final GalleryApp app;
     private Context mContext;
     private String url;
@@ -47,7 +47,7 @@ public final class GetChannelsTask extends AsyncTask<String, Void, ChannelsObj> 
 
     public GetChannelsTask(Context context) {
         this.mContext = context;
-        this.client = new OkHttpClient();
+//        this.client = new OkHttpClient();
         this.app = GalleryApp.getInstance();
         setChannelsEventListener((GetChannelsEventListener) context);
     }
@@ -174,7 +174,8 @@ public final class GetChannelsTask extends AsyncTask<String, Void, ChannelsObj> 
     }
 
     private HttpURLConnection createConnection(URL url) throws IOException {
-        return client.open(url);
+//        return client.open(url);
+        return (HttpURLConnection) url.openConnection();
     }
 
     private void setConnectionParametersForRequest(HttpURLConnection connection) throws IOException {

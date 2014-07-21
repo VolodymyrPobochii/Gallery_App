@@ -18,7 +18,7 @@ import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.FileUploadObj;
 import com.galleryapp.interfaces.ProgressiveEntityListener;
 import com.google.gson.Gson;
-import com.squareup.okhttp.OkHttpClient;
+//import com.squareup.okhttp.OkHttpClient;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -52,7 +52,7 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
 
     private final String TAG = this.getClass().getSimpleName();
     private static final String HEADER_CONTENT_TYPE = "ContentType";
-    private final OkHttpClient client;
+//    private final OkHttpClient client;
     private final String mName;
     private final GalleryApp app;
     private final String thumbPath;
@@ -70,7 +70,7 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
         this.thumbPath = thumbPath;
         this.mId = id;
         this.mName = name;
-        this.client = new OkHttpClient();
+//        this.client = new OkHttpClient();
         this.app = GalleryApp.getInstance();
         setProgressUploadListener((ProgressiveEntityListener) context);
     }
@@ -231,7 +231,8 @@ public final class UploadFileTask2 extends AsyncTask<String, Integer, FileUpload
     }
 
     private HttpURLConnection createConnection(URL url) throws IOException {
-        return client.open(url);
+//        return client.open(url);
+        return (HttpURLConnection) url.openConnection();
     }
 
     private void setConnectionParametersForRequest(HttpURLConnection connection) throws IOException {
