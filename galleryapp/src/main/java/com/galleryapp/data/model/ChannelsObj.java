@@ -2,12 +2,14 @@ package com.galleryapp.data.model;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.galleryapp.data.provider.GalleryDBContent;
 
 import java.util.ArrayList;
 
-public class ChannelsObj {
+public class ChannelsObj implements Parcelable {
 
     private ArrayList<ChannelObj> Channels;
     private Integer ErrorCode;
@@ -96,4 +98,35 @@ public class ChannelsObj {
             return "Code=" + Code + " Domain=" + Domain + " Name=" + Name;
         }
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeSerializable(this.Channels);
+        dest.writeValue(this.ErrorCode);
+        dest.writeString(this.ErrorMessage);
+    }
+
+    public ChannelsObj() {
+    }
+
+    private ChannelsObj(Parcel in) {
+        this.Channels = (ArrayList<ChannelObj>) in.readSerializable();
+        this.ErrorCode = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.ErrorMessage = in.readString();
+    }
+
+    public static final Parcelable.Creator<ChannelsObj> CREATOR = new Parcelable.Creator<ChannelsObj>() {
+        public ChannelsObj createFromParcel(Parcel source) {
+            return new ChannelsObj(source);
+        }
+
+        public ChannelsObj[] newArray(int size) {
+            return new ChannelsObj[size];
+        }
+    };
 }

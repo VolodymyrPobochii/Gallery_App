@@ -22,6 +22,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.os.RemoteException;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -29,6 +30,7 @@ import android.view.Display;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.galleryapp.ChannelsRestAdapter;
 import com.galleryapp.Config;
 import com.galleryapp.R;
 import com.galleryapp.activities.GalleryActivity;
@@ -52,6 +54,7 @@ import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj.Folde
 import com.galleryapp.data.provider.GalleryDBContent;
 import com.galleryapp.data.provider.GalleryDBProvider;
 import com.galleryapp.fragmernts.GalleryFragment;
+import com.galleryapp.interfaces.GetChannelsEventListener;
 import com.galleryapp.interfaces.ProgressiveEntityListener;
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
 import com.nostra13.universalimageloader.cache.memory.impl.LruMemoryCache;
@@ -68,8 +71,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import retrofit.Callback;
 import retrofit.RestAdapter;
+import retrofit.RetrofitError;
 import retrofit.client.OkClient;
+import retrofit.client.Response;
 
 public class GalleryApp extends Application implements ProgressiveEntityListener, GalleryFragment.OnFragmentInteractionListener {
 
@@ -412,12 +418,26 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
         getDocStatus(context, ids, docId);
     }
 
-    public void getChannels(Context context) {
+    public void getChannels(final Context context) {
         String url = hostName + ":" + port + Config.GET_CHANNELS_RULE;
         String query = String.format("%s=%s", "t", getToken());
         url += "?" + query;
-        GetChannelsTask statusTask = new GetChannelsTask(context);
-        statusTask.execute(url);
+//        GetChannelsTask statusTask = new GetChannelsTask(context);
+//        statusTask.execute(url);
+        final GetChannelsEventListener channelsEventListener = (GetChannelsEventListener) context;
+        new ChannelsRestAdapter(hostName + ":" + port)
+        .execute(getToken(), new Callback<ChannelsObj>() {
+            @Override
+            public void success(ChannelsObj channelsObj, Response response) {
+                Toast.makeText(context, "Channels: " + channelsObj.toString(), Toast.LENGTH_LONG).show();
+                channelsEventListener.onGetChannels(channelsObj);
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                Toast.makeText(context, "Error: " + error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     public int updateChannels(ChannelsObj channels) {
