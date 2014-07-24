@@ -1,11 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 19
+    compileSdkVersion 20
     buildToolsVersion '20.0.0'
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 19
+        targetSdkVersion 20
         versionCode 1
         versionName '1.0.4'
     }
@@ -27,7 +27,7 @@ dependencies {
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.1'
     // You must install or update the Support Repository through the SDK manager to use this dependency.
     // The Support Repository (separate from the corresponding library) can be found in the Extras category.
-//    compile 'com.android.support:support-v4:19.+'
+    //    compile 'com.android.support:support-v4:19.+'
     // You must install or update the Support Repository through the SDK manager to use this dependency.
     // The Support Repository (separate from the corresponding library) can be found in the Extras category.
     //    compile 'com.android.support:appcompat-v7:19.+'
@@ -41,10 +41,11 @@ dependencies {
     // Google Play Services
     //    compile 'com.google.android.gms:play-services:4.3.23'
     // Support Libraries
-//    compile 'com.squareup.okhttp:okhttp:1.5.4'
-    compile 'com.google.guava:guava:17.0'
+    //    compile 'com.squareup.okhttp:okhttp:1.5.4'
+    //    compile 'com.google.guava:guava:17.0'
     compile 'com.google.code.gson:gson:2.2.4'
     //    compile project(':retrofit')
-    compile 'com.squareup.retrofit:retrofit:1.+'
+    //    compile 'com.squareup.retrofit:retrofit:1.+'
+    compile project(':syncadapter')
     compile files('libs/android-support-v4.jar')
 }
