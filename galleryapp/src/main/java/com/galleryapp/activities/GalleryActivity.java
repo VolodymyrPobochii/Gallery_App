@@ -46,10 +46,11 @@ public class GalleryActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
+
         if (savedInstanceState == null) {
-            getFragmentManager().beginTransaction()
-                    .add(R.id.container, new GalleryFragment())
-                    .commit();
+//            getFragmentManager().beginTransaction()
+//                    .add(R.id.container, new GalleryFragment())
+//                    .commit();
         }
     }
 

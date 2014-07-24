@@ -2,7 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".activities.LoginActivity">
 
-    <RelativeLayout
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="@dimen/login_screen_form_width"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
@@ -83,12 +84,11 @@
             android:layout_below="@id/password_txt"
             android:layout_toRightOf="@id/save_credentials"
             android:layout_marginTop="@dimen/save_credentials_margin_top"
-            android:layout_marginLeft="@dimen/login_margin_top"
             android:text="@string/login_text"
             android:textSize="@dimen/login_text_size"
             android:inputType="textNoSuggestions"
             android:textIsSelectable="false"
             android:editable="false" />
 
-    </RelativeLayout>
+    </LinearLayout>
 </merge>

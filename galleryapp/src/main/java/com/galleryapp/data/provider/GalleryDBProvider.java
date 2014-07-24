@@ -26,7 +26,7 @@ import java.util.ArrayList;
  * <p/>
  * (More information available https://github.com/foxykeep/ContentProviderCodeGenerator)
  */
-public final class GalleryDBProvider extends ContentProvider {
+public final class GalleryDBProvider extends HttpBaseProvider {
 
     private static final String LOG_TAG = GalleryDBProvider.class.getSimpleName();
 
@@ -310,7 +310,13 @@ public final class GalleryDBProvider extends ContentProvider {
         }
 
         if ((c != null) && !isTemporary()) {
-            c.setNotificationUri(getContext().getContentResolver(), uri);
+//            TODO: Remove unused code
+//            c.setNotificationUri(getContext().getContentResolver(), uri);
+            if (uriType.getTableName().equals(GalleryImages.TABLE_NAME)){
+                checkForSync(c, uri);
+            }else {
+                c.setNotificationUri(getContext().getContentResolver(), uri);
+            }
         }
         return c;
     }

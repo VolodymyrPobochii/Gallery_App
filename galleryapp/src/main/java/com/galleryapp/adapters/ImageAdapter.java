@@ -4,14 +4,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Checkable;
 import android.widget.CursorAdapter;
-import android.widget.FrameLayout;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -29,24 +25,25 @@ import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
  */
 public class ImageAdapter extends CursorAdapter {
 
+    private final LayoutInflater mInflator;
     private ImageLoader mImageLoader;
     private DisplayImageOptions mOptions;
     private Context mContext;
     private ViewHolder mHolder;
-    private CheckableLayout mCheckableLayout;
+//    private CheckableLayout mCheckableLayout;
 
     public ImageAdapter(Context context, ImageLoader imageLoader, DisplayImageOptions options) {
         super(context, null, false);
         mContext = context;
         mImageLoader = imageLoader;
         mOptions = options;
+        mInflator = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
 
-        View picturesView = ((LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
-                .inflate(R.layout.item_grid_image, parent, false);
+        View picturesView = mInflator.inflate(R.layout.item_grid_image, parent, false);
         mHolder = new ViewHolder();
         assert picturesView != null;
         mHolder.imageView = (ImageView) picturesView.findViewById(R.id.image);
@@ -57,25 +54,8 @@ public class ImageAdapter extends CursorAdapter {
         mHolder.thumbStatus = (TextView) picturesView.findViewById(R.id.thumb_status);
         mHolder.thumbStatus.setText("");
         mHolder.progressBar = (ProgressBar) picturesView.findViewById(R.id.progress);
-//        picturesView.setTag(mHolder);
-
-//        ImageView picturesView = new ImageView(context);
-//        picturesView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-//        picturesView.setPadding(5, 5, 5, 5);
-//        GridView.LayoutParams lp = new GridView.LayoutParams(
-//                (int) context.getResources().getDimension(R.dimen.grid_item),
-//                (int) context.getResources().getDimension(R.dimen.grid_item));
-//        picturesView.setLayoutParams(lp);
-        //        picturesView.setImageBitmap(null);
-        mCheckableLayout = new CheckableLayout(context);
-        mCheckableLayout.setPadding(8, 8, 8, 8);
-        mCheckableLayout.setLayoutParams(new GridView.LayoutParams(
-                GridView.LayoutParams.WRAP_CONTENT,
-                GridView.LayoutParams.WRAP_CONTENT));
-        mCheckableLayout.setForegroundGravity(Gravity.CENTER);
-        mCheckableLayout.addView(picturesView);
-        mCheckableLayout.setTag(mHolder);
-        return mCheckableLayout;
+        picturesView.setTag(mHolder);
+        return picturesView;
     }
 
     @Override
@@ -156,11 +136,19 @@ public class ImageAdapter extends CursorAdapter {
         TextView thumbStatus;
     }
 
-    private class CheckableLayout extends FrameLayout implements Checkable {
+    /*public static class CheckableLayout extends FrameLayout implements Checkable {
         private boolean mChecked;
 
         public CheckableLayout(Context context) {
             super(context);
+        }
+
+        public CheckableLayout(Context context, AttributeSet attrs) {
+            super(context, attrs);
+        }
+
+        public CheckableLayout(Context context, AttributeSet attrs, int defStyle) {
+            super(context, attrs, defStyle);
         }
 
         @SuppressWarnings("deprecation")
@@ -177,6 +165,5 @@ public class ImageAdapter extends CursorAdapter {
         public void toggle() {
             setChecked(!mChecked);
         }
-
-    }
+    }*/
 }

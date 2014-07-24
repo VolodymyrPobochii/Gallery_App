@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.galleryapp.views.CheckableLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="@dimen/grid_item"
-    android:layout_height="@dimen/grid_item">
+    android:layout_height="@dimen/grid_item"
+    android:foregroundGravity="center"
+    android:padding="8dp"
+    >
 
     <ImageView
         android:id="@+id/image"
@@ -47,4 +50,5 @@
         android:indeterminate="false"
         android:max="100"
         android:visibility="gone" />
-</FrameLayout>
+
+</com.galleryapp.views.CheckableLayout>
