@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.syncadapter;
+package com.galleryapp.syncadapter;
 
 import android.app.Service;
 import android.content.Intent;
@@ -33,7 +33,7 @@ import android.util.Log;
  * OS on request.
  */
 public class SyncService extends Service {
-    private static final String TAG = "SyncService";
+    private static final String TAG = SyncService.class.getSimpleName();
 
     private static final Object sSyncAdapterLock = new Object();
     private static SyncAdapter sSyncAdapter = null;
@@ -44,7 +44,7 @@ public class SyncService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d("UNIQ_TAG", "SyncService :: onCreate()");
+        Log.d(TAG, "SyncService :: onCreate()");
         Log.i(TAG, "Service created");
         synchronized (sSyncAdapterLock) {
             if (sSyncAdapter == null) {
@@ -72,7 +72,9 @@ public class SyncService extends Service {
      */
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d("UNIQ_TAG", "SyncService :: onBind()");
+        Log.d(TAG, "SyncService :: onBind()");
         return sSyncAdapter.getSyncAdapterBinder();
     }
+
+
 }

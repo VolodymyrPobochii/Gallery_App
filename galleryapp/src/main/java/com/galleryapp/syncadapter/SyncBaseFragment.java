@@ -1,4 +1,4 @@
-package com.syncadapter;
+package com.galleryapp.syncadapter;
 
 
 import android.accounts.Account;
@@ -12,9 +12,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.syncadapter.accounts.GenericAccountService;
-import com.syncadapter.provider.BudgetProvider;
-
+import com.galleryapp.data.provider.GalleryDBProvider;
+import com.galleryapp.syncadapter.accounts.GenericAccountService;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -101,8 +100,8 @@ public abstract class SyncBaseFragment extends Fragment {
 
                     // Test the ContentResolver to see if the sync adapter is active or pending.
                     // Set the state of the refresh button accordingly.
-                    boolean syncActive = ContentResolver.isSyncActive(account, BudgetProvider.AUTHORITY);
-                    boolean syncPending = ContentResolver.isSyncPending(account, BudgetProvider.AUTHORITY);
+                    boolean syncActive = ContentResolver.isSyncActive(account, GalleryDBProvider.AUTHORITY);
+                    boolean syncPending = ContentResolver.isSyncPending(account, GalleryDBProvider.AUTHORITY);
                     setRefreshActionButtonState(syncActive || syncPending);
                 }
             });

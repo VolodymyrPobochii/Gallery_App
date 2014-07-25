@@ -1,5 +1,4 @@
-
-package com.syncadapter.provider.util;
+package com.galleryapp.data.provider.util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,11 +78,11 @@ public class ProviderCriteria {
 
     /**
      * @param metadata
-     * @param idList   comma separated String of the values
+     * @param objectList comma separated String of the values
      * @return
      */
     public <T extends Object> ProviderCriteria addInList(final ColumnMetadata metadata,
-                                                         final List<T> objectList) {
+            final List<T> objectList) {
         addOperand();
         final StringBuilder sb = new StringBuilder();
         boolean isFirst = true;
@@ -118,14 +117,14 @@ public class ProviderCriteria {
     }
 
     public ProviderCriteria addLt(final ColumnMetadata metadata, final int value,
-                                  final boolean orEqual) {
+            final boolean orEqual) {
         addOperand();
         addCriteria(metadata.getName(), value, orEqual ? TYPE_LTOE : TYPE_LT);
         return this;
     }
 
     public ProviderCriteria addGt(final ColumnMetadata metadata, final int value,
-                                  final boolean orEqual) {
+            final boolean orEqual) {
         addOperand();
         addCriteria(metadata.getName(), value, orEqual ? TYPE_GTOE : TYPE_GT);
         return this;
@@ -165,17 +164,6 @@ public class ProviderCriteria {
             mOrderSb.append(",");
         }
         mOrderSb.append(metadata.getName()).append(isAscendant ? " ASC" : " DESC");
-        return this;
-    }
-
-    public ProviderCriteria addSortOrder(final ColumnMetadata metadata, final boolean isAscendant, String itemsToShow) {
-        if (mIsOrderFirstElement) {
-            mIsOrderFirstElement = false;
-        } else {
-            mOrderSb.append(",");
-        }
-        String limit = itemsToShow.equals("0") ? "" : " LIMIT " + itemsToShow;
-        mOrderSb.append(metadata.getName()).append(isAscendant ? " ASC" : " DESC").append(limit);
         return this;
     }
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.syncadapter;
+package com.galleryapp.syncadapter;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -24,15 +24,15 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.syncadapter.accounts.GenericAccountService;
-import com.syncadapter.provider.BudgetProvider;
+import com.galleryapp.syncadapter.accounts.GenericAccountService;
+import com.galleryapp.data.provider.GalleryDBProvider;
 
 /**
  * Static helper methods for working with the sync framework.
  */
 public class SyncUtils {
     private static final long SYNC_FREQUENCY = 60 * 60;  // 1 hour (in seconds)
-    private static final String CONTENT_AUTHORITY = BudgetProvider.AUTHORITY;
+    private static final String CONTENT_AUTHORITY = GalleryDBProvider.AUTHORITY;
     private static final String PREF_SETUP_COMPLETE = "setup_complete";
     private static final String REQUEST_TYPE = "requestType";
 

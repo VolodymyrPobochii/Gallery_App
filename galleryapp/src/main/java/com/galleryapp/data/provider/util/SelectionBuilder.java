@@ -20,7 +20,7 @@
  * -Changed package name
  */
 
-package com.syncadapter.util;
+package com.galleryapp.data.provider.util;
 
 import android.content.ContentValues;
 import android.database.Cursor;
