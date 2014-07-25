@@ -1,14 +1,10 @@
 package com.galleryapp.activities;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.os.Environment;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,14 +12,8 @@ import android.widget.Toast;
 
 import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
-import com.galleryapp.data.model.DocStatusObj;
-import com.galleryapp.data.model.DocSubmittedObj;
-import com.galleryapp.data.model.FileUploadObj;
 import com.galleryapp.data.model.ImageObj;
-import com.galleryapp.fragmernts.GalleryFragment;
-import com.galleryapp.interfaces.ProgressiveEntityListener;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -78,11 +68,11 @@ public class GalleryActivity extends BaseActivity {
                                 Log.d(TAG, "ImagePath_GALL:" + image.getImagePath());
                                 Log.d(TAG, "ThumbPath_GALL:" + image.getThumbPath());
                                 app.saveImage(image);
-                            }else {
+                            } else {
                                 app.customAlertDialog(this, "Error retrieving image data. Please choose another one.",
                                         "Close", false, null, false, false).show();
                             }
-                        }else {
+                        } else {
                             app.customAlertDialog(this, "Image is not on the device storage. Please choose another one.",
                                     "Close", false, null, false, false).show();
                         }
@@ -110,11 +100,21 @@ public class GalleryActivity extends BaseActivity {
         if (c.getCount() > 0) {
             c.moveToNext();
             String imageId = c.getString(c.getColumnIndex(MediaStore.Images.Media._ID));
-            String thumbData = queryImageThumbData(imageId);
+            String thumbPath = queryImageThumbData(imageId);
+            String imagePath = c.getString(c.getColumnIndex(MediaStore.Images.Media.DATA));
+
+            // Ensure both paths are not null
+            if (TextUtils.isEmpty(thumbPath) && TextUtils.isEmpty(imagePath)) {
+                return null;
+            } else if (TextUtils.isEmpty(thumbPath) && !TextUtils.isEmpty(imagePath)) {
+                thumbPath = imagePath;
+            } else if (!TextUtils.isEmpty(thumbPath) && TextUtils.isEmpty(imagePath)) {
+                imagePath = thumbPath;
+            }
 
             imageObj = new ImageObj();
-            imageObj.setImagePath(c.getString(c.getColumnIndex(MediaStore.Images.Media.DATA)));
-            imageObj.setThumbPath(thumbData);
+            imageObj.setImagePath(imagePath);
+            imageObj.setThumbPath(thumbPath);
             imageObj.setCreateDate(new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").format(new Date()));
             imageObj.setImageTitle("New Image");
             imageObj.setImageNotes("Image from gallery");
@@ -173,7 +173,7 @@ public class GalleryActivity extends BaseActivity {
                 // Verify the intent will resolve to at least one activity
                 if (i.resolveActivity(getPackageManager()) != null) {
                     startActivityForResult(i, REQUEST_LOAD_IMAGE);
-                }else {
+                } else {
                     Toast.makeText(this, "There is no appropriate application to perform this action", Toast.LENGTH_SHORT).show();
                 }
                 return true;

@@ -88,5 +88,7 @@
     <string name="default_value_update_freq_preference">10</string>
     <string name="updateTimes">updateTimes</string>
     <string name="updateFreq">updateFreq</string>
+    <string name="account_type">com.galleryapp</string>
+    <string name="contentAuthority">com.galleryapp.provider.GalleryDBProvider</string>
 
 </resources>

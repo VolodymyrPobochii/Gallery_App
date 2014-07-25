@@ -8,12 +8,9 @@ import android.content.Loader;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -34,6 +31,7 @@ import com.galleryapp.R;
 import com.galleryapp.adapters.ImageAdapter;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.provider.GalleryDBContent;
+import com.galleryapp.syncadapter.SyncBaseFragment;
 import com.google.common.io.Files;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -51,7 +49,7 @@ import java.util.List;
  * Use the {@link GalleryFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class GalleryFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class GalleryFragment extends SyncBaseFragment implements LoaderManager.LoaderCallbacks<Cursor> {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -119,6 +117,7 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     public GalleryFragment() {
+        super();
         // Required empty public constructor
     }
 
@@ -283,6 +282,12 @@ public class GalleryFragment extends Fragment implements LoaderManager.LoaderCal
         // Specify the layout to use when the list of choices appears
         mChannelsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         return rootView;
+    }
+
+    @Override
+    protected void setRefreshActionButtonState(boolean refreshing) {
+        getActivity().setProgressBarIndeterminate(refreshing);
+        getActivity().setProgressBarIndeterminateVisibility(refreshing);
     }
 
     private void getSelectedItemsStatus() {

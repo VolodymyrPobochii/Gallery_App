@@ -20,7 +20,6 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.galleryapp.R;
-import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ImageObj;
 import com.galleryapp.utils.AlbumStorageDirFactory;
 import com.galleryapp.utils.BaseAlbumDirFactory;

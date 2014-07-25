@@ -1,1 +1,1 @@
-include ':galleryapp', ':syncadapter'
+include ':galleryapp'

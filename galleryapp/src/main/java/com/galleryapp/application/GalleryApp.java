@@ -13,7 +13,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
-import android.content.pm.ComponentInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -21,8 +20,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Parcelable;
 import android.os.RemoteException;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -36,7 +33,6 @@ import com.galleryapp.R;
 import com.galleryapp.activities.GalleryActivity;
 import com.galleryapp.activities.PrefActivity;
 import com.galleryapp.asynctasks.DocumentStatusTask;
-import com.galleryapp.asynctasks.GetChannelsTask;
 import com.galleryapp.asynctasks.SubmitDocumentTask;
 import com.galleryapp.asynctasks.UploadFileTask2;
 import com.galleryapp.data.model.ChannelsObj;
@@ -280,11 +276,6 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
 
     public void uploadFile(Context context, List<byte[]> fileBytes, List<String> filePaths, List<String> thumbPaths,
                            List<String> fileNames, List<Integer> ids) {
-        //        Retrofit block
-        /*RestAdapter restAdapter = new RestAdapter.Builder()
-                .setClient(new OkClient())
-                .setEndpoint("")
-                .build();*/
         String url = hostName + ":" + port + Config.UPLOAD_POST_REQUEST_RULE + domain;
         String query = String.format("%s=%s", "t", token);
         url += "?" + query;
@@ -420,13 +411,13 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
 
     public void getChannels(final Context context) {
         String url = hostName + ":" + port + Config.GET_CHANNELS_RULE;
-        String query = String.format("%s=%s", "t", getToken());
+        String query = String.format("%s=%s", "t", token);
         url += "?" + query;
 //        GetChannelsTask statusTask = new GetChannelsTask(context);
 //        statusTask.execute(url);
         final GetChannelsEventListener channelsEventListener = (GetChannelsEventListener) context;
         new ChannelsRestAdapter(hostName + ":" + port)
-        .execute(getToken(), new Callback<ChannelsObj>() {
+        .execute(token, new Callback<ChannelsObj>() {
             @Override
             public void success(ChannelsObj channelsObj, Response response) {
                 Toast.makeText(context, "Channels: " + channelsObj.toString(), Toast.LENGTH_LONG).show();

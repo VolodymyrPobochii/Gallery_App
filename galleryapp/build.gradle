@@ -19,7 +19,7 @@ android {
     }
     dexOptions {
 //        incremental true
-//        javaMaxHeapSize "4g"
+//        javaMaxHeapSize "2g"
     }
 }
 
@@ -42,10 +42,9 @@ dependencies {
     //    compile 'com.google.android.gms:play-services:4.3.23'
     // Support Libraries
     //    compile 'com.squareup.okhttp:okhttp:1.5.4'
-    //    compile 'com.google.guava:guava:17.0'
+    compile 'com.google.guava:guava:17.0'
     compile 'com.google.code.gson:gson:2.2.4'
     //    compile project(':retrofit')
-    //    compile 'com.squareup.retrofit:retrofit:1.+'
-    compile project(':syncadapter')
+    compile 'com.squareup.retrofit:retrofit:1.+'
     compile files('libs/android-support-v4.jar')
 }
