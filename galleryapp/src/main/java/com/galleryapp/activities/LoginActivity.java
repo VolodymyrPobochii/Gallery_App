@@ -23,8 +23,10 @@ import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ChannelsObj;
 import com.galleryapp.interfaces.GetChannelsEventListener;
 import com.galleryapp.services.LoginService;
+import com.galleryapp.syncadapter.SyncAdapter;
+import com.galleryapp.syncadapter.SyncUtils;
 
-public class LoginActivity extends BaseActivity implements GetChannelsEventListener {
+public class LoginActivity extends BaseActivity {
 
     private static final String TAG = LoginActivity.class.getSimpleName();
     private static final int TOKEN_LENGTH = 80;
@@ -112,8 +114,7 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
             mScanApp.setToken(responseToken);
             Log.d("PostLoginReceiver", "onReceive()" + "TOKEN = " + responseToken);
             tokenReceived = true;
-//            completeAuth();
-            mScanApp.getChannels(this);
+            completeAuth();
         } else if (intent.hasExtra(Config.SERVER_CONNECTION)) {
             if (LoginService.AUTH_PROBLEM.equalsIgnoreCase(intent.getStringExtra(Config.SERVER_CONNECTION))) {
                 if (loginProgress != null && loginProgress.isShowing()) loginProgress.dismiss();
@@ -206,6 +207,8 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
 
     private void completeAuth() {
         if (tokenReceived) {
+            // Update/Sync channels
+            SyncUtils.TriggerRefresh(SyncAdapter.GET_CHANNELS);
             startActivity(new Intent(LoginActivity.this, GalleryActivity.class));
             finish();
         }
@@ -291,13 +294,5 @@ public class LoginActivity extends BaseActivity implements GetChannelsEventListe
                     .apply();
         }
         super.finish();
-    }
-
-    @Override
-    public void onGetChannels(ChannelsObj channels) {
-        Log.d("UPLOAD", "onGetChannels()" + "ChannelsObj = " + channels.toString());
-        int channelsUpdated = mScanApp.updateChannels(channels);
-        Log.d("UPLOAD", "onGetChannels()" + "channelsUpdated = " + channelsUpdated);
-        completeAuth();
     }
 }

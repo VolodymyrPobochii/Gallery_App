@@ -50,7 +50,7 @@ public class ChannelsObj implements Parcelable {
                 + " ErrorMessage = " + ErrorMessage;
     }
 
-    public static class ChannelObj {
+    public static class ChannelObj implements Parcelable {
 
         private String Code;
         private String Domain;
@@ -97,6 +97,37 @@ public class ChannelsObj implements Parcelable {
         public String toString() {
             return "Code=" + Code + " Domain=" + Domain + " Name=" + Name;
         }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeString(this.Code);
+            dest.writeString(this.Domain);
+            dest.writeString(this.Name);
+        }
+
+        public ChannelObj() {
+        }
+
+        private ChannelObj(Parcel in) {
+            this.Code = in.readString();
+            this.Domain = in.readString();
+            this.Name = in.readString();
+        }
+
+        public static final Creator<ChannelObj> CREATOR = new Creator<ChannelObj>() {
+            public ChannelObj createFromParcel(Parcel source) {
+                return new ChannelObj(source);
+            }
+
+            public ChannelObj[] newArray(int size) {
+                return new ChannelObj[size];
+            }
+        };
     }
 
     @Override

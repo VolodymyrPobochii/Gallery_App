@@ -26,6 +26,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -50,8 +51,9 @@ import retrofit.client.Response;
  */
 public final class SyncAdapter extends AbstractThreadedSyncAdapter {
 
-    private static final String PREFS_NAME = "defaults";
     public final String TAG = this.getClass().getSimpleName();
+    private static final String PREFS_NAME = "defaults";
+    public static final int GET_CHANNELS = 1000;
 
     /**
      * Network connection timeout, in milliseconds.
@@ -121,14 +123,13 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
     public void onPerformSync(Account account, Bundle extras, String authority,
                               ContentProviderClient provider, SyncResult syncResult) {
 
-        Log.d(TAG, "SyncAdapter :: onPerformSync()");
+        Log.d(TAG, "onPerformSync()");
         Log.i(TAG, "Beginning network synchronization");
         int requestType = extras.getInt("requestType");
+        Log.d(TAG, "onPerformSync() :: requestType = " + requestType);
         switch (requestType) {
-            case -1:
+            case GET_CHANNELS:
                 getChannelsCodes();
-                break;
-            case 0:
                 break;
             default:
         }
@@ -136,8 +137,10 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private void getChannelsCodes() {
+        Log.d(TAG, "getChannelsCodes()::START");
         String url = mApp.getHostName() + ":" + mApp.getPort();
-        new ChannelsRestAdapter(url)
+        Log.d(TAG, "getChannelsCodes()::Url = " + url);
+       /* new ChannelsRestAdapter(url)
                 .execute(mApp.getToken(), new Callback<ChannelsObj>() {
                     @Override
                     public void success(ChannelsObj channelsObj, Response response) {
@@ -151,6 +154,23 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                         mBuilder.setContentText("Channels code request FAILURE");
                         mNotifyManager.notify(1000, mBuilder.build());
                     }
-                });
+                });*/
+        ChannelsObj channels = new ChannelsRestAdapter(url).execute(mApp.getToken());
+        if (channels != null) {
+            if (channels.getErrorCode() == 0 && TextUtils.isEmpty(channels.getErrorMessage())) {
+                if (channels.getChannels().size() > 0) {
+                    Log.d(TAG, "getChannelsCodes()" + "ChannelsObj = " + channels.toString());
+                    int channelsUpdated = mApp.updateChannels(channels);
+                    Log.d(TAG, "getChannelsCodes()" + "channelsUpdated = " + channelsUpdated);
+                } else {
+                    Log.d(TAG, "getChannelsCodes():: Channels = 0");
+                }
+            } else {
+                Log.d(TAG, "getChannelsCodes():: Error = " + channels.getErrorMessage());
+            }
+        } else {
+            Log.d(TAG, "getChannelsCodes():: Error: channels = NULL");
+        }
+        Log.d(TAG, "getChannelsCodes()::END");
     }
 }
