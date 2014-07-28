@@ -4,12 +4,16 @@ import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.RemoteException;
 import android.util.Log;
+
+import com.galleryapp.syncadapter.SyncAdapter;
+import com.galleryapp.syncadapter.SyncUtils;
 
 /**
  * Created by pvg on 24.07.14.
  */
-public abstract class HttpBaseProvider extends ContentProvider{
+public abstract class HttpBaseProvider extends ContentProvider {
 
     private static final String TAG = HttpBaseProvider.class.getSimpleName();
 
@@ -33,15 +37,18 @@ public abstract class HttpBaseProvider extends ContentProvider{
     @Override
     public abstract int update(Uri uri, ContentValues values, String selection, String[] selectionArgs);
 
-    protected final void checkForSync(Cursor c, Uri uri){
-        c.moveToNext();
-        Log.d(TAG, "c.moveToNext()");
-        // Do stuff here
-        Log.d(TAG, "checkForSync()");
-        c.moveToFirst();
-        Log.d(TAG, "c.moveToFirst()");
-        c.setNotificationUri(getContext().getContentResolver(), uri);
-        Log.d(TAG, "c.setNotificationUri()");
+    protected final void checkForSync(Cursor c, Uri uri) {
+        while (c.moveToNext()) {
+            int isSynced = c.getInt(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.ordinal());
+            int needUpload = c.getInt(GalleryDBContent.GalleryImages.Columns.NEED_UPLOAD.ordinal());
+            if (isSynced == 0 && needUpload == 1) {
+                c.moveToFirst();
+                c.setNotificationUri(getContext().getContentResolver(), uri);
+                SyncUtils.TriggerRefresh(SyncAdapter.UPLOAD_FILES);
+                break;
+            }
+        }
+        Log.d(TAG, "onPerformSync()::UPLOAD_FILES::c.getCount() = " + c.getCount());
     }
 
 }

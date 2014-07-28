@@ -310,12 +310,12 @@ public final class GalleryDBProvider extends HttpBaseProvider {
 
         if ((c != null) && !isTemporary()) {
 //            TODO: Remove unused code
-            c.setNotificationUri(getContext().getContentResolver(), uri);
-//            if (uriType.getTableName().equals(GalleryImages.TABLE_NAME)){
-//                checkForSync(c, uri);
-//            }else {
-//                c.setNotificationUri(getContext().getContentResolver(), uri);
-//            }
+//            c.setNotificationUri(getContext().getContentResolver(), uri);
+            if (uriType.getType().equals(GalleryImages.TABLE_NAME)) {
+                checkForSync(c, uri);
+            } else {
+                c.setNotificationUri(getContext().getContentResolver(), uri);
+            }
         }
         return c;
     }
