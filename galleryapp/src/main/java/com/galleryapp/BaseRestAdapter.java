@@ -1,5 +1,7 @@
 package com.galleryapp;
 
+import com.galleryapp.application.GalleryApp;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -12,8 +14,10 @@ import retrofit.RestAdapter;
 public abstract class BaseRestAdapter {
 
     protected final Object mRestService;
+    protected final GalleryApp mApp;
 
     public BaseRestAdapter(String apiUrl, Class<?> clazz) {
+        mApp = GalleryApp.getInstance();
         RestAdapter restAdapter = new RestAdapter.Builder()
                 .setEndpoint(apiUrl)
                 .setRequestInterceptor(new BaseIntercaptor(apiUrl))

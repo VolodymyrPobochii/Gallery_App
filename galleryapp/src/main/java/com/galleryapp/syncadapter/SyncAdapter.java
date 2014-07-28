@@ -19,26 +19,34 @@ package com.galleryapp.syncadapter;
 import android.accounts.Account;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
+import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SyncResult;
+import android.database.Cursor;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import android.os.Handler;
+import android.os.RemoteException;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.galleryapp.ChannelsRestAdapter;
-import com.galleryapp.Config;
+import com.galleryapp.FileUploadRestAdapter;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ChannelsObj;
-import com.galleryapp.interfaces.GetChannelsEventListener;
+import com.galleryapp.data.model.FileUploadObj;
+import com.galleryapp.data.provider.GalleryDBContent.GalleryImages;
+
+import java.io.File;
+import java.util.ArrayList;
 
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
+import retrofit.mime.TypedFile;
 
 /**
  * Define a sync adapter for the app.
@@ -53,7 +61,10 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     public final String TAG = this.getClass().getSimpleName();
     private static final String PREFS_NAME = "defaults";
+    public static final String NOT_SYNCED = "0";
+    public static final String NEED_UPLOAD = "1";
     public static final int GET_CHANNELS = 1000;
+    public static final int UPLOAD_FILES = 1001;
 
     /**
      * Network connection timeout, in milliseconds.
@@ -131,6 +142,23 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
             case GET_CHANNELS:
                 getChannelsCodes();
                 break;
+            case UPLOAD_FILES:
+                Cursor c = null;
+                try {
+                    c = provider.query(GalleryImages.CONTENT_URI,
+                            GalleryImages.PROJECTION,
+                            GalleryImages.Columns.IS_SYNCED.getName() + "=? AND " +
+                                    GalleryImages.Columns.NEED_UPLOAD.getName() + "=?",
+                            new String[]{NOT_SYNCED, NEED_UPLOAD}, null
+                    );
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+                if (c != null && c.getCount() > 0) {
+                    Log.d(TAG, "onPerformSync()::UPLOAD_FILES::c.getCount() = " + c.getCount());
+                    uploadFiles(c, provider);
+                }
+                break;
             default:
         }
         Log.i(TAG, "Network synchronization complete");
@@ -140,22 +168,59 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         Log.d(TAG, "getChannelsCodes()::START");
         String url = mApp.getHostName() + ":" + mApp.getPort();
         Log.d(TAG, "getChannelsCodes()::Url = " + url);
-       /* new ChannelsRestAdapter(url)
+        new ChannelsRestAdapter(url)
                 .execute(mApp.getToken(), new Callback<ChannelsObj>() {
                     @Override
                     public void success(ChannelsObj channelsObj, Response response) {
                         Log.d(TAG, "onPerformSync()::ChannelsRestAdapter()::success()::channelsObj = " + channelsObj);
-                        mNotifyManager.notify(1000, mBuilder.build());
+                        dispatchNotification(100);
+                        completeGetChannels(channelsObj);
                     }
 
                     @Override
                     public void failure(RetrofitError error) {
                         Log.d(TAG, "onPerformSync()::ChannelsRestAdapter()::failure()::Error: " + error.getLocalizedMessage());
                         mBuilder.setContentText("Channels code request FAILURE");
-                        mNotifyManager.notify(1000, mBuilder.build());
+                        dispatchNotification(100);
                     }
-                });*/
-        ChannelsObj channels = new ChannelsRestAdapter(url).execute(mApp.getToken());
+                });
+//        ChannelsObj channels = new ChannelsRestAdapter(url).execute(mApp.getToken());
+        //        completeGetChannels(channels);
+    }
+
+    private void uploadFiles(Cursor c, ContentProviderClient provider) {
+//        final ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
+        String url = mApp.getHostName() + ":" + mApp.getPort();
+        while (c.moveToNext()) {
+            Integer fileId = c.getInt(GalleryImages.Columns.ID.ordinal());
+            String fileName = c.getString(GalleryImages.Columns.IMAGE_NAME.ordinal());
+            String filePath = c.getString(GalleryImages.Columns.IMAGE_PATH.ordinal());
+            String fileThumbPath = c.getString(GalleryImages.Columns.THUMB_PATH.ordinal());
+            Integer needUpload = c.getInt(GalleryImages.Columns.NEED_UPLOAD.ordinal());
+            Integer isSynced = c.getInt(GalleryImages.Columns.IS_SYNCED.ordinal());
+            Log.d(TAG, "fileId=" + fileId + "|fileName=" + fileName + "|filePath=" +
+                    filePath + "|fileThumbPath=" + fileThumbPath + "|needUpload=" + needUpload + "|isSynced=" + isSynced);
+
+            TypedFile typedFile = new TypedFile("application/binary", new File(filePath));
+            new FileUploadRestAdapter(url, typedFile)
+                    .execute(mApp.getDomain(), mApp.getToken(), new UploadCallback(provider, fileId, fileName));
+        }
+    }
+
+    private void completeFileUpload(ContentProviderClient providerClient, FileUploadObj fileUploadObj, Integer mFileId) {
+        ContentValues cv = new ContentValues();
+        cv.put(GalleryImages.Columns.FILE_URI.getName(), fileUploadObj.getUrl());
+
+        try {
+            int updated = providerClient.update(GalleryImages.CONTENT_URI, cv,
+                    GalleryImages.Columns.ID.getName() + "=?", new String[]{String.valueOf(mFileId)});
+            Log.d(TAG, "updated=" + updated);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void completeGetChannels(ChannelsObj channels) {
         if (channels != null) {
             if (channels.getErrorCode() == 0 && TextUtils.isEmpty(channels.getErrorMessage())) {
                 if (channels.getChannels().size() > 0) {
@@ -172,5 +237,41 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
             Log.d(TAG, "getChannelsCodes():: Error: channels = NULL");
         }
         Log.d(TAG, "getChannelsCodes()::END");
+    }
+
+    private void dispatchNotification(final int id) {
+        mNotifyManager.notify(id, mBuilder.build());
+        new Handler().postDelayed(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        mNotifyManager.cancel(id);
+                    }
+                }, 3000
+        );
+    }
+
+    private class UploadCallback implements Callback<FileUploadObj> {
+
+        private final ContentProviderClient mProvider;
+        private final Integer mFileId;
+        private final String mFileName;
+
+        public UploadCallback(ContentProviderClient operations, Integer fileId, String fileName) {
+            this.mProvider = operations;
+            this.mFileId = fileId;
+            this.mFileName = fileName;
+        }
+
+        @Override
+        public void success(FileUploadObj fileUploadObj, Response response) {
+            completeFileUpload(mProvider, fileUploadObj, mFileId);
+            Log.d(TAG, "UploadCallback()::success=" + fileUploadObj.getUrl());
+        }
+
+        @Override
+        public void failure(RetrofitError error) {
+            Log.d(TAG, "UploadCallback()::error=" + error.getLocalizedMessage());
+        }
     }
 }
