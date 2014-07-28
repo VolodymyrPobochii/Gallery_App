@@ -417,18 +417,18 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
 //        statusTask.execute(url);
         final GetChannelsEventListener channelsEventListener = (GetChannelsEventListener) context;
         new ChannelsRestAdapter(hostName + ":" + port)
-        .execute(token, new Callback<ChannelsObj>() {
-            @Override
-            public void success(ChannelsObj channelsObj, Response response) {
-                Toast.makeText(context, "Channels: " + channelsObj.toString(), Toast.LENGTH_LONG).show();
-                channelsEventListener.onGetChannels(channelsObj);
-            }
+                .execute(token, new Callback<ChannelsObj>() {
+                    @Override
+                    public void success(ChannelsObj channelsObj, Response response) {
+                        Toast.makeText(context, "Channels: " + channelsObj.toString(), Toast.LENGTH_LONG).show();
+                        channelsEventListener.onGetChannels(channelsObj);
+                    }
 
-            @Override
-            public void failure(RetrofitError error) {
-                Toast.makeText(context, "Error: " + error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
+                    @Override
+                    public void failure(RetrofitError error) {
+                        Toast.makeText(context, "Error: " + error.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
     }
 
     public int updateChannels(ChannelsObj channels) {
@@ -456,7 +456,10 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
         int updatedCount = 0;
         ContentValues cv = new ContentValues();
         cv.put(GalleryDBContent.GalleryImages.Columns.STATUS.getName(), status);
-//        cv.put(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName(), 1);
+        if (status.equalsIgnoreCase("Completed")) {
+            cv.put(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName(), 1);
+            cv.put(GalleryDBContent.GalleryImages.Columns.NEED_UPLOAD.getName(), 0);
+        }
         for (String id : ids) {
             updatedCount += getContentResolver().update(GalleryDBContent.GalleryImages.CONTENT_URI, cv,
                     GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?" + " AND " +

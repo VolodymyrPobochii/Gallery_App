@@ -31,14 +31,21 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 
 public class PhotoIntentActivity extends Activity {
 
+    private static final String TAG = PhotoIntentActivity.class.getSimpleName();
+
     private static final int ACTION_TAKE_PHOTO_B = 1;
     private static final int ACTION_TAKE_PHOTO_S = 2;
-    private static final int ACTION_TAKE_VIDEO = 3;
 
+    private static final int ACTION_TAKE_VIDEO = 3;
     private static final String BITMAP_STORAGE_KEY = "viewbitmap";
     private static final String IMAGEVIEW_VISIBILITY_STORAGE_KEY = "imageviewvisibility";
     private ImageView mImageView;
@@ -159,37 +166,85 @@ public class PhotoIntentActivity extends Activity {
         return f;
     }
 
-    private Bitmap setPic(boolean forThumb) {
+    private Bitmap setPic(final boolean forThumb) {
 
-		/* There isn't enough memory to open up more than a couple camera photos */
-        /* So pre-scale the target bitmap into which the file is decoded */
+		/* There isn't enough memory to open up more than a couple camera photos *//*
+        *//* So pre-scale the target bitmap into which the file is decoded *//*
 
-		/* Get the size of the ImageView */
+		*//* Get the size of the ImageView *//*
         int targetW = forThumb ? getResources().getInteger(R.integer.grid_thumb_wh) : mImageView.getWidth();
         int targetH = forThumb ? getResources().getInteger(R.integer.grid_thumb_wh) : mImageView.getHeight();
 
-		/* Get the size of the image */
+		*//* Get the size of the image *//*
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
         int photoW = bmOptions.outWidth;
         int photoH = bmOptions.outHeight;
 
-		/* Figure out which way needs to be reduced less */
+		*//* Figure out which way needs to be reduced less *//*
         int scaleFactor = 1;
         if ((targetW > 0) || (targetH > 0)) {
             scaleFactor = Math.min(photoW / targetW, photoH / targetH);
         }
 
-		/* Set bitmap options to scale the image decode target */
+		*//* Set bitmap options to scale the image decode target *//*
         bmOptions.inJustDecodeBounds = false;
         bmOptions.inSampleSize = scaleFactor;
-        bmOptions.inPurgeable = true;
+        bmOptions.inPurgeable = true;*/
 
 		/* Decode the JPEG file into a Bitmap */
-        Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+//        Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
 
-        if (!forThumb) {
+        ExecutorService service = Executors.newFixedThreadPool(1);
+        Future<Bitmap> bitmapFuture = service.submit(new Callable<Bitmap>() {
+            @Override
+            public Bitmap call() throws Exception {
+                /* There isn't enough memory to open up more than a couple camera photos */
+        /* So pre-scale the target bitmap into which the file is decoded */
+
+		/* Get the size of the ImageView */
+                int targetW = forThumb ? getResources().getInteger(R.integer.grid_thumb_wh) : mImageView.getWidth();
+                int targetH = forThumb ? getResources().getInteger(R.integer.grid_thumb_wh) : mImageView.getHeight();
+
+		/* Get the size of the image */
+                BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+                bmOptions.inJustDecodeBounds = true;
+                BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+                int photoW = bmOptions.outWidth;
+                int photoH = bmOptions.outHeight;
+
+		/* Figure out which way needs to be reduced less */
+                int scaleFactor = 1;
+                if ((targetW > 0) || (targetH > 0)) {
+                    scaleFactor = Math.min(photoW / targetW, photoH / targetH);
+                }
+
+		/* Set bitmap options to scale the image decode target */
+                bmOptions.inJustDecodeBounds = false;
+                bmOptions.inSampleSize = scaleFactor;
+                bmOptions.inPurgeable = true;
+                /* Decode the JPEG file into a Bitmap */
+                return BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+            }
+        });
+
+        while (!bitmapFuture.isDone()){
+            Log.d(TAG, "Decoding bitmap...");
+        }
+
+        service.shutdown();
+
+        Bitmap bitmap = null;
+        try {
+            bitmap = bitmapFuture.get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        if (!forThumb && bitmap != null) {
         /* Associate the Bitmap to the ImageView */
             mImageView.setImageBitmap(bitmap);
             mVideoUri = null;

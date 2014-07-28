@@ -3,14 +3,20 @@ package com.galleryapp.fragmernts;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.LoaderManager;
+import android.content.ContentProvider;
+import android.content.ContentProviderOperation;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Loader;
+import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -31,7 +37,10 @@ import com.galleryapp.R;
 import com.galleryapp.adapters.ImageAdapter;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.provider.GalleryDBContent;
+import com.galleryapp.data.provider.GalleryDBProvider;
+import com.galleryapp.syncadapter.SyncAdapter;
 import com.galleryapp.syncadapter.SyncBaseFragment;
+import com.galleryapp.syncadapter.SyncUtils;
 import com.google.common.io.Files;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -50,6 +59,7 @@ import java.util.List;
  * create an instance of this fragment.
  */
 public class GalleryFragment extends SyncBaseFragment implements LoaderManager.LoaderCallbacks<Cursor> {
+    private static final String TAG = GalleryFragment.class.getSimpleName();
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -204,7 +214,8 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
                         return true;
                     case R.id.action_send_photo_item:
                         mode.finish(); // Action picked, so close the CAB
-                        sendSelectedItems();
+                        prepareFilesForSync();
+//                        sendSelectedItems();
                         return true;
                     case R.id.action_status_item:
                         mode.finish(); // Action picked, so close the CAB
@@ -286,6 +297,7 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
 
     @Override
     protected void setRefreshActionButtonState(boolean refreshing) {
+        Log.d(TAG, "setRefreshActionButtonState() = " + refreshing);
         getActivity().setProgressBarIndeterminate(refreshing);
         getActivity().setProgressBarIndeterminateVisibility(refreshing);
     }
@@ -313,6 +325,32 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
             }
         } else {
             Toast.makeText(getActivity(), "No Connection", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void prepareFilesForSync() {
+        ContentValues cv = new ContentValues();
+        cv.put(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName(), 0);
+        cv.put(GalleryDBContent.GalleryImages.Columns.NEED_UPLOAD.getName(), 1);
+
+        ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
+        for (Integer id : mCheckedIds) {
+            operations.add(ContentProviderOperation.newUpdate(GalleryDBContent.GalleryImages.CONTENT_URI)
+                    .withValues(cv)
+                    .withSelection(GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?", new String[]{String.valueOf(id + 1)})
+                    .build());
+        }
+        if (operations.size() > 0) {
+            try {
+                int updated = getActivity().getContentResolver().applyBatch(GalleryDBProvider.AUTHORITY, operations).length;
+                Log.d(TAG, "prepareFilesForSync()::applyBatch()::" + updated);
+                SyncUtils.TriggerRefresh(SyncAdapter.UPLOAD_FILES);
+                Log.d(TAG, "prepareFilesForSync()::SyncUtils.TriggerRefresh(UPLOAD_FILES)");
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            } catch (OperationApplicationException e) {
+                e.printStackTrace();
+            }
         }
     }
 
