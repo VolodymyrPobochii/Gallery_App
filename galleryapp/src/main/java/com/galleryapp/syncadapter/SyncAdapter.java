@@ -19,7 +19,6 @@ package com.galleryapp.syncadapter;
 import android.accounts.Account;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
-import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -41,7 +40,6 @@ import com.galleryapp.data.model.FileUploadObj;
 import com.galleryapp.data.provider.GalleryDBContent.GalleryImages;
 
 import java.io.File;
-import java.util.ArrayList;
 
 import retrofit.Callback;
 import retrofit.RetrofitError;

@@ -1,22 +1,15 @@
 package com.galleryapp.fragmernts;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.app.LoaderManager;
-import android.content.ContentProvider;
-import android.content.ContentProviderOperation;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Loader;
-import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -37,10 +30,7 @@ import com.galleryapp.R;
 import com.galleryapp.adapters.ImageAdapter;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.provider.GalleryDBContent;
-import com.galleryapp.data.provider.GalleryDBProvider;
-import com.galleryapp.syncadapter.SyncAdapter;
 import com.galleryapp.syncadapter.SyncBaseFragment;
-import com.galleryapp.syncadapter.SyncUtils;
 import com.google.common.io.Files;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -102,6 +92,7 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
         }
     };
     private Spinner mChannels;
+    private GalleryApp mApp;
 
     public ImageAdapter getGalleryAdapter() {
         return mGalleryAdapter;
@@ -134,6 +125,7 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mApp = GalleryApp.getInstance();
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
@@ -161,7 +153,7 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        final SharedPreferences preff = GalleryApp.getInstance().getPreff();
+        final SharedPreferences preff = mApp.getPreff();
         final View rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
         // Inflate the layout for this fragment
         // Set up an array of the Thumbnail Image ID column we want
@@ -214,7 +206,7 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
                         return true;
                     case R.id.action_send_photo_item:
                         mode.finish(); // Action picked, so close the CAB
-                        prepareFilesForSync();
+                        mApp.prepareFilesForSync(mCheckedIds);
 //                        sendSelectedItems();
                         return true;
                     case R.id.action_status_item:
@@ -246,7 +238,7 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
                                 .putString("domain", channelCursor.getString(channelCursor.getColumnIndex(GalleryDBContent.Channels.Columns.DOMAIN.getName())))
                                 .putString("capturechannelcode", channelCursor.getString(channelCursor.getColumnIndex(GalleryDBContent.Channels.Columns.CODE.getName())))
                                 .apply();
-                        GalleryApp.getInstance().setUpHost();
+                        mApp.setUpHost();
                     }
 
                     @Override
@@ -318,39 +310,14 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
             }
             cursor.close();
         }
-        if (GalleryApp.getInstance().isNetworkConnected()) {
+        // TODO : refactor to check connection in application
+        if (mApp.isNetworkConnected()) {
             for (Integer fileId : fileIds) {
                 String docId = fileDocIds.get(fileIds.indexOf(fileId));
-                GalleryApp.getInstance().getDocStatus(getActivity().getApplicationContext(), String.valueOf(fileId), docId);
+                mApp.getDocStatus(getActivity().getApplicationContext(), String.valueOf(fileId), docId);
             }
         } else {
             Toast.makeText(getActivity(), "No Connection", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void prepareFilesForSync() {
-        ContentValues cv = new ContentValues();
-        cv.put(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName(), 0);
-        cv.put(GalleryDBContent.GalleryImages.Columns.NEED_UPLOAD.getName(), 1);
-
-        ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
-        for (Integer id : mCheckedIds) {
-            operations.add(ContentProviderOperation.newUpdate(GalleryDBContent.GalleryImages.CONTENT_URI)
-                    .withValues(cv)
-                    .withSelection(GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?", new String[]{String.valueOf(id + 1)})
-                    .build());
-        }
-        if (operations.size() > 0) {
-            try {
-                int updated = getActivity().getContentResolver().applyBatch(GalleryDBProvider.AUTHORITY, operations).length;
-                Log.d(TAG, "prepareFilesForSync()::applyBatch()::" + updated);
-                SyncUtils.TriggerRefresh(SyncAdapter.UPLOAD_FILES);
-                Log.d(TAG, "prepareFilesForSync()::SyncUtils.TriggerRefresh(UPLOAD_FILES)");
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            } catch (OperationApplicationException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -389,7 +356,7 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
 //                files.add(new TypedFile("application/binary", uploadFile));
             }
 //            mListener.onStartUploadImages(filePaths.size());
-            GalleryApp.getInstance().uploadFile(getActivity(), fileBytes, filePaths, thumbPaths, fileNames, fileIds);
+            mApp.uploadFile(getActivity(), fileBytes, filePaths, thumbPaths, fileNames, fileIds);
         }
     }
 

@@ -5,6 +5,8 @@ import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.app.ProgressDialog;
+import android.content.ContentProvider;
+import android.content.ContentProviderClient;
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
 import android.content.ContentValues;
@@ -52,6 +54,8 @@ import com.galleryapp.data.provider.GalleryDBProvider;
 import com.galleryapp.fragmernts.GalleryFragment;
 import com.galleryapp.interfaces.GetChannelsEventListener;
 import com.galleryapp.interfaces.ProgressiveEntityListener;
+import com.galleryapp.syncadapter.SyncAdapter;
+import com.galleryapp.syncadapter.SyncUtils;
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
 import com.nostra13.universalimageloader.cache.memory.impl.LruMemoryCache;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -78,7 +82,7 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
     public static final String TAG = GalleryApp.class.getSimpleName();
     private static final long TIMER_TICK = 100l;
 
-    private static GalleryApp instance;
+    private static GalleryApp sInstance;
 
     private String login;
     private String password;
@@ -105,8 +109,8 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
     @Override
     public void onCreate() {
         super.onCreate();
-        if (instance == null) {
-            instance = this;
+        if (sInstance == null) {
+            sInstance = this;
         }
         DisplayMetrics metrics = new DisplayMetrics();
         WindowManager windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
@@ -271,7 +275,33 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
     }
 
     public static GalleryApp getInstance() {
-        return instance;
+        return sInstance;
+    }
+
+    public void prepareFilesForSync(List<Integer> mCheckedIds) {
+        ContentValues cv = new ContentValues();
+        cv.put(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName(), 0);
+        cv.put(GalleryDBContent.GalleryImages.Columns.NEED_UPLOAD.getName(), 1);
+
+        ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
+        for (Integer id : mCheckedIds) {
+            operations.add(ContentProviderOperation.newUpdate(GalleryDBContent.GalleryImages.CONTENT_URI)
+                    .withValues(cv)
+                    .withSelection(GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?", new String[]{String.valueOf(id + 1)})
+                    .build());
+        }
+        if (operations.size() > 0) {
+            try {
+                int updated = getContentResolver().applyBatch(GalleryDBProvider.AUTHORITY, operations).length;
+                Log.d(TAG, "prepareFilesForSync()::applyBatch()::" + updated);
+                SyncUtils.TriggerRefresh(SyncAdapter.UPLOAD_FILES);
+                Log.d(TAG, "prepareFilesForSync()::SyncUtils.TriggerRefresh(UPLOAD_FILES)");
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            } catch (OperationApplicationException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void uploadFile(Context context, List<byte[]> fileBytes, List<String> filePaths, List<String> thumbPaths,
