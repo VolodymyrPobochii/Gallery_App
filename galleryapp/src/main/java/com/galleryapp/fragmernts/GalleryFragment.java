@@ -1,8 +1,14 @@
 package com.galleryapp.fragmernts;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.LoaderManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.CursorLoader;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.Loader;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -26,6 +32,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.galleryapp.Config;
 import com.galleryapp.R;
 import com.galleryapp.adapters.ImageAdapter;
 import com.galleryapp.application.GalleryApp;
@@ -93,11 +100,12 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
     };
     private Spinner mChannels;
     private GalleryApp mApp;
+    private StatusUpdateReceiver mStatusReceiver;
+    private IntentFilter mStatusFilter;
 
     public ImageAdapter getGalleryAdapter() {
         return mGalleryAdapter;
     }
-
 
     /**
      * Use this factory method to create a new instance of
@@ -138,6 +146,12 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
                 .build();
         initThumbLoader();
         initChannelsLoader();
+        initStatusReceiver();
+    }
+
+    private void initStatusReceiver() {
+        mStatusReceiver = new StatusUpdateReceiver();
+        mStatusFilter = new IntentFilter(Config.ACTION_UPDATE_STATUS);
     }
 
     private void initThumbLoader() {
@@ -206,8 +220,8 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
                         return true;
                     case R.id.action_send_photo_item:
                         mode.finish(); // Action picked, so close the CAB
-                        mApp.prepareFilesForSync(mCheckedIds);
-//                        sendSelectedItems();
+//                        mApp.prepareFilesForSync(mCheckedIds);
+                        sendSelectedItems();
                         return true;
                     case R.id.action_status_item:
                         mode.finish(); // Action picked, so close the CAB
@@ -342,7 +356,9 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
             cursor.close();
         }
 
-        File uploadFile = null;
+        mApp.prepareFilesForSync(fileIds);
+
+        /*File uploadFile = null;
 //        ArrayList<TypedInput> files = new ArrayList<TypedInput>();
         ArrayList<byte[]> fileBytes = new ArrayList<byte[]>();
         if (!filePaths.isEmpty()) {
@@ -357,7 +373,7 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
             }
 //            mListener.onStartUploadImages(filePaths.size());
             mApp.uploadFile(getActivity(), fileBytes, filePaths, thumbPaths, fileNames, fileIds);
-        }
+        }*/
     }
 
     private void deleteSelectedItems() {
@@ -405,6 +421,18 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        getActivity().registerReceiver(mStatusReceiver, mStatusFilter);
+    }
+
+    @Override
+    public void onPause() {
+        getActivity().unregisterReceiver(mStatusReceiver);
+        super.onPause();
+    }
+
+    @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Uri queryUri = GalleryDBContent.GalleryImages.CONTENT_URI;
 //        int limit = args.getInt(LIMIT, 100);
@@ -448,5 +476,25 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
         public void onDeleteItemsOperation(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs);
 
         public void onStartUploadImages(int uploadCount);
+    }
+
+    private class StatusUpdateReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null) {
+                AlertDialog dialog = new AlertDialog.Builder(context)
+                        .setTitle("File status info")
+                        .setMessage("Please check document status manually letter")
+                        .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .create();
+                dialog.show();
+            }
+        }
     }
 }

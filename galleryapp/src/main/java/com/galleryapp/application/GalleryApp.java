@@ -17,6 +17,7 @@ import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -279,6 +280,21 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
     }
 
     public void prepareFilesForSync(List<Integer> mCheckedIds) {
+        for (Integer id : mCheckedIds) {
+            Log.d(TAG, "prepareFilesForSync()::checkedID = " + Integer.toString(id));
+        }
+
+        Cursor cursor = getContentResolver().query(GalleryDBContent.GalleryImages.CONTENT_URI, GalleryDBContent.GalleryImages.PROJECTION,
+                null, null, null);
+        if (cursor.getCount() > 0) {
+            Log.d(TAG, "prepareFilesForSync()::ID.ordinal = " +
+                    Integer.toString(GalleryDBContent.GalleryImages.Columns.ID.ordinal()));
+            while (cursor.moveToNext()) {
+                Log.d(TAG, "prepareFilesForSync()::cursorID = " +
+                        Integer.toString(cursor.getInt(GalleryDBContent.GalleryImages.Columns.ID.ordinal())));
+            }
+        }
+
         ContentValues cv = new ContentValues();
         cv.put(GalleryDBContent.GalleryImages.Columns.IS_SYNCED.getName(), 0);
         cv.put(GalleryDBContent.GalleryImages.Columns.NEED_UPLOAD.getName(), 1);
@@ -660,6 +676,7 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
                     }.start();
                     mUpdateTimes--;
                 } else {
+                    sendBroadcast(new Intent(Config.ACTION_UPDATE_STATUS));
                     AlertDialog dialog = new AlertDialog.Builder(this)
                             .setTitle("File status info")
                             .setMessage("Please check document status manually letter")

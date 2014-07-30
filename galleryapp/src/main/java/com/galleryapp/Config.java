@@ -1,11 +1,15 @@
 package com.galleryapp;
 
+import android.content.Context;
+
 /**
  * Created by Admin on 25.04.2014.
  */
 public class Config {
     public Config() {
     }
+
+    public static final String ACTION_UPDATE_STATUS = "com.galleryapp.ACTION_UPDATE_STATUS";
 
     public static final String DEFAULT_USERNAME = "serge.kazakov@staging";
 

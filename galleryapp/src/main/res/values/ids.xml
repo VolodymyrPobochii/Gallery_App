@@ -2,4 +2,5 @@
 <resources>
     <item name="gallery_thumbs_loader" type="id">gallery_loader</item>
     <item name="channels_loader" type="id">channels_loader</item>
+    <item name="submit_doc" type="id">submitDoc</item>
 </resources>
