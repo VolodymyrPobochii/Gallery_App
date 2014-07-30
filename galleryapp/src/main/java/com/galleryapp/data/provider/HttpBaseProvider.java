@@ -48,7 +48,14 @@ public abstract class HttpBaseProvider extends ContentProvider {
                 break;
             }
         }
-        Log.d(TAG, "onPerformSync()::UPLOAD_FILES::c.getCount() = " + c.getCount());
+        Log.d(TAG, "onPerformSync()::checkForSync()::c.getCount() = " + c.getCount());
     }
 
+    protected final void checkChannels(Cursor c, Uri uri) {
+        if (c.getCount() == 0) {
+            c.setNotificationUri(getContext().getContentResolver(), uri);
+            SyncUtils.TriggerRefresh(SyncAdapter.GET_CHANNELS);
+        }
+        Log.d(TAG, "onPerformSync()::checkChannels()::c.getCount() = " + c.getCount());
+    }
 }

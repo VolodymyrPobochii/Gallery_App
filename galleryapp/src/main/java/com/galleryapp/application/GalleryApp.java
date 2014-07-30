@@ -294,12 +294,13 @@ public class GalleryApp extends Application implements ProgressiveEntityListener
             try {
                 int updated = getContentResolver().applyBatch(GalleryDBProvider.AUTHORITY, operations).length;
                 Log.d(TAG, "prepareFilesForSync()::applyBatch()::" + updated);
-                SyncUtils.TriggerRefresh(SyncAdapter.UPLOAD_FILES);
-                Log.d(TAG, "prepareFilesForSync()::SyncUtils.TriggerRefresh(UPLOAD_FILES)");
             } catch (RemoteException e) {
                 e.printStackTrace();
             } catch (OperationApplicationException e) {
                 e.printStackTrace();
+            } finally {
+                SyncUtils.TriggerRefresh(SyncAdapter.UPLOAD_FILES);
+                Log.d(TAG, "prepareFilesForSync()::SyncUtils.TriggerRefresh(UPLOAD_FILES)");
             }
         }
     }

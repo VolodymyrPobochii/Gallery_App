@@ -36,8 +36,6 @@ public abstract class SyncBaseFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        // Create account, if needed
-        SyncUtils.CreateSyncAccount(activity);
     }
 
     @Override

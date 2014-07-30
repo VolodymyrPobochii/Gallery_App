@@ -15,11 +15,10 @@ limitations under the License.
 -->
 
 <sync-adapter xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:accountType="@string/account_type"
     android:allowParallelSyncs="false"
     android:contentAuthority="@string/contentAuthority"
     android:isAlwaysSyncable="true"
     android:supportsUploading="false"
     android:userVisible="false"
-    tools:ignore="UnusedAttribute" />
+    />

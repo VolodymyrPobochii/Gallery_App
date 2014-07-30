@@ -313,7 +313,9 @@ public final class GalleryDBProvider extends HttpBaseProvider {
 //            c.setNotificationUri(getContext().getContentResolver(), uri);
             if (uriType.getType().equals(GalleryImages.TABLE_NAME)) {
                 checkForSync(c, uri);
-            } else {
+            } else if (uriType.getType().equals(Channels.TABLE_NAME)){
+                checkChannels(c, uri);
+            }else {
                 c.setNotificationUri(getContext().getContentResolver(), uri);
             }
         }

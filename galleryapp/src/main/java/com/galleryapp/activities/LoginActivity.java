@@ -208,6 +208,8 @@ public class LoginActivity extends BaseActivity {
     private void completeAuth() {
         if (tokenReceived) {
             // Update/Sync channels
+            // Create account, if needed
+            SyncUtils.CreateSyncAccount(this);
             SyncUtils.TriggerRefresh(SyncAdapter.GET_CHANNELS);
             startActivity(new Intent(LoginActivity.this, GalleryActivity.class));
             finish();

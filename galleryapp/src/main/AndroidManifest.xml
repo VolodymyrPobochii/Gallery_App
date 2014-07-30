@@ -71,7 +71,8 @@
         <provider
             android:name="com.galleryapp.data.provider.GalleryDBProvider"
             android:authorities="com.galleryapp.provider.GalleryDBProvider"
-            android:exported="false" />
+            android:exported="false"
+            android:syncable="true"/>
 
         <!-- This service implements our SyncAdapter. It needs to be exported, so that the system
         sync framework can access it. -->
