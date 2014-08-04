@@ -31,7 +31,7 @@ import com.galleryapp.data.provider.GalleryDBProvider;
  * Static helper methods for working with the sync framework.
  */
 public class SyncUtils {
-    private static final long SYNC_FREQUENCY = 60 * 60;  // 1 hour (in seconds)
+    private static final long SYNC_FREQUENCY = 60 * 60 * 12;  // 1 hour (in seconds)
     private static final String CONTENT_AUTHORITY = GalleryDBProvider.AUTHORITY;
     private static final String PREF_SETUP_COMPLETE = "setup_complete";
     private static final String REQUEST_TYPE = "requestType";

@@ -75,6 +75,4 @@ public class SyncService extends Service {
         Log.d(TAG, "SyncService :: onBind()");
         return sSyncAdapter.getSyncAdapterBinder();
     }
-
-
 }

@@ -37,7 +37,9 @@ import com.galleryapp.R;
 import com.galleryapp.adapters.ImageAdapter;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.provider.GalleryDBContent;
+import com.galleryapp.syncadapter.SyncAdapter;
 import com.galleryapp.syncadapter.SyncBaseFragment;
+import com.galleryapp.syncadapter.SyncUtils;
 import com.google.common.io.Files;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -225,7 +227,8 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
                         return true;
                     case R.id.action_status_item:
                         mode.finish(); // Action picked, so close the CAB
-                        getSelectedItemsStatus();
+//                        getSelectedItemsStatus();
+                        SyncUtils.TriggerRefresh(SyncAdapter.GET_DOC_STATUS);
                         return true;
                     default:
                         return false;
@@ -308,33 +311,6 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
         getActivity().setProgressBarIndeterminateVisibility(refreshing);
     }
 
-    private void getSelectedItemsStatus() {
-        ArrayList<Integer> fileIds = new ArrayList<Integer>();
-        ArrayList<String> fileDocIds = new ArrayList<String>();
-
-        Cursor cursor = ((ImageAdapter) mGridView.getAdapter()).getCursor();
-        assert cursor != null;
-        if (cursor.getCount() > 0) {
-            for (Integer id : mCheckedIds) {
-                Log.d("UPLOAD", "ID[" + id + "] = " + id);
-                cursor.moveToPosition(id);
-                fileIds.add(cursor.getInt(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.ID.getName())));
-                fileDocIds.add(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.FILE_ID.getName())));
-                Log.d("UPLOAD", "filePath = " + fileIds + "\nfileName = " + fileDocIds);
-            }
-            cursor.close();
-        }
-        // TODO : refactor to check connection in application
-        if (mApp.isNetworkConnected()) {
-            for (Integer fileId : fileIds) {
-                String docId = fileDocIds.get(fileIds.indexOf(fileId));
-                mApp.getDocStatus(getActivity().getApplicationContext(), String.valueOf(fileId), docId);
-            }
-        } else {
-            Toast.makeText(getActivity(), "No Connection", Toast.LENGTH_SHORT).show();
-        }
-    }
-
     private void sendSelectedItems() {
         List<String> filePaths = new ArrayList<String>();
         List<String> thumbPaths = new ArrayList<String>();
@@ -357,23 +333,6 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
         }
 
         mApp.prepareFilesForSync(fileIds);
-
-        /*File uploadFile = null;
-//        ArrayList<TypedInput> files = new ArrayList<TypedInput>();
-        ArrayList<byte[]> fileBytes = new ArrayList<byte[]>();
-        if (!filePaths.isEmpty()) {
-            for (String filePath : filePaths) {
-                uploadFile = new File(filePath);
-                try {
-                    fileBytes.add(Files.toByteArray(uploadFile));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-//                files.add(new TypedFile("application/binary", uploadFile));
-            }
-//            mListener.onStartUploadImages(filePaths.size());
-            mApp.uploadFile(getActivity(), fileBytes, filePaths, thumbPaths, fileNames, fileIds);
-        }*/
     }
 
     private void deleteSelectedItems() {
@@ -474,7 +433,6 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         public void onDeleteItemsOperation(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs);
-
         public void onStartUploadImages(int uploadCount);
     }
 
