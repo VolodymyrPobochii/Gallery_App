@@ -208,21 +208,21 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private void getChannelsCodes(ContentProvider localProvider, SyncResult syncResult) {
         Log.d(TAG, "getChannelsCodes() :: START");
-        mBuilder.setTicker("Channels update")
+        /*mBuilder.setTicker("Channels update")
                 .setContentTitle("Channels update")
                 .setContentText("Updating channels...")
                 .setProgress(100, 0, true)
-                .setSmallIcon(android.R.drawable.stat_sys_download);
+                .setSmallIcon(android.R.drawable.stat_sys_download);*/
 
         ChannelsObj channels = null;
         try {
-            mNotifyManager.notify(R.id.get_channels, mBuilder.build());
+//            mNotifyManager.notify(R.id.get_channels, mBuilder.build());
             channels = mRestService.getChannels(mApp.getToken());
         } catch (RetrofitError error) {
             Log.d(TAG, "getChannelsCodes() :: RetrofitError = " + error.getLocalizedMessage());
-            mBuilder.setContentText("Channels code request FAILURE")
+           /* mBuilder.setContentText("Channels code request FAILURE")
                     .setSmallIcon(android.R.drawable.stat_notify_error);
-            dispatchNotification(R.id.get_channels);
+            dispatchNotification(R.id.get_channels);*/
         }
         Log.d(TAG, "getChannelsCodes() :: END");
         completeGetChannels(channels, localProvider, syncResult);
@@ -523,16 +523,16 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private void completeGetChannels(ChannelsObj channels, ContentProvider localProvider, SyncResult syncResult) {
         if (channels != null) {
-            mBuilder.setContentText("Channels update Successful")
+            /*mBuilder.setContentText("Channels update Successful")
                     .setSmallIcon(android.R.drawable.stat_sys_download_done);
-            dispatchNotification(R.id.get_channels);
+            dispatchNotification(R.id.get_channels);*/
             if (channels.getErrorCode() == 0 && TextUtils.isEmpty(channels.getErrorMessage())) {
                 if (channels.getChannels().size() > 0) {
                     Log.d(TAG, "getChannelsCodes()" + "ChannelsObj = " + channels.toString());
                     Log.d(TAG, "getChannelsCodes()" + "syncResult.stats.numInserts = " + syncResult.stats.numInserts);
                     int channelsUpdated = updateChannels(channels, localProvider);
                     syncResult.stats.numInserts += channelsUpdated;
-                    dispatchNotification(R.id.get_channels);
+//                    dispatchNotification(R.id.get_channels);
                     Log.d(TAG, "getChannelsCodes()" + "channelsUpdated = " + channelsUpdated);
                     Log.d(TAG, "getChannelsCodes()" + "syncResult.stats.numInserts = " + syncResult.stats.numInserts);
                 } else {
@@ -543,9 +543,9 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
             }
         } else {
             Log.d(TAG, "getChannelsCodes():: Error: channels = NULL");
-            mBuilder.setContentText("Upload Error")
+            /*mBuilder.setContentText("Upload Error")
                     .setSmallIcon(android.R.drawable.stat_notify_error);
-            dispatchNotification(R.id.get_channels);
+            dispatchNotification(R.id.get_channels);*/
         }
         Log.d(TAG, "getChannelsCodes()::END");
     }
