@@ -24,6 +24,10 @@ import com.galleryapp.R;
 import com.galleryapp.data.provider.GalleryDBContent.IndexSchemas;
 import com.galleryapp.views.SchemeElementSelector;
 
+import org.apache.http.protocol.HTTP;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -220,9 +224,17 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                                 String name = names.get(i);
                                 sb.append(name).append("=");
                                 if (v instanceof Spinner) {
-                                    sb.append(((Spinner) v).getSelectedItem());
+                                    try {
+                                        sb.append(URLEncoder.encode((String) ((Spinner) v).getSelectedItem(), HTTP.UTF_8));
+                                    } catch (UnsupportedEncodingException e) {
+                                        e.printStackTrace();
+                                    }
                                 } else if (v instanceof EditText) {
-                                    sb.append(((EditText) v).getText().toString());
+                                    try {
+                                        sb.append(URLEncoder.encode(((EditText) v).getText().toString(), HTTP.UTF_8));
+                                    } catch (UnsupportedEncodingException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
                                 if (i != (viewSize - 1)) {
                                     sb.append("&");

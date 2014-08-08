@@ -343,11 +343,7 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
     }
 
     public void setIndexString(String indexString) {
-        try {
-            this.indexString = URLEncoder.encode(indexString, HTTP.UTF_8);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        this.indexString = indexString;
     }
 
     public String getToken() {
