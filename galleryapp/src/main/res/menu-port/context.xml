@@ -6,21 +6,21 @@
         android:title="@string/action_delete_photo_item"
         android:icon="@android:drawable/ic_menu_delete"
         android:orderInCategory="99"
-        android:showAsAction="ifRoom|withText"
+        android:showAsAction="ifRoom"
         tools:ignore="AppCompatResource" />
 
     <item android:id="@+id/action_set_index"
         android:title="@string/action_set_index"
         android:icon="@android:drawable/ic_menu_set_as"
         android:orderInCategory="100"
-        android:showAsAction="ifRoom|withText"
+        android:showAsAction="ifRoom"
         tools:ignore="AppCompatResource" />
 
     <item android:id="@+id/action_send_photo_item"
         android:title="@string/action_send_photo_item"
         android:icon="@android:drawable/ic_menu_send"
         android:orderInCategory="101"
-        android:showAsAction="ifRoom|withText"
+        android:showAsAction="ifRoom"
         tools:ignore="AppCompatResource" />
 
     <item
@@ -28,7 +28,7 @@
         android:title="@string/action_status_item"
         android:icon="@android:drawable/ic_input_get"
         android:orderInCategory="102"
-        android:showAsAction="ifRoom|withText"
+        android:showAsAction="ifRoom"
         tools:ignore="AppCompatResource"
         />
 </menu>

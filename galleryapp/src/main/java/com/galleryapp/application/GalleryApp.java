@@ -41,7 +41,11 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.utils.StorageUtils;
 
+import org.apache.http.protocol.HTTP;
+
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -59,6 +63,7 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
     private String token;
     private String domain;
     private String captureChannelCode;
+    private String indexString;
     private SharedPreferences preff;
     private String hostName;
     private String port;
@@ -255,6 +260,7 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
         Cursor cursor = getContentResolver().query(GalleryDBContent.GalleryImages.CONTENT_URI,
                 GalleryDBContent.GalleryImages.PROJECTION,
                 null, null, null);
+
         if (cursor.getCount() > 0) {
             Log.d(TAG, "prepareFilesForSync()::ID.ordinal = " +
                     Integer.toString(GalleryDBContent.GalleryImages.Columns.ID.ordinal()));
@@ -284,10 +290,9 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
                 e.printStackTrace();
             } catch (OperationApplicationException e) {
                 e.printStackTrace();
-            } finally {
-                SyncUtils.TriggerRefresh(SyncAdapter.UPLOAD_FILES);
-                Log.d(TAG, "prepareFilesForSync()::SyncUtils.TriggerRefresh(UPLOAD_FILES)");
             }
+            SyncUtils.TriggerRefresh(SyncAdapter.UPLOAD_FILES);
+            Log.d(TAG, "prepareFilesForSync()::SyncUtils.TriggerRefresh(UPLOAD_FILES)");
         }
     }
 
@@ -331,6 +336,18 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
 
     public void setCaptureChannelCode(String captureChannelCode) {
         this.captureChannelCode = captureChannelCode;
+    }
+
+    public String getIndexString() {
+        return indexString;
+    }
+
+    public void setIndexString(String indexString) {
+        try {
+            this.indexString = URLEncoder.encode(indexString, HTTP.UTF_8);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
     }
 
     public String getToken() {

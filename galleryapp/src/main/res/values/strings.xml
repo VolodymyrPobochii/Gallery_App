@@ -44,6 +44,7 @@
     <string name="preferences">Preferences</string>
     <string name="action_delete_photo_item">Delete</string>
     <string name="action_send_photo_item">Send</string>
+    <string name="action_set_index">Schema</string>
     <string name="album_name">CameraSample</string>
     <string name="thumbs_name">CameraSampleThumb</string>
     <string name="cannot">Cannot</string>

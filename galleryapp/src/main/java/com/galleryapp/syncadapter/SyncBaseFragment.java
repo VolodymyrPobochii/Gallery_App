@@ -7,6 +7,7 @@ import android.app.Fragment;
 import android.content.ContentResolver;
 import android.content.SyncStatusObserver;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +29,8 @@ public abstract class SyncBaseFragment extends Fragment {
      * foreground.
      */
     protected Object mSyncObserverHandle;
+
+    protected static Handler sHandler = new Handler();
 
     public SyncBaseFragment() {
         // Required empty public constructor

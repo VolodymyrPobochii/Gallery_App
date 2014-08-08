@@ -1,5 +1,6 @@
 package com.galleryapp.activities;
 
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -13,19 +14,23 @@ import android.widget.Toast;
 import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ImageObj;
+import com.galleryapp.fragmernts.GalleryFragment;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
 
-public class GalleryActivity extends BaseActivity {
+public class GalleryActivity extends BaseActivity
+        implements SchemeDialog.SchemeDialogCallbacks, GalleryFragment.ContextualActionCallback {
 
     private static final String TAG = GalleryActivity.class.getSimpleName();
     public static final int REQUEST_SETTINGS = 1000;
     private static final int REQUEST_CAMERA_PHOTO = 1100;
     private static final int REQUEST_LOAD_IMAGE = 1200;
     private static final long TIMER_TICK = 100l;
+    private static final String SCHEME_DIALOG = "SCHEME";
+    private static final long DELAY_TIME = 250l;
     private int mUploadCount;
     private int mUpdateTimes;
     private int mUpdateFreq;
@@ -180,6 +185,31 @@ public class GalleryActivity extends BaseActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onOkClicked(String indexString) {
+        //TODO: refactor
+        getApp().setIndexString(indexString);
+        /*sHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ((GalleryFragment) getFragmentManager()
+                        .findFragmentById(R.id.container)).sendSelectedItems();
+            }
+        }, DELAY_TIME);*/
+    }
+
+    @Override
+    public void onCancelClicked() {
+
+    }
+
+    @Override
+    public void onFileUpload() {
+        DialogFragment dialog = SchemeDialog
+                .newInstance(getApp().getCaptureChannelCode());
+        dialog.show(getFragmentManager(), SCHEME_DIALOG);
     }
 
    /* @Override

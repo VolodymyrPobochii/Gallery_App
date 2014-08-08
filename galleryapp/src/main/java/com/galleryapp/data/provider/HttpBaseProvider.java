@@ -43,7 +43,7 @@ public abstract class HttpBaseProvider extends ContentProvider {
             int needUpload = c.getInt(GalleryDBContent.GalleryImages.Columns.NEED_UPLOAD.ordinal());
             if (isSynced == 0 && needUpload == 1) {
                 c.moveToFirst();
-                c.setNotificationUri(getContext().getContentResolver(), uri);
+//                c.setNotificationUri(getContext().getContentResolver(), uri);
                 SyncUtils.TriggerRefresh(SyncAdapter.UPLOAD_FILES);
                 break;
             }
@@ -53,9 +53,14 @@ public abstract class HttpBaseProvider extends ContentProvider {
 
     protected final void checkChannels(Cursor c, Uri uri) {
         if (c.getCount() == 0) {
-            c.setNotificationUri(getContext().getContentResolver(), uri);
+//            c.setNotificationUri(getContext().getContentResolver(), uri);
             SyncUtils.TriggerRefresh(SyncAdapter.GET_CHANNELS);
         }
         Log.d(TAG, "onPerformSync()::checkChannels()::c.getCount() = " + c.getCount());
+    }
+
+    protected final void syncIndexSchemas(){
+        SyncUtils.TriggerRefresh(SyncAdapter.GET_INDEX_SCHEME);
+        Log.d(TAG, "onPerformSync()::syncIndexSchemas()");
     }
 }

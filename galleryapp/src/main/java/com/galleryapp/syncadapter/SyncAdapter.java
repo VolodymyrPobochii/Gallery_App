@@ -17,7 +17,6 @@
 package com.galleryapp.syncadapter;
 
 import android.accounts.Account;
-import android.app.AlertDialog;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProvider;
 import android.content.ContentProviderClient;
@@ -25,16 +24,12 @@ import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.content.SyncResult;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.os.Handler;
-import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
@@ -42,12 +37,14 @@ import android.util.Log;
 
 import com.galleryapp.Config;
 import com.galleryapp.R;
-import com.galleryapp.ScanRestServiceEnum;
+import com.galleryapp.ScanRestService;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ChannelsObj;
 import com.galleryapp.data.model.DocStatusObj;
 import com.galleryapp.data.model.DocSubmittedObj;
 import com.galleryapp.data.model.FileUploadObj;
+import com.galleryapp.data.model.IndexSchema;
+import com.galleryapp.data.model.SchemeElement;
 import com.galleryapp.data.model.SubmitDocumentObj;
 import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj;
 import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj;
@@ -56,15 +53,25 @@ import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj.Folde
 import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj.Folder.DocumentError;
 import com.galleryapp.data.provider.GalleryDBContent;
 import com.galleryapp.data.provider.GalleryDBContent.GalleryImages;
+import com.galleryapp.data.provider.GalleryDBContent.Channels;
+import com.galleryapp.data.provider.GalleryDBContent.IndexSchemas;
+import com.google.common.base.Utf8;
 import com.google.gson.Gson;
+
+import org.apache.http.protocol.HTTP;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
 import java.util.UUID;
 
 import retrofit.RetrofitError;
+import retrofit.client.Response;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedFile;
 
@@ -86,6 +93,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
     public static final int GET_CHANNELS = 1000;
     public static final int UPLOAD_FILES = 1001;
     public static final int GET_DOC_STATUS = 1002;
+    public static final int GET_INDEX_SCHEME = 1003;
     private static final long TIMER_TICK = 100l;
     private static final long TIME_TO_CLOSE_NOTIFICATION = 3000l;
 
@@ -106,7 +114,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
     private NotificationManagerCompat mNotifyManager;
     private NotificationCompat.Builder mBuilder;
     private Context mContext;
-    private ScanRestServiceEnum.ScanServices mRestService;
+    private ScanRestService.ScanServices mRestService;
     private ArrayList<Document> mDocuments;
     private ArrayList<String> mIds;
     private int mUploadCount;
@@ -145,14 +153,8 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
 
         String baseUrl = mApp.getHostName() + ":" + mApp.getPort();
         Log.d(TAG, "init():: API_Url = " + baseUrl);
-        //TODO: refactor later
-//        ScanRestService scanService = new ScanRestService.Builder(baseUrl).build();
-        ScanRestServiceEnum serviceEnum = ScanRestServiceEnum.INSTANCE.initRestAdapter(baseUrl);
+        ScanRestService serviceEnum = ScanRestService.INSTANCE.initRestAdapter(baseUrl);
         Log.d(TAG, "init():: Created scanService = " + serviceEnum.toString());
-//        serviceEnum.initRestAdapter(baseUrl);
-//        Log.d(TAG, "init():: Created scanService = " + scanService.toString());
-        //TODO: refactor later
-//        mRestService = scanService.getService();
         mRestService = serviceEnum.getService();
         Log.d(TAG, "init():: Created mRestService = " + mRestService.toString());
     }
@@ -183,6 +185,18 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
             case GET_CHANNELS:
                 getChannelsCodes(localProvider, syncResult);
                 break;
+            case GET_INDEX_SCHEME:
+                String capchcode = mApp.getCaptureChannelCode();
+                Log.d(TAG, "onPerformSync() :: GET_INDEX_SCHEME :: capchcode = " + capchcode);
+                Cursor channels = localProvider.query(Channels.CONTENT_URI,
+                        Channels.PROJECTION,
+                        null, null, null
+                );
+                while (channels.moveToNext()) {
+                    String code = channels.getString(Channels.Columns.CODE.getIndex());
+                    getIndexScheme(localProvider, syncResult, code);
+                }
+                break;
             case UPLOAD_FILES:
                 Cursor c = localProvider.query(GalleryImages.CONTENT_URI,
                         GalleryImages.PROJECTION,
@@ -204,6 +218,40 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
             default:
         }
         Log.i(TAG, "onPerformSync() :: Network synchronization complete");
+    }
+
+    private void getIndexScheme(ContentProvider localProvider, SyncResult syncResult, String capchcode) {
+        Log.d(TAG, "getIndexScheme() :: BEGIN :: capchcode = " + capchcode);
+        IndexSchema indexSchema = null;
+        try {
+//            mNotifyManager.notify(R.id.get_channels, mBuilder.build());
+            indexSchema = mRestService.getIndexScheme(mApp.getDomain(), mApp.getToken(), capchcode);
+        } catch (RetrofitError error) {
+            Log.d(TAG, "getIndexScheme() :: RetrofitError = " + error.getLocalizedMessage());
+           /* mBuilder.setContentText("Channels code request FAILURE")
+                    .setSmallIcon(android.R.drawable.stat_notify_error);
+            dispatchNotification(R.id.get_channels);*/
+        }
+        if (indexSchema != null) {
+            String scheme = new Gson().toJson(indexSchema);
+            Log.d(TAG, "getIndexScheme() :: END :: Scheme = " + scheme);
+            List<SchemeElement> elements = indexSchema.getSchema().getDocuemntSchema().getElements();
+            ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
+            for (SchemeElement element : elements) {
+                element.setChannCode(capchcode);
+                operations.add(ContentProviderOperation.newInsert(IndexSchemas.CONTENT_URI).withValues(element.toContentValues()).build());
+            }
+            if (operations.size() > 0) {
+                try {
+                    int results = localProvider.applyBatch(operations).length;
+                    Log.d(TAG, "getIndexScheme() :: applyBatch() = " + results);
+                } catch (OperationApplicationException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            Log.d(TAG, "getIndexScheme() :: END :: Scheme = NULL");
+        }
     }
 
     private void getChannelsCodes(ContentProvider localProvider, SyncResult syncResult) {
@@ -232,6 +280,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         //TODO: refactor later
 //        final ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
         while (c.moveToNext()) {
+            Log.d(TAG, "uploadFiles() :: BEGIN");
             Integer fileId = c.getInt(GalleryImages.Columns.ID.ordinal());
             String fileName = c.getString(GalleryImages.Columns.IMAGE_NAME.ordinal());
             String filePath = c.getString(GalleryImages.Columns.IMAGE_PATH.ordinal());
@@ -275,6 +324,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                         .setSmallIcon(android.R.drawable.stat_notify_error);
                 dispatchNotification(fileId);
             }
+            Log.d(TAG, "uploadFiles() :: END");
         }
         c.close();
     }
@@ -302,7 +352,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         Log.d(TAG, "prepareSubmitDocs() :: START : name = " + name);
         mIds.add(String.valueOf(id));
         Document document = new Document();
-        document.setIndexSchema("");
+        document.setIndexSchema(mApp.getIndexString());
         document.setOriginalFileName(name);
         document.setContentType("image/jpg");
         document.setContentLength((int) length);
@@ -311,7 +361,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         document.setIsEmailManifest(false);
         document.setBody(null);
         mDocuments.add(document);
-        Log.d(TAG, "prepareSubmitDocs() :: END : name = " + name);
+        Log.d(TAG, "prepareSubmitDocs() :: END : name = " + name + " / schema = " + document.getIndexSchema());
         if (mUploadCount == 0) {
             submitDocs(localProvider);
         }
@@ -551,15 +601,25 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private int updateChannels(ChannelsObj channels, ContentProvider localProvider) {
+        //Set first channel as default
+        mApp.getPreff().edit()
+                .putString("domain", channels.getChannels().get(0).getDomain())
+                .putString("capturechannelcode", channels.getChannels().get(0).getCode())
+                .apply();
+        mApp.setUpHost();
+        //Cleare channels
         localProvider.delete(GalleryDBContent.Channels.CONTENT_URI, null, null);
-
+        //Clear IndexSchema
+        localProvider.delete(IndexSchemas.CONTENT_URI, null, null);
+        //Prepare channels for apply batch
         ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
-        for (ChannelsObj.ChannelObj channel : channels.getChannels()) {
+        ArrayList<ChannelsObj.ChannelObj> channelObjects = channels.getChannels();
+        for (ChannelsObj.ChannelObj channel : channelObjects) {
             operations.add(ContentProviderOperation.newInsert(GalleryDBContent.Channels.CONTENT_URI)
                     .withValues(channel.toContentValues())
                     .build());
         }
-
+        //Channels apply batch
         ContentProviderResult[] results = new ContentProviderResult[0];
         if (operations.size() > 0) {
             try {

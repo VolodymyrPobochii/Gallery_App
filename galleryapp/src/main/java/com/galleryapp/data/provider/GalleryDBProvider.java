@@ -13,10 +13,12 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.galleryapp.data.provider.GalleryDBContent.Channels;
 import com.galleryapp.data.provider.GalleryDBContent.GalleryImages;
+import com.galleryapp.data.provider.GalleryDBContent.IndexSchemas;
 
 import java.util.ArrayList;
 
@@ -41,14 +43,15 @@ public final class GalleryDBProvider extends HttpBaseProvider {
 
     // Version 1 : Creation of the database
     public static final int DATABASE_VERSION = 3;
-
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     private enum UriType {
         GALLERY_IMAGES(GalleryImages.TABLE_NAME, GalleryImages.TABLE_NAME, GalleryImages.TYPE_ELEM_TYPE),
         GALLERY_IMAGES_ID(GalleryImages.TABLE_NAME + "/#", GalleryImages.TABLE_NAME, GalleryImages.TYPE_DIR_TYPE),
         CHANNELS(Channels.TABLE_NAME, Channels.TABLE_NAME, Channels.TYPE_ELEM_TYPE),
-        CHANNELS_ID(Channels.TABLE_NAME + "/#", Channels.TABLE_NAME, Channels.TYPE_DIR_TYPE);
+        CHANNELS_ID(Channels.TABLE_NAME + "/#", Channels.TABLE_NAME, Channels.TYPE_DIR_TYPE),
+        INDEXSCHEMA(IndexSchemas.TABLE_NAME, IndexSchemas.TABLE_NAME, IndexSchemas.TYPE_ELEM_TYPE),
+        INDEXSCHEMA_ID(IndexSchemas.TABLE_NAME + "/#", IndexSchemas.TABLE_NAME, IndexSchemas.TYPE_DIR_TYPE);
 
         private String mTableName;
         private String mType;
@@ -110,6 +113,7 @@ public final class GalleryDBProvider extends HttpBaseProvider {
             // Create all tables here; each class has its own method
             GalleryImages.createTable(db);
             Channels.createTable(db);
+            IndexSchemas.createTable(db);
         }
 
         @Override
@@ -118,6 +122,7 @@ public final class GalleryDBProvider extends HttpBaseProvider {
             // Upgrade all tables here; each class has its own method
             GalleryImages.upgradeTable(db, oldVersion, newVersion);
             Channels.upgradeTable(db, oldVersion, newVersion);
+            IndexSchemas.upgradeTable(db, oldVersion, newVersion);
         }
 
         @Override
@@ -144,12 +149,14 @@ public final class GalleryDBProvider extends HttpBaseProvider {
         switch (uriType) {
             case GALLERY_IMAGES_ID:
             case CHANNELS_ID:
+            case INDEXSCHEMA_ID:
                 id = uri.getPathSegments().get(1);
                 result = db.delete(uriType.getTableName(), whereWithId(selection),
                         addIdToSelectionArgs(id, selectionArgs));
                 break;
             case GALLERY_IMAGES:
             case CHANNELS:
+            case INDEXSCHEMA:
                 result = db.delete(uriType.getTableName(), selection, selectionArgs);
                 break;
         }
@@ -182,6 +189,7 @@ public final class GalleryDBProvider extends HttpBaseProvider {
         switch (uriType) {
             case GALLERY_IMAGES:
             case CHANNELS:
+            case INDEXSCHEMA:
                 id = db.insert(uriType.getTableName(), "foo", values);
                 resultUri = id == -1 ? null : ContentUris.withAppendedId(uri, id);
                 break;
@@ -192,11 +200,18 @@ public final class GalleryDBProvider extends HttpBaseProvider {
         // Notify with the base uri, not the new uri (nobody is watching a new
         // record)
         getContext().getContentResolver().notifyChange(uri, null);
+        if (uriType == UriType.CHANNELS) {
+            if (resultUri != null) {
+                //TODO: check for sync if needed
+                Log.d(LOG_TAG, "insert() :: GET_INDEX_SCHEMA");
+                syncIndexSchemas();
+            }
+        }
         return resultUri;
     }
 
     @Override
-    public ContentProviderResult[] applyBatch(ArrayList<ContentProviderOperation> operations)
+    public ContentProviderResult[] applyBatch(@NonNull ArrayList<ContentProviderOperation> operations)
             throws OperationApplicationException {
 //        Uri uri = operations.get(0).getUri();
         SQLiteDatabase db = getDatabase(getContext());
@@ -217,7 +232,7 @@ public final class GalleryDBProvider extends HttpBaseProvider {
     }
 
     @Override
-    public int bulkInsert(Uri uri, ContentValues[] values) {
+    public int bulkInsert(Uri uri, @NonNull ContentValues[] values) {
 
         UriType uriType = matchUri(uri);
         Context context = getContext();
@@ -265,6 +280,21 @@ public final class GalleryDBProvider extends HttpBaseProvider {
                         Log.d(LOG_TAG, "bulkInsert: uri=" + uri + " | nb inserts : " + numberInserted);
                     }
                     break;
+                case INDEXSCHEMA:
+                    insertStmt = db.compileStatement(IndexSchemas.getBulkInsertString());
+                    for (ContentValues value : values) {
+                        IndexSchemas.bindValuesInBulkInsert(insertStmt, value);
+                        insertStmt.execute();
+                        insertStmt.clearBindings();
+                    }
+                    insertStmt.close();
+                    db.setTransactionSuccessful();
+                    numberInserted = values.length;
+
+                    if (ACTIVATE_ALL_LOGS) {
+                        Log.d(LOG_TAG, "bulkInsert: uri=" + uri + " | nb inserts : " + numberInserted);
+                    }
+                    break;
 
                 default:
                     throw new IllegalArgumentException("Unknown URI " + uri);
@@ -276,6 +306,12 @@ public final class GalleryDBProvider extends HttpBaseProvider {
         // Notify with the base uri, not the new uri (nobody is watching a new
         // record)
         context.getContentResolver().notifyChange(uri, null);
+        if (uriType == UriType.CHANNELS) {
+            if (numberInserted > 0) {
+                //TODO: check whether a sync needed
+                Log.d(LOG_TAG, "bulkInsert() :: GET_INDEX_SCHEMA");
+            }
+        }
         return numberInserted;
     }
 
@@ -297,12 +333,14 @@ public final class GalleryDBProvider extends HttpBaseProvider {
         switch (uriType) {
             case GALLERY_IMAGES_ID:
             case CHANNELS_ID:
+            case INDEXSCHEMA_ID:
                 id = uri.getPathSegments().get(1);
                 c = db.query(uriType.getTableName(), projection, whereWithId(selection),
                         addIdToSelectionArgs(id, selectionArgs), null, null, sortOrder);
                 break;
             case GALLERY_IMAGES:
             case CHANNELS:
+            case INDEXSCHEMA:
                 c = db.query(uriType.getTableName(), projection, selection, selectionArgs,
                         null, null, sortOrder);
                 break;
@@ -313,11 +351,12 @@ public final class GalleryDBProvider extends HttpBaseProvider {
 //            c.setNotificationUri(getContext().getContentResolver(), uri);
             if (uriType.getType().equals(GalleryImages.TABLE_NAME)) {
                 checkForSync(c, uri);
-            } else if (uriType.getType().equals(Channels.TABLE_NAME)){
+            } else if (uriType.getType().equals(Channels.TABLE_NAME)) {
                 checkChannels(c, uri);
-            }else {
-                c.setNotificationUri(getContext().getContentResolver(), uri);
+            } else {
+//                c.setNotificationUri(getContext().getContentResolver(), uri);
             }
+            c.setNotificationUri(getContext().getContentResolver(), uri);
         }
         return c;
     }
@@ -365,12 +404,14 @@ public final class GalleryDBProvider extends HttpBaseProvider {
         switch (uriType) {
             case GALLERY_IMAGES_ID:
             case CHANNELS_ID:
+            case INDEXSCHEMA_ID:
                 String id = uri.getPathSegments().get(1);
                 result = db.update(uriType.getTableName(), values, whereWithId(selection),
                         addIdToSelectionArgs(id, selectionArgs));
                 break;
             case GALLERY_IMAGES:
             case CHANNELS:
+            case INDEXSCHEMA:
                 result = db.update(uriType.getTableName(), values, selection, selectionArgs);
                 break;
         }

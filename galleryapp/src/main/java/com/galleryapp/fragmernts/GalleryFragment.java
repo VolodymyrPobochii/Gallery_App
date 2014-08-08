@@ -30,7 +30,6 @@ import android.widget.GridView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.galleryapp.Config;
 import com.galleryapp.R;
@@ -40,12 +39,10 @@ import com.galleryapp.data.provider.GalleryDBContent;
 import com.galleryapp.syncadapter.SyncAdapter;
 import com.galleryapp.syncadapter.SyncBaseFragment;
 import com.galleryapp.syncadapter.SyncUtils;
-import com.google.common.io.Files;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,19 +54,23 @@ import java.util.List;
  * Use the {@link GalleryFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class GalleryFragment extends SyncBaseFragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class GalleryFragment extends SyncBaseFragment
+        implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = GalleryFragment.class.getSimpleName();
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     private static final String LIMIT = "limit";
+    private static final String SCHEME_DIALOG = "SCHEME";
+    private static final long DELAY_TIME = 250l;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
 
     private OnFragmentInteractionListener mListener;
+    private ContextualActionCallback mCallback;
     private ImageAdapter mGalleryAdapter;
     private int mCurrentLimit = 0;
     private boolean loading = true;
@@ -220,10 +221,16 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
                         deleteSelectedItems();
                         mode.finish(); // Action picked, so close the CAB
                         return true;
+                    case R.id.action_set_index:
+//                        mode.finish(); // Action picked, so close the CAB
+//                        mApp.prepareFilesForSync(mCheckedIds);
+                        mCallback.onFileUpload();
+                        return true;
                     case R.id.action_send_photo_item:
                         mode.finish(); // Action picked, so close the CAB
 //                        mApp.prepareFilesForSync(mCheckedIds);
                         sendSelectedItems();
+//                        mCallback.onFileUpload();
                         return true;
                     case R.id.action_status_item:
                         mode.finish(); // Action picked, so close the CAB
@@ -238,7 +245,7 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
             @Override
             public boolean onCreateActionMode(ActionMode mode, Menu menu) {
                 // Inflate the menu for the CAB
-                Log.d("CHECKED_IDS", "onCreateActionMode");
+                Log.d(TAG, "onCreateActionMode");
                 MenuInflater inflater = mode.getMenuInflater();
                 assert inflater != null;
                 inflater.inflate(R.menu.context, menu);
@@ -249,11 +256,12 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
                 mChannels.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                     @Override
                     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        Log.d(TAG, "onCreateActionMode()::onItemSelected():CaptureChannel");
                         ((TextView) view).setTextColor(Color.WHITE);
                         Cursor channelCursor = (Cursor) mChannels.getSelectedItem();
                         preff.edit()
-                                .putString("domain", channelCursor.getString(channelCursor.getColumnIndex(GalleryDBContent.Channels.Columns.DOMAIN.getName())))
-                                .putString("capturechannelcode", channelCursor.getString(channelCursor.getColumnIndex(GalleryDBContent.Channels.Columns.CODE.getName())))
+                                .putString("domain", channelCursor.getString(GalleryDBContent.Channels.Columns.DOMAIN.ordinal()))
+                                .putString("capturechannelcode", channelCursor.getString(GalleryDBContent.Channels.Columns.CODE.ordinal()))
                                 .apply();
                         mApp.setUpHost();
                     }
@@ -267,7 +275,7 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
                 Cursor data = mChannelsAdapter.getCursor();
                 if (data != null) {
                     while (data.moveToNext()) {
-                        if (data.getString(data.getColumnIndex(GalleryDBContent.Channels.Columns.DOMAIN.getName())).intern()
+                        if (data.getString(data.getColumnIndex(GalleryDBContent.Channels.Columns.DOMAIN.getName()))
                                 .equals(preff.getString("domain", getString(R.string.default_value_domain_preference)))) {
                             if (mChannels != null) {
                                 mChannels.setSelection(data.getPosition());
@@ -307,14 +315,9 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
     @Override
     protected void setRefreshActionButtonState(boolean refreshing) {
         Log.d(TAG, "setRefreshActionButtonState() = " + refreshing);
-        getActivity().setProgressBarIndeterminate(refreshing);
-        getActivity().setProgressBarIndeterminateVisibility(refreshing);
     }
 
-    private void sendSelectedItems() {
-        List<String> filePaths = new ArrayList<String>();
-        List<String> thumbPaths = new ArrayList<String>();
-        List<String> fileNames = new ArrayList<String>();
+    public final void sendSelectedItems() {
         List<Integer> fileIds = new ArrayList<Integer>();
 
         Cursor cursor = ((ImageAdapter) mGridView.getAdapter()).getCursor();
@@ -324,15 +327,13 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
                 Log.d("UPLOAD", "ID[" + id + "] = " + id);
                 cursor.moveToPosition(id);
                 fileIds.add(cursor.getInt(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.ID.getName())));
-                filePaths.add(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_PATH.getName())));
-                thumbPaths.add(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.THUMB_PATH.getName())));
-                fileNames.add(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_NAME.getName())));
-                Log.d("UPLOAD", "filePath = " + filePaths + "\nfileName = " + fileNames);
+                Log.d("UPLOAD", "fileId = " + fileIds);
             }
             cursor.close();
         }
 
         mApp.prepareFilesForSync(fileIds);
+//        initThumbLoader();
     }
 
     private void deleteSelectedItems() {
@@ -354,18 +355,12 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
         mListener.onDeleteItemsOperation(checkedCursorIds, checkedImages, checkedThumbs);
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-//            mListener.onDeleteItemsOperation(null, null, null);
-        }
-    }
-
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
             mListener = (OnFragmentInteractionListener) activity.getApplication();
+            mCallback = (ContextualActionCallback) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
@@ -433,7 +428,13 @@ public class GalleryFragment extends SyncBaseFragment implements LoaderManager.L
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         public void onDeleteItemsOperation(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs);
+
         public void onStartUploadImages(int uploadCount);
+    }
+
+    public interface ContextualActionCallback {
+        // TODO: Update argument type and name
+        public void onFileUpload();
     }
 
     private class StatusUpdateReceiver extends BroadcastReceiver {

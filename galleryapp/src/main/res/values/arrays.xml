@@ -18,4 +18,9 @@
         <item>TestOcrCreateNew_Production.54</item>
         <item>das_Production.54</item>
     </string-array>
+    <string-array name="stub_sp">
+        <item>Element1</item>
+        <item>Element2</item>
+        <item>Element3</item>
+    </string-array>
 </resources>
