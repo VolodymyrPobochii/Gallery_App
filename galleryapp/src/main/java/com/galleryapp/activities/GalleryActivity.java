@@ -1,6 +1,7 @@
 package com.galleryapp.activities;
 
 import android.app.DialogFragment;
+import android.app.Fragment;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -202,7 +203,6 @@ public class GalleryActivity extends BaseActivity
 
     @Override
     public void onCancelClicked() {
-
     }
 
     @Override
@@ -212,6 +212,12 @@ public class GalleryActivity extends BaseActivity
         dialog.show(getFragmentManager(), SCHEME_DIALOG);
     }
 
+    private void dismissDialog() {
+        DialogFragment dialog = (DialogFragment) getFragmentManager().findFragmentByTag(SCHEME_DIALOG);
+        if (dialog != null) {
+            dialog.dismiss();
+        }
+    }
    /* @Override
     public void onDeleteItemsOperation(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs) {
         if (ids != null && ids.size() > 0) {

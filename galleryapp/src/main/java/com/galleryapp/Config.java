@@ -6,6 +6,7 @@ import android.content.Context;
  * Created by Admin on 25.04.2014.
  */
 public class Config {
+
     public Config() {
     }
 
@@ -50,6 +51,9 @@ public class Config {
     public static final String METHOD_SUBMITDOCUMENT = "submitdocument";
     public static final String METHOD_GETSTATUS = "getstatus";
     public static final String UPLOAD_POST_REQUEST_RULE = CAPTURE_SERVICE + "/" + METHOD_UPLOAD + "/";
+    public static final String BDS_SERVICE = "/BDS.WebService/DataServiceRest.svc";
+    public static final String METHOD_GET_ITEMS = "post";
+    public static final String POST_GET_ITEMS = BDS_SERVICE + "/" + METHOD_GET_ITEMS + "/";
     private static final String METHOD_DOC_STATUS = "getstatus";
     private static final String METHOD_GET_CHANNELS = "getscancahnnels";
     private static final String METHOD_SUBMITT_DOC = "submitdocument";

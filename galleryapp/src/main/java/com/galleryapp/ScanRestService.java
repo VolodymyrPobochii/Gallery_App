@@ -1,8 +1,10 @@
 package com.galleryapp;
 
+import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ChannelsObj;
 import com.galleryapp.data.model.DocStatusObj;
 import com.galleryapp.data.model.DocSubmittedObj;
+import com.galleryapp.data.model.ElementData;
 import com.galleryapp.data.model.FileUploadObj;
 import com.galleryapp.data.model.IndexSchema;
 
@@ -12,6 +14,7 @@ import java.net.URL;
 import retrofit.Callback;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
+import retrofit.client.Response;
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.Header;
@@ -111,6 +114,15 @@ public enum ScanRestService {
         @Headers("Method: GET")
         @GET(Config.GET_INDEX_SCHEMA_REQUEST_RULE + "{domain}")
         IndexSchema getIndexScheme(@Path("domain") String domain, @Query("t") String t, @Query("capchcode") String capchcode);
+
+        @Headers("Method: POST")
+        @POST(Config.POST_GET_ITEMS + "{domain}" + "/{ruleCode}")
+        void getItems(@Path("domain") String domain, @Path("ruleCode") String ruleCode,
+                      @Query("t") String t, Callback<ElementData> callback);
+
+        @Headers("Method: POST")
+        @POST(Config.POST_GET_ITEMS + "{domain}" + "/{ruleCode}")
+        ElementData getItems(@Path("domain") String domain, @Path("ruleCode") String ruleCode, @Query("t") String t);
     }
 
     /**

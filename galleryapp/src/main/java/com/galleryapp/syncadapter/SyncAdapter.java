@@ -42,6 +42,7 @@ import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ChannelsObj;
 import com.galleryapp.data.model.DocStatusObj;
 import com.galleryapp.data.model.DocSubmittedObj;
+import com.galleryapp.data.model.DocumentSchema;
 import com.galleryapp.data.model.FileUploadObj;
 import com.galleryapp.data.model.IndexSchema;
 import com.galleryapp.data.model.SchemeElement;
@@ -238,20 +239,26 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         if (indexSchema != null) {
             String scheme = new Gson().toJson(indexSchema);
             Log.d(TAG, "getIndexScheme() :: END :: Scheme = " + scheme);
-            List<SchemeElement> elements = indexSchema.getSchema().getDocuemntSchema().getElements();
-            ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
-            for (SchemeElement element : elements) {
-                element.setChannCode(capchcode);
-                operations.add(ContentProviderOperation.newInsert(IndexSchemas.CONTENT_URI).withValues(element.toContentValues()).build());
-            }
-            if (operations.size() > 0) {
-                try {
-                    int results = localProvider.applyBatch(operations).length;
-                    Log.d(TAG, "getIndexScheme() :: applyBatch() = " + results);
-                } catch (OperationApplicationException e) {
-                    e.printStackTrace();
+            DocumentSchema docSchema = indexSchema.getSchema().getDocuemntSchema();
+            if (docSchema != null) {
+                List<SchemeElement> elements = docSchema.getElements();
+                ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
+                for (SchemeElement element : elements) {
+                    element.setChannCode(capchcode);
+                    operations.add(ContentProviderOperation.newInsert(IndexSchemas.CONTENT_URI).withValues(element.toContentValues()).build());
                 }
+                if (operations.size() > 0) {
+                    try {
+                        int results = localProvider.applyBatch(operations).length;
+                        Log.d(TAG, "getIndexScheme() :: applyBatch() = " + results);
+                    } catch (OperationApplicationException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }else {
+                Log.d(TAG, "getIndexScheme() :: DocumentSchema = NULL");
             }
+
         } else {
             Log.d(TAG, "getIndexScheme() :: END :: Scheme = NULL");
         }

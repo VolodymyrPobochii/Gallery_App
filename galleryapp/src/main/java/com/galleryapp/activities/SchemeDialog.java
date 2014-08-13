@@ -9,18 +9,24 @@ import android.content.DialogInterface;
 import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.galleryapp.R;
+import com.galleryapp.ScanRestService;
+import com.galleryapp.application.GalleryApp;
+import com.galleryapp.data.model.ElementData;
 import com.galleryapp.data.provider.GalleryDBContent.IndexSchemas;
 import com.galleryapp.syncadapter.SyncAdapter;
 import com.galleryapp.syncadapter.SyncUtils;
@@ -32,6 +38,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 /**
  * Created by pvg on 05.08.14.
@@ -45,6 +55,8 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
     private LayoutInflater mInflater;
 
     private SchemeDialogCallbacks mCallback;
+    private GalleryApp mApp;
+    private static Handler mHandler = new Handler();
 
     public interface SchemeDialogCallbacks {
         void onOkClicked(String indexString);
@@ -73,6 +85,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
             mCallback = (SchemeDialogCallbacks) activity;
         }
         mActivity = activity;
+        mApp = GalleryApp.getInstance();
         mInflater = activity.getLayoutInflater();
     }
 
@@ -176,18 +189,20 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+        final ViewGroup root = (ViewGroup) getView();
         if (cursor != null && cursor.getCount() > 0) {
             Log.d(TAG, "onLoadFinished() :: Cursor = " + cursor.getCount());
 
             final List<View> views = new ArrayList<View>();
             final List<String> names = new ArrayList<String>();
-            ViewGroup root = (ViewGroup) getView();
+
             if (root != null) {
                 while (cursor.moveToNext()) {
 
                     String type = cursor.getString(cursor.getColumnIndex(IndexSchemas.Columns.TYPE.getName()));
                     String code = cursor.getString(cursor.getColumnIndex(IndexSchemas.Columns.CODE.getName()));
                     String name = cursor.getString(cursor.getColumnIndex(IndexSchemas.Columns.NAME.getName()));
+                    String ruleCode = cursor.getString(cursor.getColumnIndex(IndexSchemas.Columns.RULECODE.getName()));
                     Log.d(TAG, "onLoadFinished() :: type = " + type + " / code = " + code);
 
                     if (type.contains("LookupSchemaElement")) {
@@ -195,9 +210,43 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                         View spinnerView = SchemeElementSelector.getViewByType(mInflater,
                                 SchemeElementSelector.TYPE_SPINNER, name, code.hashCode(), root);
                         ((TextView) spinnerView.findViewById(R.id.name_sp)).setText(name);
-                        Spinner spinner = (Spinner) spinnerView.findViewById(R.id.component_sp);
-                        spinner.setAdapter(new ArrayAdapter<String>(mActivity, R.layout.view_textview,
-                                mActivity.getResources().getStringArray(R.array.stub_sp)));
+                        final Spinner spinner = (Spinner) spinnerView.findViewById(R.id.component_sp);
+                       /* spinner.setAdapter(new ArrayAdapter<String>(mActivity, R.layout.view_textview,
+                                mActivity.getResources().getStringArray(R.array.stub_sp)));*/
+                        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                            @Override
+                            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                                Toast.makeText(mActivity, "Clicked: " + adapterView.getSelectedItem(), Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onNothingSelected(AdapterView<?> adapterView) {
+
+                            }
+                        });
+                        //TODO: network request to get Element Items
+                        String baseUrl = mApp.getHostName() + ":" + mApp.getPort();
+                        Log.d(TAG, "init():: API_Url = " + baseUrl);
+                        ScanRestService serviceEnum = ScanRestService.INSTANCE.initRestAdapter(baseUrl);
+                        Log.d(TAG, "init():: Created scanService = " + serviceEnum.toString());
+                        ScanRestService.ScanServices mRestService = serviceEnum.getService();
+
+                        mRestService.getItems(mApp.getDomain(), ruleCode, mApp.getToken(), new Callback<ElementData>() {
+                            @Override
+                            public void success(ElementData elementData, Response response) {
+                                List<ElementData.ElementObj> items = elementData.getDATA().getRoot_retrieve_objects_root_Elements().getITEMS();
+                                List<String> elements = new ArrayList<String>();
+                                for (ElementData.ElementObj obj : items) {
+                                    elements.add(obj.getNAME());
+                                }
+                                spinner.setAdapter(new ArrayAdapter<String>(mActivity, R.layout.view_textview, elements));
+                            }
+
+                            @Override
+                            public void failure(RetrofitError error) {
+
+                            }
+                        });
 
                         views.add(spinner);
 
@@ -264,6 +313,19 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
         } else {
             Log.d(TAG, "onLoadFinished() :: Cursor NULL or EMPTY");
 //            SyncUtils.triggerRefresh(SyncAdapter.GET_INDEX_SCHEME);
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (root != null) {
+                        root.findViewById(R.id.progress).setVisibility(View.GONE);
+                        Toast.makeText(mActivity, "No Schema available now.", Toast.LENGTH_SHORT).show();
+                        if (mCallback != null) {
+                            mCallback.onCancelClicked();
+                        }
+                        getDialog().dismiss();
+                    }
+                }
+            }, 2000);
         }
     }
 
