@@ -20,8 +20,6 @@ import android.widget.EditText;
 import com.galleryapp.Config;
 import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
-import com.galleryapp.data.model.ChannelsObj;
-import com.galleryapp.interfaces.GetChannelsEventListener;
 import com.galleryapp.services.LoginService;
 import com.galleryapp.syncadapter.SyncAdapter;
 import com.galleryapp.syncadapter.SyncUtils;
@@ -209,8 +207,8 @@ public class LoginActivity extends BaseActivity {
         if (tokenReceived) {
             // Update/Sync channels
             // Create account, if needed
-            SyncUtils.CreateSyncAccount(this);
-            SyncUtils.TriggerRefresh(SyncAdapter.GET_CHANNELS);
+            SyncUtils.createSyncAccount(this);
+            SyncUtils.triggerRefresh(SyncAdapter.GET_CHANNELS);
             startActivity(new Intent(LoginActivity.this, GalleryActivity.class));
             finish();
         }

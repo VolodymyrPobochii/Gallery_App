@@ -41,9 +41,9 @@ public class SyncUtils {
      *
      * @param context Context
      */
-    public static void CreateSyncAccount(Context context) {
+    public static void createSyncAccount(Context context) {
 
-        Log.d("UNIQ_TAG", "SyncUtils :: CreateSyncAccount()");
+        Log.d("UNIQ_TAG", "SyncUtils :: createSyncAccount()");
         boolean newAccount = false;
         boolean setupComplete = PreferenceManager
                 .getDefaultSharedPreferences(context).getBoolean(PREF_SETUP_COMPLETE, false);
@@ -66,7 +66,7 @@ public class SyncUtils {
         // data has been deleted. (Note that it's possible to clear app data WITHOUT affecting
         // the account list, so wee need to check both.)
         if (newAccount || !setupComplete) {
-//            TriggerRefresh(-1);
+//            triggerRefresh(-1);
             PreferenceManager.getDefaultSharedPreferences(context)
                     .edit()
                     .putBoolean(PREF_SETUP_COMPLETE, true).commit();
@@ -84,8 +84,8 @@ public class SyncUtils {
      * but the user is not actively waiting for that data, you should omit this flag; this will give
      * the OS additional freedom in scheduling your sync request.
      */
-    public static void TriggerRefresh(int requestType) {
-        Log.d("UNIQ_TAG", "SyncUtils :: TriggerRefresh()");
+    public static void triggerRefresh(int requestType) {
+        Log.d("UNIQ_TAG", "SyncUtils :: triggerRefresh()");
         Bundle b = new Bundle();
         // Disable sync backoff and ignore sync preferences. In other words...perform sync NOW!
         b.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);

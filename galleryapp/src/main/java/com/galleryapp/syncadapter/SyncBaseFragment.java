@@ -89,7 +89,7 @@ public abstract class SyncBaseFragment extends Fragment {
                 public void run() {
                     Log.d("UNIQ_TAG", "EntryListFragment :: onStatusChanged :: run");
                     // Create a handle to the account that was created by
-                    // SyncService.CreateSyncAccount(). This will be used to query the system to
+                    // SyncService.createSyncAccount(). This will be used to query the system to
                     // see how the sync status has changed.
                     Account account = GenericAccountService.GetAccount();
                     if (account == null) {

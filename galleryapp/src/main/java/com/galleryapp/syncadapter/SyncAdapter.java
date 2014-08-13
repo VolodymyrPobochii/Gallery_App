@@ -192,9 +192,12 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                         Channels.PROJECTION,
                         null, null, null
                 );
-                while (channels.moveToNext()) {
-                    String code = channels.getString(Channels.Columns.CODE.getIndex());
-                    getIndexScheme(localProvider, syncResult, code);
+                if (channels != null && channels.getCount() > 0) {
+                    localProvider.delete(IndexSchemas.CONTENT_URI, null, null);
+                    while (channels.moveToNext()) {
+                        String code = channels.getString(Channels.Columns.CODE.getIndex());
+                        getIndexScheme(localProvider, syncResult, code);
+                    }
                 }
                 break;
             case UPLOAD_FILES:

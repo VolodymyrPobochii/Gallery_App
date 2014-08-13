@@ -22,13 +22,14 @@ import android.widget.TextView;
 
 import com.galleryapp.R;
 import com.galleryapp.data.provider.GalleryDBContent.IndexSchemas;
+import com.galleryapp.syncadapter.SyncAdapter;
+import com.galleryapp.syncadapter.SyncUtils;
 import com.galleryapp.views.SchemeElementSelector;
 
 import org.apache.http.protocol.HTTP;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -262,6 +263,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
             }
         } else {
             Log.d(TAG, "onLoadFinished() :: Cursor NULL or EMPTY");
+//            SyncUtils.triggerRefresh(SyncAdapter.GET_INDEX_SCHEME);
         }
     }
 

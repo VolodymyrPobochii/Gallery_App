@@ -235,7 +235,7 @@ public class GalleryFragment extends SyncBaseFragment
                     case R.id.action_status_item:
                         mode.finish(); // Action picked, so close the CAB
 //                        getSelectedItemsStatus();
-                        SyncUtils.TriggerRefresh(SyncAdapter.GET_DOC_STATUS);
+                        SyncUtils.triggerRefresh(SyncAdapter.GET_DOC_STATUS);
                         return true;
                     default:
                         return false;

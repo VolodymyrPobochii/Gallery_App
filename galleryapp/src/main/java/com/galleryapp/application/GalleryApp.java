@@ -41,11 +41,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.utils.StorageUtils;
 
-import org.apache.http.protocol.HTTP;
-
 import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -291,8 +287,8 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
             } catch (OperationApplicationException e) {
                 e.printStackTrace();
             }
-            SyncUtils.TriggerRefresh(SyncAdapter.UPLOAD_FILES);
-            Log.d(TAG, "prepareFilesForSync()::SyncUtils.TriggerRefresh(UPLOAD_FILES)");
+            SyncUtils.triggerRefresh(SyncAdapter.UPLOAD_FILES);
+            Log.d(TAG, "prepareFilesForSync()::SyncUtils.triggerRefresh(UPLOAD_FILES)");
         }
     }
 
