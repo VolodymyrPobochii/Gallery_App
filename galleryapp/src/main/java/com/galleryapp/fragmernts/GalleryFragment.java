@@ -105,6 +105,7 @@ public class GalleryFragment extends SyncBaseFragment
     private GalleryApp mApp;
     private StatusUpdateReceiver mStatusReceiver;
     private IntentFilter mStatusFilter;
+    private boolean hasSchema;
 
     public ImageAdapter getGalleryAdapter() {
         return mGalleryAdapter;
@@ -246,9 +247,6 @@ public class GalleryFragment extends SyncBaseFragment
             public boolean onCreateActionMode(ActionMode mode, Menu menu) {
                 // Inflate the menu for the CAB
                 Log.d(TAG, "onCreateActionMode");
-                MenuInflater inflater = mode.getMenuInflater();
-                assert inflater != null;
-                inflater.inflate(R.menu.context, menu);
                 mode.setCustomView(getActivity().getLayoutInflater().inflate(R.layout.cab_layout, null));
                 ((TextView) mode.getCustomView().findViewById(R.id.cab_title)).setText("Select Items");
                 ((TextView) mode.getCustomView().findViewById(R.id.cab_subtitle)).setText("One item selected");
@@ -264,6 +262,10 @@ public class GalleryFragment extends SyncBaseFragment
                                 .putString("capturechannelcode", channelCursor.getString(GalleryDBContent.Channels.Columns.CODE.ordinal()))
                                 .apply();
                         mApp.setUpHost();
+                        Cursor c = getActivity().getContentResolver().query(GalleryDBContent.IndexSchemas.CONTENT_URI,
+                                GalleryDBContent.IndexSchemas.PROJECTION,
+                                null, null, null);
+                        hasSchema = c != null && c.getCount() > 0;
                     }
 
                     @Override
@@ -280,11 +282,18 @@ public class GalleryFragment extends SyncBaseFragment
                             if (mChannels != null) {
                                 mChannels.setSelection(data.getPosition());
                             }
+                        } else {
+                            if (mChannels != null) {
+                                mChannels.setSelection(0);
+                            }
                         }
                     }
                 }
 //                mode.setTitle("Select Items");
 //                mode.setSubtitle("One item selected");
+                MenuInflater inflater = mode.getMenuInflater();
+                assert inflater != null;
+                inflater.inflate(hasSchema ? R.menu.context : R.menu.context_noschema, menu);
                 return true;
             }
 
