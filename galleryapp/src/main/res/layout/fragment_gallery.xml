@@ -5,8 +5,9 @@
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
     android:gravity="center"
-    android:horizontalSpacing="3dp"
+    android:horizontalSpacing="1dp"
     android:numColumns="@integer/grid_num_columns"
-    android:padding="5dp"
-    android:verticalSpacing="3dp"
-    tools:context="com.galleryapp.fragmernts.GalleryFragment" />
+    android:padding="4dp"
+    android:verticalSpacing="1dp"
+    tools:context="com.galleryapp.fragmernts.GalleryFragment"
+    tools:listitem="@layout/item_grid_image" />

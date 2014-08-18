@@ -53,26 +53,19 @@ import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj.Folde
 import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj.Folder.Document;
 import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj.Folder.DocumentError;
 import com.galleryapp.data.provider.GalleryDBContent;
-import com.galleryapp.data.provider.GalleryDBContent.GalleryImages;
 import com.galleryapp.data.provider.GalleryDBContent.Channels;
+import com.galleryapp.data.provider.GalleryDBContent.GalleryImages;
 import com.galleryapp.data.provider.GalleryDBContent.IndexSchemas;
-import com.google.common.base.Utf8;
 import com.google.gson.Gson;
-
-import org.apache.http.protocol.HTTP;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import java.util.UUID;
 
 import retrofit.RetrofitError;
-import retrofit.client.Response;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedFile;
 
@@ -197,7 +190,8 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                     localProvider.delete(IndexSchemas.CONTENT_URI, null, null);
                     while (channels.moveToNext()) {
                         String code = channels.getString(Channels.Columns.CODE.getIndex());
-                        getIndexScheme(localProvider, syncResult, code);
+                        String domain = channels.getString(Channels.Columns.DOMAIN.getIndex());
+                        getIndexScheme(localProvider, syncResult, code, domain);
                     }
                 }
                 break;
@@ -224,12 +218,12 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         Log.i(TAG, "onPerformSync() :: Network synchronization complete");
     }
 
-    private void getIndexScheme(ContentProvider localProvider, SyncResult syncResult, String capchcode) {
-        Log.d(TAG, "getIndexScheme() :: BEGIN :: capchcode = " + capchcode);
+    private void getIndexScheme(ContentProvider localProvider, SyncResult syncResult, String capchcode, String domain) {
         IndexSchema indexSchema = null;
         try {
 //            mNotifyManager.notify(R.id.get_channels, mBuilder.build());
-            indexSchema = mRestService.getIndexScheme(mApp.getDomain(), mApp.getToken(), capchcode);
+            Log.d(TAG, "getIndexScheme() :: BEGIN :: capchcode = " + capchcode + " domain = " + domain + " token = " + mApp.getToken());
+            indexSchema = mRestService.getIndexScheme(domain, mApp.getToken(), capchcode);
         } catch (RetrofitError error) {
             Log.d(TAG, "getIndexScheme() :: RetrofitError = " + error.getLocalizedMessage());
            /* mBuilder.setContentText("Channels code request FAILURE")
@@ -249,13 +243,13 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                 }
                 if (operations.size() > 0) {
                     try {
-                        int results = localProvider.applyBatch(operations).length;
-                        Log.d(TAG, "getIndexScheme() :: applyBatch() = " + results);
+                        syncResult.stats.numInserts = localProvider.applyBatch(operations).length;
+                        Log.d(TAG, "getIndexScheme() :: applyBatch() = " + syncResult.stats.numInserts);
                     } catch (OperationApplicationException e) {
                         e.printStackTrace();
                     }
                 }
-            }else {
+            } else {
                 Log.d(TAG, "getIndexScheme() :: DocumentSchema = NULL");
             }
 

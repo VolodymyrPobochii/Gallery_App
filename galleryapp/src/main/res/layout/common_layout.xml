@@ -5,22 +5,23 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="10dp">
+    android:padding="3dp">
 
     <TextView
         android:id="@android:id/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="left|center_vertical"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:gravity="start|center_vertical"
+        style="@style/ActionBarTextAppearance" />
 
     <EditText
         android:id="@android:id/summary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="left|center_vertical"
-        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:gravity="start|center_vertical"
         android:textColor="?android:attr/textColorPrimary"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:inputType="text"
+        style="@style/ActionBarTextAppearance" />
 
 </LinearLayout>

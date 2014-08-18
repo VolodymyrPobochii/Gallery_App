@@ -21,7 +21,6 @@ public final class CheckableLayout extends FrameLayout implements Checkable {
         super(context, attrs, defStyle);
     }
 
-    @SuppressWarnings("deprecation")
     public void setChecked(boolean checked) {
         mChecked = checked;
         setBackgroundColor(checked ? getResources().getColor(android.R.color.holo_blue_bright) :

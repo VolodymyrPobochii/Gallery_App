@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.galleryapp.views.CheckableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="@dimen/grid_item"
-    android:layout_height="@dimen/grid_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:foregroundGravity="center"
-    android:padding="8dp"
-    >
+    android:padding="5dp">
 
     <ImageView
         android:id="@+id/image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:adjustViewBounds="false"
         android:contentDescription="@string/descr_image"
         android:scaleType="centerCrop" />
 
@@ -30,8 +28,7 @@
         android:layout_gravity="top|left"
         android:background="@color/white"
         android:contentDescription="@string/image_synced_status"
-        android:padding="8dp"
-        />
+        android:padding="8dp" />
 
     <TextView
         android:id="@+id/thumb_status"

@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.galleryapp.R;
 import com.galleryapp.data.provider.GalleryDBContent;
+import com.galleryapp.utils.MetricsHelper;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
@@ -25,6 +26,7 @@ import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
  */
 public class ImageAdapter extends CursorAdapter {
 
+    private static final String TAG = ImageAdapter.class.getSimpleName();
     private final LayoutInflater mInflator;
     private ImageLoader mImageLoader;
     private DisplayImageOptions mOptions;
@@ -44,8 +46,11 @@ public class ImageAdapter extends CursorAdapter {
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
 
         View picturesView = mInflator.inflate(R.layout.item_grid_image, parent, false);
+        ViewGroup.LayoutParams lp = picturesView.getLayoutParams();
+        lp.height = MetricsHelper.getThumbHeight(context);
+        Log.d(TAG, "viewHeight = " + lp.height + " viewWidth = " + lp.width);
+        picturesView.setLayoutParams(lp);
         mHolder = new ViewHolder();
-        assert picturesView != null;
         mHolder.imageView = (ImageView) picturesView.findViewById(R.id.image);
         mHolder.thumbTitle = (TextView) picturesView.findViewById(R.id.thumb_title);
         mHolder.thumbTitle.setText("");

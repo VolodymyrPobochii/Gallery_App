@@ -28,8 +28,6 @@ import com.galleryapp.ScanRestService;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ElementData;
 import com.galleryapp.data.provider.GalleryDBContent.IndexSchemas;
-import com.galleryapp.syncadapter.SyncAdapter;
-import com.galleryapp.syncadapter.SyncUtils;
 import com.galleryapp.views.SchemeElementSelector;
 
 import org.apache.http.protocol.HTTP;
@@ -234,12 +232,20 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                         mRestService.getItems(mApp.getDomain(), ruleCode, mApp.getToken(), new Callback<ElementData>() {
                             @Override
                             public void success(ElementData elementData, Response response) {
-                                List<ElementData.ElementObj> items = elementData.getDATA().getRoot_retrieve_objects_root_Elements().getITEMS();
-                                List<String> elements = new ArrayList<String>();
-                                for (ElementData.ElementObj obj : items) {
-                                    elements.add(obj.getNAME());
+                                ElementData.RootData rootData = elementData.getDATA();
+                                if (rootData != null) {
+                                    ElementData.RootObjects rootObjects = rootData.getRoot_retrieve_objects_root_Elements();
+                                    if (rootObjects != null) {
+                                        List<ElementData.ElementObj> items = rootObjects.getITEMS();
+                                        if (items != null && items.size() > 0) {
+                                            List<String> elements = new ArrayList<String>();
+                                            for (ElementData.ElementObj obj : items) {
+                                                elements.add(obj.getNAME());
+                                            }
+                                            spinner.setAdapter(new ArrayAdapter<String>(mActivity, R.layout.view_textview, elements));
+                                        }
+                                    }
                                 }
-                                spinner.setAdapter(new ArrayAdapter<String>(mActivity, R.layout.view_textview, elements));
                             }
 
                             @Override
@@ -294,7 +300,9 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                             Log.d(TAG, "onLoadFinished() :: onOkClicked :: indexString = " + indexString);
                             mCallback.onOkClicked(indexString);
                         }
-                        getDialog().dismiss();
+                        if (getDialog() != null) {
+                            getDialog().dismiss();
+                        }
                     }
                 });
 
@@ -304,7 +312,9 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                         if (mCallback != null) {
                             mCallback.onCancelClicked();
                         }
-                        getDialog().dismiss();
+                        if (getDialog() != null) {
+                            getDialog().dismiss();
+                        }
                     }
                 });
 
@@ -322,7 +332,9 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                         if (mCallback != null) {
                             mCallback.onCancelClicked();
                         }
-                        getDialog().dismiss();
+                        if (getDialog() != null) {
+                            getDialog().dismiss();
+                        }
                     }
                 }
             }, 2000);

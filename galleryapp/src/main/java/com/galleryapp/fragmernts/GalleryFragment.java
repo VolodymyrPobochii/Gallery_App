@@ -83,6 +83,11 @@ public class GalleryFragment extends SyncBaseFragment
     private List<Integer> mCheckedIds = new ArrayList<Integer>();
     private GridView mGridView;
     private SimpleCursorAdapter mChannelsAdapter;
+    private Spinner mChannels;
+    private GalleryApp mApp;
+    private StatusUpdateReceiver mStatusReceiver;
+    private IntentFilter mStatusFilter;
+
     private LoaderManager.LoaderCallbacks<Cursor> mChannelsLoader = new LoaderManager.LoaderCallbacks<Cursor>() {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -101,11 +106,7 @@ public class GalleryFragment extends SyncBaseFragment
             mChannelsAdapter.changeCursor(null);
         }
     };
-    private Spinner mChannels;
-    private GalleryApp mApp;
-    private StatusUpdateReceiver mStatusReceiver;
-    private IntentFilter mStatusFilter;
-    private boolean hasSchema;
+
 
     public ImageAdapter getGalleryAdapter() {
         return mGalleryAdapter;
@@ -244,9 +245,13 @@ public class GalleryFragment extends SyncBaseFragment
             }
 
             @Override
-            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            public boolean onCreateActionMode(final ActionMode mode, final Menu menu) {
                 // Inflate the menu for the CAB
                 Log.d(TAG, "onCreateActionMode");
+                MenuInflater inflater = mode.getMenuInflater();
+                assert inflater != null;
+                inflater.inflate(R.menu.context, menu);
+                Log.d(TAG, "onCreateActionMode()::inflater.inflate()");
                 mode.setCustomView(getActivity().getLayoutInflater().inflate(R.layout.cab_layout, null));
                 ((TextView) mode.getCustomView().findViewById(R.id.cab_title)).setText("Select Items");
                 ((TextView) mode.getCustomView().findViewById(R.id.cab_subtitle)).setText("One item selected");
@@ -257,20 +262,27 @@ public class GalleryFragment extends SyncBaseFragment
                         Log.d(TAG, "onCreateActionMode()::onItemSelected():CaptureChannel");
                         ((TextView) view).setTextColor(Color.WHITE);
                         Cursor channelCursor = (Cursor) mChannels.getSelectedItem();
+                        String channelDomain = channelCursor.getString(GalleryDBContent.Channels.Columns.DOMAIN.ordinal());
+                        String channelCode = channelCursor.getString(GalleryDBContent.Channels.Columns.CODE.ordinal());
+
                         preff.edit()
-                                .putString("domain", channelCursor.getString(GalleryDBContent.Channels.Columns.DOMAIN.ordinal()))
-                                .putString("capturechannelcode", channelCursor.getString(GalleryDBContent.Channels.Columns.CODE.ordinal()))
+                                .putString("domain", channelDomain)
+                                .putString("capturechannelcode", channelCode)
                                 .apply();
+
                         mApp.setUpHost();
+
                         Cursor c = getActivity().getContentResolver().query(GalleryDBContent.IndexSchemas.CONTENT_URI,
                                 GalleryDBContent.IndexSchemas.PROJECTION,
-                                null, null, null);
-                        hasSchema = c != null && c.getCount() > 0;
+                                GalleryDBContent.IndexSchemas.Columns.CHANNCODE.getName() + "=?", new String[]{channelCode}, null);
+
+                        boolean hasSchema = c != null && c.getCount() > 0;
+
+                        menu.getItem(1).setEnabled(hasSchema);
                     }
 
                     @Override
                     public void onNothingSelected(AdapterView<?> parent) {
-
                     }
                 });
                 mChannels.setAdapter(mChannelsAdapter);
@@ -282,18 +294,14 @@ public class GalleryFragment extends SyncBaseFragment
                             if (mChannels != null) {
                                 mChannels.setSelection(data.getPosition());
                             }
-                        } else {
-                            if (mChannels != null) {
-                                mChannels.setSelection(0);
-                            }
+                            break;
                         }
                     }
+                } else {
+                    Log.d(TAG, "onCreateActionMode()::mChannelsAdapter.getCursor()::data = null");
                 }
 //                mode.setTitle("Select Items");
 //                mode.setSubtitle("One item selected");
-                MenuInflater inflater = mode.getMenuInflater();
-                assert inflater != null;
-                inflater.inflate(hasSchema ? R.menu.context : R.menu.context_noschema, menu);
                 return true;
             }
 
