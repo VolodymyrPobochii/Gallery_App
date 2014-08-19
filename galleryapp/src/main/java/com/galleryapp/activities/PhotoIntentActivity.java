@@ -19,6 +19,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.galleryapp.Logger;
 import com.galleryapp.R;
 import com.galleryapp.data.model.ImageObj;
 import com.galleryapp.utils.AlbumStorageDirFactory;
@@ -229,8 +230,8 @@ public class PhotoIntentActivity extends Activity {
             }
         });
 
-        while (!bitmapFuture.isDone()){
-            Log.d(TAG, "Decoding bitmap...");
+        while (!bitmapFuture.isDone()) {
+            Logger.d(TAG, "Decoding bitmap...");
         }
 
         service.shutdown();
@@ -257,9 +258,9 @@ public class PhotoIntentActivity extends Activity {
         Intent mediaScanIntent = new Intent("android.intent.action.MEDIA_SCANNER_SCAN_FILE");
         File f = new File(mCurrentPhotoPath);
         Uri contentUri = Uri.fromFile(f);
-        Log.d("Image", "galleryAddPic:" + contentUri.toString());
-        Log.d("MediaStore", "galleryAddPic::path = " + mCurrentPhotoPath);
-        Log.d("MediaStore", "galleryAddPic::uri = " + contentUri);
+        Logger.d("Image", "galleryAddPic:" + contentUri.toString());
+        Logger.d("MediaStore", "galleryAddPic::path = " + mCurrentPhotoPath);
+        Logger.d("MediaStore", "galleryAddPic::uri = " + contentUri);
         mediaScanIntent.setData(contentUri);
         this.sendBroadcast(mediaScanIntent);
     }
@@ -345,7 +346,7 @@ public class PhotoIntentActivity extends Activity {
 
             /*GalleryApp app = (GalleryApp) getApplication();
             app.saveImage(image);*/
-            Log.d("Image", "Path:" + mCurrentPhotoPath);
+            Logger.d("Image", "Path:" + mCurrentPhotoPath);
 
             Intent data = new Intent();
             data.putExtra("selectedPhotoItemId", selectedPhotoItemId);

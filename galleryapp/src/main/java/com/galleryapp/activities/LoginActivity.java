@@ -9,7 +9,6 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,6 +17,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 
 import com.galleryapp.Config;
+import com.galleryapp.Logger;
 import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.services.LoginService;
@@ -88,10 +88,10 @@ public class LoginActivity extends BaseActivity {
             }
         }
         if (requestCode == GalleryActivity.REQUEST_SETTINGS) {
-            Log.d("LoginActivity", "onActResult()::requestCode == GalleryActivity.REQUEST_SETTINGS");
-            Log.d("LoginActivity", "onActResult()::resultCode == " + String.valueOf(resultCode));
+            Logger.d("LoginActivity", "onActResult()::requestCode == GalleryActivity.REQUEST_SETTINGS");
+            Logger.d("LoginActivity", "onActResult()::resultCode == " + String.valueOf(resultCode));
             if (resultCode == RESULT_OK) {
-                Log.d("LoginActivity", "onActResult()::resultCode == RESULT_OK");
+                Logger.d("LoginActivity", "onActResult()::resultCode == RESULT_OK");
                 mScanApp.setUpHost();
                 initViews();
             }
@@ -110,7 +110,7 @@ public class LoginActivity extends BaseActivity {
                 return;
             }
             mScanApp.setToken(responseToken);
-            Log.d("PostLoginReceiver", "onReceive()" + "TOKEN = " + responseToken);
+            Logger.d("PostLoginReceiver", "onReceive()" + "TOKEN = " + responseToken);
             tokenReceived = true;
             completeAuth();
         } else if (intent.hasExtra(Config.SERVER_CONNECTION)) {

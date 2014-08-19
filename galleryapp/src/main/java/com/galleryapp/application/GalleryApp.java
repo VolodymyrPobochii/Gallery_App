@@ -20,11 +20,11 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 
 import com.galleryapp.Config;
+import com.galleryapp.Logger;
 import com.galleryapp.R;
 import com.galleryapp.activities.GalleryActivity;
 import com.galleryapp.activities.PrefActivity;
@@ -112,7 +112,7 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        Log.d(TAG, "width=" + newConfig.screenWidthDp +
+        Logger.d(TAG, "width=" + newConfig.screenWidthDp +
                 "height=" + newConfig.screenHeightDp);
     }
 
@@ -161,7 +161,7 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
             }
         } else {
             boolean result = file.delete();
-            Log.d("CHECKED_IDS", "File[deleted] = " + result);
+            Logger.d("CHECKED_IDS", "File[deleted] = " + result);
         }
     }
 
@@ -242,15 +242,15 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
         baseUrl = hostName + ":" + port + Config.DEFAULT_URL_BODY + domain;
         cmsBaseUrl = hostName + ":" + port + Config.DEFAULT_CSM_URL_BODY;
 
-        Log.d("GalleryApp", "setUpHost()::host=" + hostName);
-        Log.d("GalleryApp", "setUpHost()::port=" + port);
-        Log.d("GalleryApp", "setUpHost()::domain=" + domain);
-        Log.d("GalleryApp", "setUpHost()::channelCode=" + captureChannelCode);
+        Logger.d("GalleryApp", "setUpHost()::host=" + hostName);
+        Logger.d("GalleryApp", "setUpHost()::port=" + port);
+        Logger.d("GalleryApp", "setUpHost()::domain=" + domain);
+        Logger.d("GalleryApp", "setUpHost()::channelCode=" + captureChannelCode);
     }
 
     public void prepareFilesForSync(List<Integer> checkedIds) {
         for (Integer id : checkedIds) {
-            Log.d(TAG, "prepareFilesForSync()::checkedID = " + Integer.toString(id));
+            Logger.d(TAG, "prepareFilesForSync()::checkedID = " + Integer.toString(id));
         }
 
         Cursor cursor = getContentResolver().query(GalleryDBContent.GalleryImages.CONTENT_URI,
@@ -258,10 +258,10 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
                 null, null, null);
 
         if (cursor.getCount() > 0) {
-            Log.d(TAG, "prepareFilesForSync()::ID.ordinal = " +
+            Logger.d(TAG, "prepareFilesForSync()::ID.ordinal = " +
                     Integer.toString(GalleryDBContent.GalleryImages.Columns.ID.ordinal()));
             while (cursor.moveToNext()) {
-                Log.d(TAG, "prepareFilesForSync()::cursorID = " +
+                Logger.d(TAG, "prepareFilesForSync()::cursorID = " +
                         Integer.toString(cursor.getInt(GalleryDBContent.GalleryImages.Columns.ID.ordinal())));
             }
         }
@@ -281,14 +281,14 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
         if (operations.size() > 0) {
             try {
                 int updated = getContentResolver().applyBatch(GalleryDBProvider.AUTHORITY, operations).length;
-                Log.d(TAG, "prepareFilesForSync()::applyBatch()::" + updated);
+                Logger.d(TAG, "prepareFilesForSync()::applyBatch()::" + updated);
             } catch (RemoteException e) {
                 e.printStackTrace();
             } catch (OperationApplicationException e) {
                 e.printStackTrace();
             }
             SyncUtils.triggerRefresh(SyncAdapter.UPLOAD_FILES);
-            Log.d(TAG, "prepareFilesForSync()::SyncUtils.triggerRefresh(UPLOAD_FILES)");
+            Logger.d(TAG, "prepareFilesForSync()::SyncUtils.triggerRefresh(UPLOAD_FILES)");
         }
     }
 
@@ -415,13 +415,13 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
     public void onDeleteItemsOperation(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs) {
         if (ids != null && ids.size() > 0) {
             for (String id : ids) {
-                Log.d("CHECKED_IDS", "ID[delete] = " + id);
+                Logger.d("CHECKED_IDS", "ID[delete] = " + id);
             }
             for (File checkedImage : checkedImages) {
-                Log.d("CHECKED_IDS", "checkedImage[delete] = " + checkedImage);
+                Logger.d("CHECKED_IDS", "checkedImage[delete] = " + checkedImage);
             }
             for (File checkedThumb : checkedThumbs) {
-                Log.d("CHECKED_IDS", "checkedThumb[delete] = " + checkedThumb);
+                Logger.d("CHECKED_IDS", "checkedThumb[delete] = " + checkedThumb);
             }
             deleteImage(ids, checkedImages, checkedThumbs);
         }

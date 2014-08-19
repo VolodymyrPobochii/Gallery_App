@@ -3,7 +3,6 @@ package com.galleryapp;
 import android.content.Context;
 import android.preference.Preference;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,13 +22,13 @@ public class ScanPreff extends Preference {
 
     public ScanPreff(Context context) {
         super(context);
-        Log.d(TAG, "ScanPreff()");
+        Logger.d(TAG, "ScanPreff()");
         init(context);
     }
 
     public ScanPreff(Context context, AttributeSet attrs) {
         super(context, attrs, 0);
-        Log.d(TAG, "ScanPreff()");
+        Logger.d(TAG, "ScanPreff()");
         init(context);
     }
 
@@ -44,40 +43,40 @@ public class ScanPreff extends Preference {
 
     @Override
     public View getView(View convertView, ViewGroup parent) {
-        Log.d(TAG, "getView()");
+        Logger.d(TAG, "getView()");
         return myView;
     }
 
     @Override
     protected void onBindView(View view) {
         super.onBindView(view);
-        Log.d(TAG, "onBindView()");
+        Logger.d(TAG, "onBindView()");
 //        mSummary = (EditText) view.findViewById(android.R.id.summary);
     }
 
     @Override
     public CharSequence getSummary() {
-        Log.d(TAG, "getSummary()");
+        Logger.d(TAG, "getSummary()");
         return mSummary != null ? mSummary.getText().toString() : "null";
     }
 
     @Override
     public void setSummary(CharSequence summary) {
         super.setSummary(summary);
-        Log.d(TAG, "setSummary()");
+        Logger.d(TAG, "setSummary()");
         if (mSummary != null) mSummary.setText(summary);
     }
 
     @Override
     public void setTitle(CharSequence title) {
         super.setTitle(title);
-        Log.d(TAG, "setTitle()");
+        Logger.d(TAG, "setTitle()");
         if (mTitle != null) mTitle.setText(title);
     }
 
     @Override
     public CharSequence getTitle() {
-        Log.d(TAG, "getTitle()");
+        Logger.d(TAG, "getTitle()");
         return mTitle != null ? mTitle.getText().toString() : "null";
     }
 

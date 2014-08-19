@@ -3,7 +3,6 @@ package com.galleryapp.adapters;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.galleryapp.Logger;
 import com.galleryapp.R;
 import com.galleryapp.data.provider.GalleryDBContent;
 import com.galleryapp.utils.MetricsHelper;
@@ -47,8 +47,8 @@ public class ImageAdapter extends CursorAdapter {
 
         View picturesView = mInflator.inflate(R.layout.item_grid_image, parent, false);
         ViewGroup.LayoutParams lp = picturesView.getLayoutParams();
-        lp.height = MetricsHelper.getThumbHeight(context);
-        Log.d(TAG, "viewHeight = " + lp.height + " viewWidth = " + lp.width);
+        lp.height = MetricsHelper.getThumbHeight();
+        Logger.d(TAG, "viewHeight = " + lp.height + " viewWidth = " + lp.width);
         picturesView.setLayoutParams(lp);
         mHolder = new ViewHolder();
         mHolder.imageView = (ImageView) picturesView.findViewById(R.id.image);
@@ -68,7 +68,7 @@ public class ImageAdapter extends CursorAdapter {
 //        ((ImageView)view).setImageBitmap(null);
         final String imagePath = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_PATH.getName()));
         final String thumbPath = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.THUMB_PATH.getName()));
-        Log.d("MediaStore", "bindView::thumbPath = " + thumbPath);
+        Logger.d("MediaStore", "bindView::thumbPath = " + thumbPath);
         final String imageTitle = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_TITLE.getName()));
         final String imageDate = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.CREATE_DATE.getName()));
         final String imageStatus = cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.STATUS.getName()));
@@ -83,7 +83,7 @@ public class ImageAdapter extends CursorAdapter {
         }
 //        Uri imageUri = Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID);
 //        ((ImageView) view).setImageURI(imageUri);
-//        Log.d("URI", "thumbURI = " + Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID).toString());
+//        Logger.d("URI", "thumbURI = " + Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, "" + imageID).toString());
         // Set the content of the image based on the provided URI
         mImageLoader.displayImage("file://" + thumbPath, holder.imageView, mOptions, new SimpleImageLoadingListener() {
                     @Override

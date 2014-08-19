@@ -19,15 +19,17 @@ package com.galleryapp.syncadapter;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import android.util.Log;
 
-/** Service to handle sync requests.
- *
+import com.galleryapp.Logger;
+
+/**
+ * Service to handle sync requests.
+ * <p/>
  * <p>This service is invoked in response to Intents with action android.content.SyncAdapter, and
  * returns a Binder connection to SyncAdapter.
- *
+ * <p/>
  * <p>For performance, only one sync adapter will be initialized within this application's context.
- *
+ * <p/>
  * <p>Note: The SyncService itself is not notified when a new sync occurs. It's role is to
  * manage the lifecycle of our {@link SyncAdapter} and provide a handle to said SyncAdapter to the
  * OS on request.
@@ -44,8 +46,8 @@ public class SyncService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "SyncService :: onCreate()");
-        Log.i(TAG, "Service created");
+        Logger.d(TAG, "SyncService :: onCreate()");
+        Logger.i(TAG, "Service created");
         synchronized (sSyncAdapterLock) {
             if (sSyncAdapter == null) {
                 sSyncAdapter = new SyncAdapter(getApplicationContext(), true);
@@ -59,12 +61,12 @@ public class SyncService extends Service {
      */
     public void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "Service destroyed");
+        Logger.i(TAG, "Service destroyed");
     }
 
     /**
      * Return Binder handle for IPC communication with {@link SyncAdapter}.
-     *
+     * <p/>
      * <p>New sync requests will be sent directly to the SyncAdapter using this channel.
      *
      * @param intent Calling intent
@@ -72,7 +74,7 @@ public class SyncService extends Service {
      */
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(TAG, "SyncService :: onBind()");
+        Logger.d(TAG, "SyncService :: onBind()");
         return sSyncAdapter.getSyncAdapterBinder();
     }
 }

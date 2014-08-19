@@ -8,11 +8,11 @@ import android.content.ContentResolver;
 import android.content.SyncStatusObserver;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.galleryapp.Logger;
 import com.galleryapp.data.provider.GalleryDBProvider;
 import com.galleryapp.syncadapter.accounts.GenericAccountService;
 
@@ -87,7 +87,7 @@ public abstract class SyncBaseFragment extends Fragment {
                  */
                 @Override
                 public void run() {
-                    Log.d("UNIQ_TAG", "EntryListFragment :: onStatusChanged :: run");
+                    Logger.d("UNIQ_TAG", "EntryListFragment :: onStatusChanged :: run");
                     // Create a handle to the account that was created by
                     // SyncService.createSyncAccount(). This will be used to query the system to
                     // see how the sync status has changed.

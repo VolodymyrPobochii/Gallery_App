@@ -6,11 +6,11 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.galleryapp.Logger;
 import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ImageObj;
@@ -59,8 +59,8 @@ public class GalleryActivity extends BaseActivity
                 if (resultCode == RESULT_OK) {
                     if (data != null && data.hasExtra("image")) {
                         ImageObj image = data.getParcelableExtra("image");
-                        Log.d(TAG, "ImagePath_CAMERA:" + image.getImagePath());
-                        Log.d(TAG, "ThumbPath_CAMERA:" + image.getThumbPath());
+                        Logger.d(TAG, "ImagePath_CAMERA:" + image.getImagePath());
+                        Logger.d(TAG, "ThumbPath_CAMERA:" + image.getThumbPath());
                         app.saveImage(image);
                     }
                 }
@@ -71,8 +71,8 @@ public class GalleryActivity extends BaseActivity
                         if (data.getData().getAuthority().intern().equalsIgnoreCase("media")) {
                             ImageObj image = queryImageData(data);
                             if (image != null) {
-                                Log.d(TAG, "ImagePath_GALL:" + image.getImagePath());
-                                Log.d(TAG, "ThumbPath_GALL:" + image.getThumbPath());
+                                Logger.d(TAG, "ImagePath_GALL:" + image.getImagePath());
+                                Logger.d(TAG, "ThumbPath_GALL:" + image.getThumbPath());
                                 app.saveImage(image);
                             } else {
                                 app.customAlertDialog(this, "Error retrieving image data. Please choose another one.",
@@ -87,7 +87,7 @@ public class GalleryActivity extends BaseActivity
                 break;
             case REQUEST_SETTINGS:
                 if (resultCode == RESULT_OK) {
-                    Log.d(TAG, "onActivityResult():REQUEST_SETTINGS");
+                    Logger.d(TAG, "onActivityResult():REQUEST_SETTINGS");
                     app.setUpHost();
                 }
                 break;
@@ -96,12 +96,12 @@ public class GalleryActivity extends BaseActivity
     }
 
     private ImageObj queryImageData(Intent data) {
-        Log.d(TAG, "queryImageData()_GALL::URI: " + data.getData().toString());
-        Log.d(TAG, "queryImageData()_GALL::Authority: " + data.getData().getAuthority());
+        Logger.d(TAG, "queryImageData()_GALL::URI: " + data.getData().toString());
+        Logger.d(TAG, "queryImageData()_GALL::Authority: " + data.getData().getAuthority());
         Cursor c = getContentResolver().query(data.getData(), null, null, null, null);
 //                new String[]{MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA}, null, null, null);
         assert c != null;
-        Log.d(TAG, "queryImageData()_GALL::CursorCount: " + c.getCount());
+        Logger.d(TAG, "queryImageData()_GALL::CursorCount: " + c.getCount());
         ImageObj imageObj = null;
         if (c.getCount() > 0) {
             c.moveToNext();
@@ -147,7 +147,7 @@ public class GalleryActivity extends BaseActivity
         if (c.getCount() > 0) {
             c.moveToNext();
             thumbData = c.getString(c.getColumnIndex(MediaStore.Images.Thumbnails.DATA));
-            Log.d("Image", "GalleryFilePath:" + thumbData);
+            Logger.d("Image", "GalleryFilePath:" + thumbData);
             c.close();
         }
         return thumbData;
@@ -216,13 +216,13 @@ public class GalleryActivity extends BaseActivity
     public void onDeleteItemsOperation(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs) {
         if (ids != null && ids.size() > 0) {
             for (String id : ids) {
-                Log.d("CHECKED_IDS", "ID[delete] = " + id);
+                Logger.d("CHECKED_IDS", "ID[delete] = " + id);
             }
             for (File checkedImage : checkedImages) {
-                Log.d("CHECKED_IDS", "checkedImage[delete] = " + checkedImage);
+                Logger.d("CHECKED_IDS", "checkedImage[delete] = " + checkedImage);
             }
             for (File checkedThumb : checkedThumbs) {
-                Log.d("CHECKED_IDS", "checkedThumb[delete] = " + checkedThumb);
+                Logger.d("CHECKED_IDS", "checkedThumb[delete] = " + checkedThumb);
             }
             getApp().deleteImage(ids, checkedImages, checkedThumbs);
         }
@@ -235,10 +235,10 @@ public class GalleryActivity extends BaseActivity
 
     @Override
     public void onFileUploaded(FileUploadObj response, String id, String name, long length) {
-        Log.d("UPLOAD", "onFileUploaded():: response = " + response.getUrl());
+        Logger.d("UPLOAD", "onFileUploaded():: response = " + response.getUrl());
         mUploadCount--;
         if (getApp().updateImageUri(response.getUrl(), id) != 0) {
-            Log.d("UPLOAD", "updateImageUri():: imageId = " + id + "\nImageName = " + name + "\n" + "FileURI = " + response.getUrl() +
+            Logger.d("UPLOAD", "updateImageUri():: imageId = " + id + "\nImageName = " + name + "\n" + "FileURI = " + response.getUrl() +
                     "\nmUploadCount = " + mUploadCount);
             getApp().prepareSubmitDocs(this, response, id, name, length, mUploadCount);
         }
@@ -246,9 +246,9 @@ public class GalleryActivity extends BaseActivity
 
     @Override
     public void onDocSubmitted(DocSubmittedObj response, ArrayList<String> ids) {
-        Log.d("UPLOAD", "onDocSubmitted():: response = " + response.getId());
+        Logger.d("UPLOAD", "onDocSubmitted():: response = " + response.getId());
         int updatedCount = getApp().updateImageId(response.getId(), ids);
-        Log.d("UPLOAD", "onDocSubmitted():: updatedCount = " + updatedCount);
+        Logger.d("UPLOAD", "onDocSubmitted():: updatedCount = " + updatedCount);
         if (updatedCount != 0) {
             mUpdateTimes = Integer.parseInt(getApp().getPreff().getString(getString(R.string.updateTimes), "2"));
             mUpdateFreq = Integer.parseInt(getApp().getPreff().getString(getString(R.string.updateFreq), "10")) * 1000;
@@ -258,9 +258,9 @@ public class GalleryActivity extends BaseActivity
 
     @Override
     public void onDocStatus(DocStatusObj response, final ArrayList<String> ids, final String docId) {
-        Log.d("UPLOAD", "onDocStatus():: response = " + response.getStatus() + " / errorMessage = " + response.getErrorMessage());
+        Logger.d("UPLOAD", "onDocStatus():: response = " + response.getStatus() + " / errorMessage = " + response.getErrorMessage());
         int updatedCount = getApp().updateImageStatus(response.getStatus(), ids, docId);
-        Log.d("UPLOAD", "onDocStatus():: updatedCount = " + updatedCount);
+        Logger.d("UPLOAD", "onDocStatus():: updatedCount = " + updatedCount);
         if (!response.getStatus().equals("Completed")) {
             if (mUpdateTimes != 0) {
                 new CountDownTimer(mUpdateFreq, TIMER_TICK) {

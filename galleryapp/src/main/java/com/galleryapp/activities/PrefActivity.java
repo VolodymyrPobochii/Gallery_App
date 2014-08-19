@@ -16,22 +16,17 @@
 
 package com.galleryapp.activities;
 
-import android.app.Fragment;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NavUtils;
-import android.support.v4.app.TaskStackBuilder;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.EditText;
 
+import com.galleryapp.Logger;
 import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
 
@@ -91,7 +86,7 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
     }
 
     private void updatePreffSummaries() {
-        Log.d(TAG, "PreffCount = " + getPreferenceScreen().getPreferenceCount());
+        Logger.d(TAG, "PreffCount = " + getPreferenceScreen().getPreferenceCount());
 
         bindPreferenceSummaryToValue(findPreference("hostName"));
         bindPreferenceSummaryToValue(findPreference("port"));
@@ -155,7 +150,7 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        Log.d(TAG, "Changed : preff = " + sharedPreferences.toString() + " key = " + key);
+        Logger.d(TAG, "Changed : preff = " + sharedPreferences.toString() + " key = " + key);
         updatePreffSummaries();
         setResult(RESULT_OK);
     }
@@ -167,7 +162,7 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
     private Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
-            Log.d(TAG, TAG + "::onPreferenceChange:preference");
+            Logger.d(TAG, TAG + "::onPreferenceChange:preference");
             String stringValue = value.toString();
             if (preference instanceof ListPreference) {
                 // For list preferences, look up the correct display value in
@@ -220,7 +215,7 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
     @Override
     public void finish() {
         editPreff(this);
-        Log.d(TAG, "HostName = " + findPreference("hostName").getSummary());
+        Logger.d(TAG, "HostName = " + findPreference("hostName").getSummary());
         setResult(RESULT_OK);
         super.finish();
     }

@@ -5,9 +5,9 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.net.http.AndroidHttpClient;
 import android.os.IBinder;
-import android.util.Log;
 
 import com.galleryapp.Config;
+import com.galleryapp.Logger;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -41,7 +41,7 @@ public final class LoginService extends IntentService {
 
     public LoginService() {
         super("Empty constructor");
-        Log.d(TAG, "OAuthService()");
+        Logger.d(TAG, "OAuthService()");
 
     }
 
@@ -49,7 +49,7 @@ public final class LoginService extends IntentService {
     // This method is executed in background when this service is started
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.d(TAG, "PostLogin :: onHandleIntent()");
+        Logger.d(TAG, "PostLogin :: onHandleIntent()");
         /*Get login progress intent*/
         loginProgressIntent = intent.getParcelableExtra("loginProgressIntent");
 
@@ -69,12 +69,12 @@ public final class LoginService extends IntentService {
         }
         url += "?" + query;
 
-        Log.d(TAG, "PostLogin :: onHandleIntent() :: url = " + url);
+        Logger.d(TAG, "PostLogin :: onHandleIntent() :: url = " + url);
 
         connectionMessage(CONNECTION_START);
 
         responseToken = DownloadData(url);
-        Log.d(TAG, "responseToken = " + responseToken);
+        Logger.d(TAG, "responseToken = " + responseToken);
         if (!responseToken.isEmpty()) {
             responseToken = responseToken.substring(1);
             responseToken = responseToken.substring(0, responseToken.length() - 1);
@@ -110,14 +110,14 @@ public final class LoginService extends IntentService {
             AndroidHttpClient httpClient = AndroidHttpClient.newInstance("android", getApplicationContext());
             HttpGet get = new HttpGet(parsedUrl.toURI());
             get.addHeader("Host", parsedUrl.getAuthority());
-            Log.d(TAG, "OpenHttpGETConnection::addHeader = " + "Host::" + parsedUrl.getAuthority());
+            Logger.d(TAG, "OpenHttpGETConnection::addHeader = " + "Host::" + parsedUrl.getAuthority());
             get.addHeader("Content-Type", "application/json");
             HttpResponse httpResponse = httpClient.execute(get);
             inputStream = httpResponse.getEntity().getContent();
             httpClient.close();
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d(TAG, "OpenHttpGETConnection::Exception = " + e.toString());
+            Logger.d(TAG, "OpenHttpGETConnection::Exception = " + e.toString());
         }
         connectionMessage(CONNECTION_SUCCESS);
         return inputStream;
@@ -127,7 +127,7 @@ public final class LoginService extends IntentService {
      * A method to download data from url
      */
     public String DownloadData(String URL) {
-        Log.d(TAG, "PostLoginService :: onHandleIntent() :: proccessIntent :: DownloadData()");
+        Logger.d(TAG, "PostLoginService :: onHandleIntent() :: proccessIntent :: DownloadData()");
         int BUFFER_SIZE = 2000;
         InputStream in = null;
         InputStreamReader isr = null;
@@ -135,7 +135,7 @@ public final class LoginService extends IntentService {
             //in = OpenHttpPOSTConnection(URL);
             in = OpenHttpGETConnection(URL);
         } catch (Exception e) {
-            Log.d(TAG, "DownloadData::Exception = " + e.toString());
+            Logger.d(TAG, "DownloadData::Exception = " + e.toString());
             e.printStackTrace();
             connectionMessage(CONNECTION_ERROR);
             return "";
@@ -143,7 +143,7 @@ public final class LoginService extends IntentService {
         try {
             isr = new InputStreamReader(in);
         } catch (Exception e) {
-            Log.d(TAG, "DownloadData::InputStreamReader::Exception = " + e.toString());
+            Logger.d(TAG, "DownloadData::InputStreamReader::Exception = " + e.toString());
             e.printStackTrace();
             connectionMessage(CONNECTION_ERROR);
             return "";
@@ -160,7 +160,7 @@ public final class LoginService extends IntentService {
             }
             in.close();
         } catch (IOException e) {
-            Log.d(TAG, "DownloadData::isr.read::IOException = " + e.toString());
+            Logger.d(TAG, "DownloadData::isr.read::IOException = " + e.toString());
             e.printStackTrace();
             connectionMessage(CONNECTION_ERROR);
             return "";
@@ -172,31 +172,31 @@ public final class LoginService extends IntentService {
     public void onCreate() {
         super.onCreate();
         //startForeground(1, new Notification());
-        Log.d(TAG, "OAuthService :: onCreate()");
+        Logger.d(TAG, "OAuthService :: onCreate()");
     }
 
     @Override
     public void onStart(Intent intent, int startId) {
         super.onStart(intent, startId);
-        Log.d(TAG, "OAuthService :: onStart() :: startId = " + Integer.toString(startId));
+        Logger.d(TAG, "OAuthService :: onStart() :: startId = " + Integer.toString(startId));
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "OAuthService :: onStartCommand() :: startId = " + Integer.toString(startId) + " :: flags = " + Integer.toString(flags));
+        Logger.d(TAG, "OAuthService :: onStartCommand() :: startId = " + Integer.toString(startId) + " :: flags = " + Integer.toString(flags));
         return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "OAuthService :: onDestroy()");
+        Logger.d(TAG, "OAuthService :: onDestroy()");
         // Destroy connection mananger
         super.onDestroy();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(TAG, "OAuthService :: onBind()");
+        Logger.d(TAG, "OAuthService :: onBind()");
         return super.onBind(intent);
     }
 

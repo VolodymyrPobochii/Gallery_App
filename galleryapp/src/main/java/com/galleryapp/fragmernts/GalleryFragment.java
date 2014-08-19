@@ -16,7 +16,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -32,6 +31,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.galleryapp.Config;
+import com.galleryapp.Logger;
 import com.galleryapp.R;
 import com.galleryapp.adapters.ImageAdapter;
 import com.galleryapp.application.GalleryApp;
@@ -192,7 +192,7 @@ public class GalleryFragment extends SyncBaseFragment
 
             @Override
             public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
-                Log.d("CHECKED_IDS", "onItemCheckedStateChanged");
+                Logger.d("CHECKED_IDS", "onItemCheckedStateChanged");
                 // Here you can do something when items are selected/de-selected,
                 // such as update the title in the CAB
                 if (checked) {
@@ -216,7 +216,7 @@ public class GalleryFragment extends SyncBaseFragment
 
             @Override
             public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-                Log.d("CHECKED_IDS", "onActionItemClicked");
+                Logger.d("CHECKED_IDS", "onActionItemClicked");
                 // Respond to clicks on the actions in the CAB
                 switch (item.getItemId()) {
                     case R.id.action_delete_photo_item:
@@ -247,11 +247,11 @@ public class GalleryFragment extends SyncBaseFragment
             @Override
             public boolean onCreateActionMode(final ActionMode mode, final Menu menu) {
                 // Inflate the menu for the CAB
-                Log.d(TAG, "onCreateActionMode");
+                Logger.d(TAG, "onCreateActionMode");
                 MenuInflater inflater = mode.getMenuInflater();
                 assert inflater != null;
                 inflater.inflate(R.menu.context, menu);
-                Log.d(TAG, "onCreateActionMode()::inflater.inflate()");
+                Logger.d(TAG, "onCreateActionMode()::inflater.inflate()");
                 mode.setCustomView(getActivity().getLayoutInflater().inflate(R.layout.cab_layout, null));
                 ((TextView) mode.getCustomView().findViewById(R.id.cab_title)).setText("Select Items");
                 ((TextView) mode.getCustomView().findViewById(R.id.cab_subtitle)).setText("One item selected");
@@ -259,7 +259,7 @@ public class GalleryFragment extends SyncBaseFragment
                 mChannels.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                     @Override
                     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                        Log.d(TAG, "onCreateActionMode()::onItemSelected():CaptureChannel");
+                        Logger.d(TAG, "onCreateActionMode()::onItemSelected():CaptureChannel");
                         ((TextView) view).setTextColor(Color.WHITE);
                         Cursor channelCursor = (Cursor) mChannels.getSelectedItem();
                         String channelDomain = channelCursor.getString(GalleryDBContent.Channels.Columns.DOMAIN.ordinal());
@@ -298,7 +298,7 @@ public class GalleryFragment extends SyncBaseFragment
                         }
                     }
                 } else {
-                    Log.d(TAG, "onCreateActionMode()::mChannelsAdapter.getCursor()::data = null");
+                    Logger.d(TAG, "onCreateActionMode()::mChannelsAdapter.getCursor()::data = null");
                 }
 //                mode.setTitle("Select Items");
 //                mode.setSubtitle("One item selected");
@@ -309,7 +309,7 @@ public class GalleryFragment extends SyncBaseFragment
             public void onDestroyActionMode(ActionMode mode) {
                 // Here you can make any necessary updates to the activity when
                 // the CAB is removed. By default, selected items are deselected/unchecked.
-                Log.d("CHECKED_IDS", "onDestroyActionMode");
+                Logger.d("CHECKED_IDS", "onDestroyActionMode");
 //                mCheckedIds.clear();
                 initThumbLoader();
             }
@@ -331,7 +331,7 @@ public class GalleryFragment extends SyncBaseFragment
 
     @Override
     protected void setRefreshActionButtonState(boolean refreshing) {
-        Log.d(TAG, "setRefreshActionButtonState() = " + refreshing);
+        Logger.d(TAG, "setRefreshActionButtonState() = " + refreshing);
     }
 
     public final void sendSelectedItems() {
@@ -341,10 +341,10 @@ public class GalleryFragment extends SyncBaseFragment
         assert cursor != null;
         if (cursor.getCount() > 0) {
             for (Integer id : mCheckedIds) {
-                Log.d("UPLOAD", "ID[" + id + "] = " + id);
+                Logger.d("UPLOAD", "ID[" + id + "] = " + id);
                 cursor.moveToPosition(id);
                 fileIds.add(cursor.getInt(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.ID.getName())));
-                Log.d("UPLOAD", "fileId = " + fileIds);
+                Logger.d("UPLOAD", "fileId = " + fileIds);
             }
             cursor.close();
         }
@@ -361,7 +361,7 @@ public class GalleryFragment extends SyncBaseFragment
         assert cursor != null;
         if (cursor.getCount() > 0) {
             for (Integer id : mCheckedIds) {
-                Log.d("CHECKED_IDS", "ID[] = " + id);
+                Logger.d("CHECKED_IDS", "ID[] = " + id);
                 cursor.moveToPosition(id);
                 checkedCursorIds.add(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.ID.getName())));
                 checkedImages.add(new File(cursor.getString(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.IMAGE_PATH.getName()))));

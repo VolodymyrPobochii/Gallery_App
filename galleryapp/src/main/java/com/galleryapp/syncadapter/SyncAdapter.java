@@ -36,6 +36,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.galleryapp.Config;
+import com.galleryapp.Logger;
 import com.galleryapp.R;
 import com.galleryapp.ScanRestService;
 import com.galleryapp.application.GalleryApp;
@@ -250,16 +251,16 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                     }
                 }
             } else {
-                Log.d(TAG, "getIndexScheme() :: DocumentSchema = NULL");
+                Logger.d(TAG, "getIndexScheme() :: DocumentSchema = NULL");
             }
 
         } else {
-            Log.d(TAG, "getIndexScheme() :: END :: Scheme = NULL");
+            Logger.d(TAG, "getIndexScheme() :: END :: Scheme = NULL");
         }
     }
 
     private void getChannelsCodes(ContentProvider localProvider, SyncResult syncResult) {
-        Log.d(TAG, "getChannelsCodes() :: START");
+        Logger.d(TAG, "getChannelsCodes() :: START");
         /*mBuilder.setTicker("Channels update")
                 .setContentTitle("Channels update")
                 .setContentText("Updating channels...")
@@ -271,12 +272,12 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
 //            mNotifyManager.notify(R.id.get_channels, mBuilder.build());
             channels = mRestService.getChannels(mApp.getToken());
         } catch (RetrofitError error) {
-            Log.d(TAG, "getChannelsCodes() :: RetrofitError = " + error.getLocalizedMessage());
+            Logger.d(TAG, "getChannelsCodes() :: RetrofitError = " + error.getLocalizedMessage());
            /* mBuilder.setContentText("Channels code request FAILURE")
                     .setSmallIcon(android.R.drawable.stat_notify_error);
             dispatchNotification(R.id.get_channels);*/
         }
-        Log.d(TAG, "getChannelsCodes() :: END");
+        Logger.d(TAG, "getChannelsCodes() :: END");
         completeGetChannels(channels, localProvider, syncResult);
     }
 
@@ -284,14 +285,14 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         //TODO: refactor later
 //        final ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
         while (c.moveToNext()) {
-            Log.d(TAG, "uploadFiles() :: BEGIN");
+            Logger.d(TAG, "uploadFiles() :: BEGIN");
             Integer fileId = c.getInt(GalleryImages.Columns.ID.ordinal());
             String fileName = c.getString(GalleryImages.Columns.IMAGE_NAME.ordinal());
             String filePath = c.getString(GalleryImages.Columns.IMAGE_PATH.ordinal());
             String fileThumbPath = c.getString(GalleryImages.Columns.THUMB_PATH.ordinal());
             Integer needUpload = c.getInt(GalleryImages.Columns.NEED_UPLOAD.ordinal());
             Integer isSynced = c.getInt(GalleryImages.Columns.IS_SYNCED.ordinal());
-            Log.d(TAG, "fileId=" + fileId + "|fileName=" + fileName + "|filePath=" +
+            Logger.d(TAG, "fileId=" + fileId + "|fileName=" + fileName + "|filePath=" +
                     filePath + "|fileThumbPath=" + fileThumbPath + "|needUpload=" + needUpload + "|isSynced=" + isSynced);
 
             TypedFile typedFile = new TypedFile("application/binary", new File(filePath));
@@ -315,10 +316,10 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                 mBuilder.setContentText("Upload Error")
                         .setSmallIcon(android.R.drawable.stat_notify_error);
                 dispatchNotification(fileId);
-                Log.d(TAG, "uploadFiles() :: RetrofitError = " + error.getLocalizedMessage());
+                Logger.d(TAG, "uploadFiles() :: RetrofitError = " + error.getLocalizedMessage());
             }
             if (fileUpload != null) {
-                Log.d(TAG, "uploadFiles() :: success = " + fileUpload.getUrl());
+                Logger.d(TAG, "uploadFiles() :: success = " + fileUpload.getUrl());
                 mBuilder.setContentText("Upload Successful")
                         .setSmallIcon(android.R.drawable.stat_sys_upload_done);
                 dispatchNotification(fileId);
@@ -328,32 +329,32 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                         .setSmallIcon(android.R.drawable.stat_notify_error);
                 dispatchNotification(fileId);
             }
-            Log.d(TAG, "uploadFiles() :: END");
+            Logger.d(TAG, "uploadFiles() :: END");
         }
         c.close();
     }
 
     private void completeFileUpload(ContentProvider localProvider, SyncResult syncResult,
                                     String uri, Integer fileId, String fileName, long fileLength) {
-        Log.d(TAG, "completeFileUpload() :: START : fileName = " + fileName);
+        Logger.d(TAG, "completeFileUpload() :: START : fileName = " + fileName);
         mNotifyManager.cancel(fileId);
         ContentValues cv = new ContentValues();
         cv.put(GalleryImages.Columns.FILE_URI.getName(), uri);
         int updated = localProvider.update(GalleryImages.CONTENT_URI, cv,
                 GalleryImages.Columns.ID.getName() + "=?", new String[]{String.valueOf(fileId)});
-        Log.d(TAG, "updated=" + updated);
+        Logger.d(TAG, "updated=" + updated);
         if (updated > 0) {
-            Log.d(TAG, "completeFileUpload() :: END : updated = " + updated);
-            Log.d(TAG, "completeFileUpload() :: syncResult.stats.numInserts = " + syncResult.stats.numUpdates);
+            Logger.d(TAG, "completeFileUpload() :: END : updated = " + updated);
+            Logger.d(TAG, "completeFileUpload() :: syncResult.stats.numInserts = " + syncResult.stats.numUpdates);
             syncResult.stats.numUpdates += updated;
-            Log.d(TAG, "completeFileUpload() :: syncResult.stats.numInserts = " + syncResult.stats.numUpdates);
+            Logger.d(TAG, "completeFileUpload() :: syncResult.stats.numInserts = " + syncResult.stats.numUpdates);
             mUploadCount--;
             prepareSubmitDocs(localProvider, uri, fileId, fileName, fileLength);
         }
     }
 
     private void prepareSubmitDocs(ContentProvider localProvider, String uri, Integer id, String name, long length) {
-        Log.d(TAG, "prepareSubmitDocs() :: START : name = " + name);
+        Logger.d(TAG, "prepareSubmitDocs() :: START : name = " + name);
         mIds.add(String.valueOf(id));
         Document document = new Document();
         document.setIndexSchema(mApp.getIndexString());
@@ -365,14 +366,14 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         document.setIsEmailManifest(false);
         document.setBody(null);
         mDocuments.add(document);
-        Log.d(TAG, "prepareSubmitDocs() :: END : name = " + name + " / schema = " + document.getIndexSchema());
+        Logger.d(TAG, "prepareSubmitDocs() :: END : name = " + name + " / schema = " + document.getIndexSchema());
         if (mUploadCount == 0) {
             submitDocs(localProvider);
         }
     }
 
     private void submitDocs(ContentProvider localProvider) {
-        Log.d(TAG, "prepareSubmitDocs() :: START");
+        Logger.d(TAG, "prepareSubmitDocs() :: START");
         String token = mApp.getToken();
         String domain = mApp.getDomain();
         String hostName = mApp.getHostName();
@@ -421,7 +422,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                 .append("sync=true").append("&")
                 .append("scheme=").append(hostUrl != null ? hostUrl.getProtocol() : "http")
                 .toString();
-        Log.d(TAG, "PARAMETERS: " + parameters);
+        Logger.d(TAG, "PARAMETERS: " + parameters);
         captureItemObj.setParameters(parameters);
         captureItemObj.setChannelType(3);
 
@@ -438,7 +439,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         submitDocumentTask.execute(url);*/
 
         String json = new Gson().toJson(submitDocumentObj);
-        Log.d("UPLOAD", "DocSubmittedObj = " + json);
+        Logger.d("UPLOAD", "DocSubmittedObj = " + json);
         byte[] postJson = json.getBytes();
         TypedByteArray docFile = new TypedByteArray("application/binary", postJson);
         long fileLength = docFile.length();
@@ -456,10 +457,10 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
             mBuilder.setContentText("Submit Error")
                     .setSmallIcon(android.R.drawable.stat_notify_error);
             dispatchNotification(R.id.submit_doc);
-            Log.d(TAG, "uploadFiles() :: RetrofitError = " + error.getLocalizedMessage());
+            Logger.d(TAG, "uploadFiles() :: RetrofitError = " + error.getLocalizedMessage());
         }
         if (submittedDoc != null) {
-            Log.d(TAG, "uploadFiles() :: success = " + submittedDoc.getId());
+            Logger.d(TAG, "uploadFiles() :: success = " + submittedDoc.getId());
             mBuilder.setContentText("Submit Successful")
                     .setSmallIcon(android.R.drawable.stat_sys_upload_done);
             dispatchNotification(R.id.submit_doc);
@@ -469,18 +470,18 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                     .setSmallIcon(android.R.drawable.stat_notify_error);
             dispatchNotification(R.id.submit_doc);
         }
-        Log.d(TAG, "prepareSubmitDocs() :: END");
+        Logger.d(TAG, "prepareSubmitDocs() :: END");
     }
 
     private void completeSubmitDoc(ContentProvider localProvider, DocSubmittedObj submittedDoc, ArrayList<String> ids) {
         String docId = submittedDoc.getId();
-        Log.d(TAG, "completeSubmitDoc():: submittedDoc = " + docId);
+        Logger.d(TAG, "completeSubmitDoc():: submittedDoc = " + docId);
         int updatedCount = updateImageId(localProvider, docId, ids);
-        Log.d(TAG, "completeSubmitDoc():: updatedCount = " + updatedCount);
+        Logger.d(TAG, "completeSubmitDoc():: updatedCount = " + updatedCount);
         if (updatedCount != 0) {
             mUpdateTimes = Integer.parseInt(mPreff.getString(mContext.getString(R.string.updateTimes), "2"));
             mUpdateFreq = Integer.parseInt(mPreff.getString(mContext.getString(R.string.updateFreq), "10")) * 1000;
-            Log.d(TAG, "completeSubmitDoc():: mUpdateTimes = " + mUpdateTimes + " mUpdateFreq = " + mUpdateFreq);
+            Logger.d(TAG, "completeSubmitDoc():: mUpdateTimes = " + mUpdateTimes + " mUpdateFreq = " + mUpdateFreq);
             getDocStatus(localProvider, docId);
         }
     }
@@ -496,18 +497,18 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         if (docStatus != null) {
             if (docStatus.getErrorCode() == 0) {
                 String status = docStatus.getStatus();
-                Log.d(TAG, "onDocStatus():: docStatus = " + status + " / errorMessage = " + docStatus.getErrorMessage());
+                Logger.d(TAG, "onDocStatus():: docStatus = " + status + " / errorMessage = " + docStatus.getErrorMessage());
                 int updatedCount = updateImageStatus(localProvider, status, docId);
-                Log.d("UPLOAD", "onDocStatus():: updatedCount = " + updatedCount);
+                Logger.d("UPLOAD", "onDocStatus():: updatedCount = " + updatedCount);
                 if (!status.equals("Completed")) {
                     long startTime = System.currentTimeMillis();
                     if (mUpdateTimes != 0) {
                         int dt = (int) (System.currentTimeMillis() - startTime);
-                        Log.d(TAG, "Waiting for status (dt:" + dt + ") START");
+                        Logger.d(TAG, "Waiting for status (dt:" + dt + ") START");
                         while (dt < mUpdateFreq) {
                             dt = (int) (System.currentTimeMillis() - startTime);
                         }
-                        Log.d(TAG, "Waiting for status (dt:" + dt + ") FINISH");
+                        Logger.d(TAG, "Waiting for status (dt:" + dt + ") FINISH");
                         mUpdateTimes--;
                         getDocStatus(localProvider, docId);
                     } else {
@@ -532,22 +533,22 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                 new String[]{"", "Completed"}, null
         );
         if (cursor != null && cursor.getCount() > 0) {
-            Log.d(TAG, "GET_DOC_STATUS :: c.count = " + cursor.getCount());
+            Logger.d(TAG, "GET_DOC_STATUS :: c.count = " + cursor.getCount());
             while (cursor.moveToNext()) {
-                Log.d(TAG, "GET_DOC_STATUS :: cursor.moveToNext()");
+                Logger.d(TAG, "GET_DOC_STATUS :: cursor.moveToNext()");
                 String id = cursor.getString(GalleryImages.Columns.ID.ordinal());
                 String docId = cursor.getString(GalleryImages.Columns.FILE_ID.ordinal());
                 String status = cursor.getString(GalleryImages.Columns.STATUS.ordinal());
                 if (!TextUtils.isEmpty(docId) && !status.equalsIgnoreCase("Completed")) {
-                    Log.d(TAG, "GET_DOC_STATUS :: getDocStatus() : break");
+                    Logger.d(TAG, "GET_DOC_STATUS :: getDocStatus() : break");
                     getDocStatus(localProvider, docId);
                     break;
                 }
             }
             cursor.close();
-            Log.d(TAG, "GET_DOC_STATUS ::  cursor.close()");
+            Logger.d(TAG, "GET_DOC_STATUS ::  cursor.close()");
         } else {
-            Log.d(TAG, "GET_DOC_STATUS ::  All Statuses Updated");
+            Logger.d(TAG, "GET_DOC_STATUS ::  All Statuses Updated");
         }
     }
 
@@ -568,7 +569,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         ContentValues cv = new ContentValues();
         cv.put(GalleryDBContent.GalleryImages.Columns.FILE_ID.getName(), fileId);
         for (String id : ids) {
-            Log.d(TAG, "updateImageId():: id = " + id);
+            Logger.d(TAG, "updateImageId():: id = " + id);
             updatedCount += localProvider.update(GalleryDBContent.GalleryImages.CONTENT_URI, cv,
                     GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?", new String[]{id});
         }
@@ -582,26 +583,26 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
             dispatchNotification(R.id.get_channels);*/
             if (channels.getErrorCode() == 0 && TextUtils.isEmpty(channels.getErrorMessage())) {
                 if (channels.getChannels().size() > 0) {
-                    Log.d(TAG, "getChannelsCodes()" + "ChannelsObj = " + channels.toString());
-                    Log.d(TAG, "getChannelsCodes()" + "syncResult.stats.numInserts = " + syncResult.stats.numInserts);
+                    Logger.d(TAG, "getChannelsCodes()" + "ChannelsObj = " + channels.toString());
+                    Logger.d(TAG, "getChannelsCodes()" + "syncResult.stats.numInserts = " + syncResult.stats.numInserts);
                     int channelsUpdated = updateChannels(channels, localProvider);
                     syncResult.stats.numInserts += channelsUpdated;
 //                    dispatchNotification(R.id.get_channels);
-                    Log.d(TAG, "getChannelsCodes()" + "channelsUpdated = " + channelsUpdated);
-                    Log.d(TAG, "getChannelsCodes()" + "syncResult.stats.numInserts = " + syncResult.stats.numInserts);
+                    Logger.d(TAG, "getChannelsCodes()" + "channelsUpdated = " + channelsUpdated);
+                    Logger.d(TAG, "getChannelsCodes()" + "syncResult.stats.numInserts = " + syncResult.stats.numInserts);
                 } else {
-                    Log.d(TAG, "getChannelsCodes():: Channels = 0");
+                    Logger.d(TAG, "getChannelsCodes():: Channels = 0");
                 }
             } else {
-                Log.d(TAG, "getChannelsCodes():: Error = " + channels.getErrorMessage());
+                Logger.d(TAG, "getChannelsCodes():: Error = " + channels.getErrorMessage());
             }
         } else {
-            Log.d(TAG, "getChannelsCodes():: Error: channels = NULL");
+            Logger.d(TAG, "getChannelsCodes():: Error: channels = NULL");
             /*mBuilder.setContentText("Upload Error")
                     .setSmallIcon(android.R.drawable.stat_notify_error);
             dispatchNotification(R.id.get_channels);*/
         }
-        Log.d(TAG, "getChannelsCodes()::END");
+        Logger.d(TAG, "getChannelsCodes()::END");
     }
 
     private int updateChannels(ChannelsObj channels, ContentProvider localProvider) {
@@ -639,11 +640,11 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         mNotifyManager.notify(id, mBuilder.build());
         long startTime = System.currentTimeMillis();
         long dt = System.currentTimeMillis() - startTime;
-        Log.d(TAG, "Waiting for close notification (dt:" + dt + ") START");
+        Logger.d(TAG, "Waiting for close notification (dt:" + dt + ") START");
         while (dt < TIME_TO_CLOSE_NOTIFICATION) {
             dt = System.currentTimeMillis() - startTime;
         }
-        Log.d(TAG, "Waiting for close notification (dt:" + dt + ") FINISH");
+        Logger.d(TAG, "Waiting for close notification (dt:" + dt + ") FINISH");
         mNotifyManager.cancel(id);
     }
 
@@ -664,12 +665,12 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         @Override
         public void success(FileUploadObj fileUploadObj, Response response) {
 //            completeFileUpload(mProvider, fileUploadObj.getUrl(), mFileId, fileName, fileLength);
-            Log.d(TAG, "UploadCallback()::success=" + fileUploadObj.getUrl());
+            Logger.d(TAG, "UploadCallback()::success=" + fileUploadObj.getUrl());
         }
 
         @Override
         public void failure(RetrofitError error) {
-            Log.d(TAG, "UploadCallback()::error=" + error.getLocalizedMessage());
+            Logger.d(TAG, "UploadCallback()::error=" + error.getLocalizedMessage());
         }
     }*/
 }

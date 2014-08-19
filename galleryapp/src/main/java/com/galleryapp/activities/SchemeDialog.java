@@ -23,6 +23,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.galleryapp.Logger;
 import com.galleryapp.R;
 import com.galleryapp.ScanRestService;
 import com.galleryapp.application.GalleryApp;
@@ -224,9 +225,9 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                         });
                         //TODO: network request to get Element Items
                         String baseUrl = mApp.getHostName() + ":" + mApp.getPort();
-                        Log.d(TAG, "init():: API_Url = " + baseUrl);
+                        Logger.d(TAG, "init():: API_Url = " + baseUrl);
                         ScanRestService serviceEnum = ScanRestService.INSTANCE.initRestAdapter(baseUrl);
-                        Log.d(TAG, "init():: Created scanService = " + serviceEnum.toString());
+                        Logger.d(TAG, "init():: Created scanService = " + serviceEnum.toString());
                         ScanRestService.ScanServices mRestService = serviceEnum.getService();
 
                         mRestService.getItems(mApp.getDomain(), ruleCode, mApp.getToken(), new Callback<ElementData>() {
@@ -297,7 +298,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                                 }
                             }
                             String indexString = sb.toString();
-                            Log.d(TAG, "onLoadFinished() :: onOkClicked :: indexString = " + indexString);
+                            Logger.d(TAG, "onLoadFinished() :: onOkClicked :: indexString = " + indexString);
                             mCallback.onOkClicked(indexString);
                         }
                         if (getDialog() != null) {
@@ -321,7 +322,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                 root.findViewById(R.id.progress).setVisibility(View.GONE);
             }
         } else {
-            Log.d(TAG, "onLoadFinished() :: Cursor NULL or EMPTY");
+            Logger.d(TAG, "onLoadFinished() :: Cursor NULL or EMPTY");
 //            SyncUtils.triggerRefresh(SyncAdapter.GET_INDEX_SCHEME);
             mHandler.postDelayed(new Runnable() {
                 @Override
