@@ -214,7 +214,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                             @Override
                             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                                Toast.makeText(mActivity, "Clicked: " + adapterView.getSelectedItem(), Toast.LENGTH_SHORT).show();
+//                                Toast.makeText(mActivity, "Clicked: " + adapterView.getSelectedItem(), Toast.LENGTH_SHORT).show();
                             }
 
                             @Override
