@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class GalleryApp extends Application implements GalleryFragment.OnFragmentInteractionListener {
+public final class GalleryApp extends Application implements GalleryFragment.OnFragmentInteractionListener {
 
     public static final String TAG = GalleryApp.class.getSimpleName();
     private static final long TIMER_TICK = 100l;
@@ -121,7 +121,7 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
         super.onTerminate();
     }
 
-    public void deleteImage(ArrayList<String> ids, ArrayList<File> images, ArrayList<File> thumbs) {
+    public final void deleteImage(ArrayList<String> ids, ArrayList<File> images, ArrayList<File> thumbs) {
         ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
         for (String id : ids) {
             operations.add(ContentProviderOperation.newDelete(GalleryDBContent.GalleryImages.CONTENT_URI)
@@ -165,12 +165,12 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
         }
     }
 
-    public Uri saveImage(final ImageObj image) {
+    public final Uri saveImage(final ImageObj image) {
         return getContentResolver()
                 .insert(GalleryDBContent.GalleryImages.CONTENT_URI, image.toContentValues());
     }
 
-    public boolean isNetworkConnected() {
+    public final boolean isNetworkConnected() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo ni = cm.getActiveNetworkInfo();
         return ni != null;
@@ -216,7 +216,7 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
         return dialog;
     }
 
-    public ProgressDialog customProgressDialog(final Context context, String message) {
+    public final ProgressDialog customProgressDialog(final Context context, String message) {
         ProgressDialog progressDialog = new ProgressDialog(context);
         progressDialog.setTitle(context.getResources().getString(R.string.app_name));
         progressDialog.setMessage(message);
@@ -226,12 +226,12 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
         return progressDialog;
     }
 
-    public AlertDialog noConnectionDialog() {
+    public final AlertDialog noConnectionDialog() {
         return customAlertDialog(getApplicationContext(), getString(R.string.no_connection),
                 getString(R.string.close), false, null, false, false);
     }
 
-    public void setUpHost() {
+    public final void setUpHost() {
         hostName = preff.getString("hostName", Config.DEFAULT_HOST);
         port = preff.getString("port", Config.DEFAULT_PORT);
         domain = preff.getString("domain", Config.DEFAULT_DOMAIN);
@@ -248,7 +248,7 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
         Logger.d("GalleryApp", "setUpHost()::channelCode=" + captureChannelCode);
     }
 
-    public void prepareFilesForSync(List<Integer> checkedIds) {
+    public final void prepareFilesForSync(List<Integer> checkedIds) {
         for (Integer id : checkedIds) {
             Logger.d(TAG, "prepareFilesForSync()::checkedID = " + Integer.toString(id));
         }
@@ -290,6 +290,52 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
             SyncUtils.triggerRefresh(SyncAdapter.UPLOAD_FILES);
             Logger.d(TAG, "prepareFilesForSync()::SyncUtils.triggerRefresh(UPLOAD_FILES)");
         }
+    }
+
+    public final int updateImageIndexSchema(String indexString, int imageId) {
+        ContentValues cv = new ContentValues();
+        cv.put(GalleryDBContent.GalleryImages.Columns.INDEX_SCHEMA.getName(), indexString);
+
+        return getContentResolver().update(GalleryDBContent.GalleryImages.CONTENT_URI, cv,
+                GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?", new String[]{Integer.toString(imageId)});
+    }
+
+    public final String getImageIndexString(Integer id) {
+        Cursor schemaValues = getContentResolver().query(GalleryDBContent.GalleryImages.CONTENT_URI,
+                new String[]{GalleryDBContent.GalleryImages.Columns.INDEX_SCHEMA.getName()},
+                GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?",
+                new String[]{String.valueOf(id)},
+                null);
+
+        if (schemaValues != null && schemaValues.getCount() > 0) {
+            schemaValues.moveToLast();
+            return
+                    schemaValues.getString(
+                            schemaValues.getColumnIndex(
+                                    GalleryDBContent.GalleryImages.Columns.INDEX_SCHEMA.getName()));
+        }
+        return null;
+    }
+
+
+    @Override
+    public void onDeleteItemsOperation(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs) {
+        if (ids != null && ids.size() > 0) {
+            for (String id : ids) {
+                Logger.d("CHECKED_IDS", "ID[delete] = " + id);
+            }
+            for (File checkedImage : checkedImages) {
+                Logger.d("CHECKED_IDS", "checkedImage[delete] = " + checkedImage);
+            }
+            for (File checkedThumb : checkedThumbs) {
+                Logger.d("CHECKED_IDS", "checkedThumb[delete] = " + checkedThumb);
+            }
+            deleteImage(ids, checkedImages, checkedThumbs);
+        }
+    }
+
+    @Override
+    public void onStartUploadImages(int uploadCount) {
     }
 
     /*public ArrayList<String> getRunningActivities() {
@@ -409,25 +455,5 @@ public class GalleryApp extends Application implements GalleryFragment.OnFragmen
 
     public void setAppVersion(String appVersion) {
         this.appVersion = appVersion;
-    }
-
-    @Override
-    public void onDeleteItemsOperation(ArrayList<String> ids, ArrayList<File> checkedImages, ArrayList<File> checkedThumbs) {
-        if (ids != null && ids.size() > 0) {
-            for (String id : ids) {
-                Logger.d("CHECKED_IDS", "ID[delete] = " + id);
-            }
-            for (File checkedImage : checkedImages) {
-                Logger.d("CHECKED_IDS", "checkedImage[delete] = " + checkedImage);
-            }
-            for (File checkedThumb : checkedThumbs) {
-                Logger.d("CHECKED_IDS", "checkedThumb[delete] = " + checkedThumb);
-            }
-            deleteImage(ids, checkedImages, checkedThumbs);
-        }
-    }
-
-    @Override
-    public void onStartUploadImages(int uploadCount) {
     }
 }

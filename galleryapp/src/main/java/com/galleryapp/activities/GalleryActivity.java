@@ -15,6 +15,7 @@ import com.galleryapp.R;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ImageObj;
 import com.galleryapp.fragmernts.GalleryFragment;
+import com.galleryapp.fragmernts.SchemeDialog;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class GalleryActivity extends BaseActivity
     private static final int REQUEST_LOAD_IMAGE = 1200;
     private static final long TIMER_TICK = 100l;
     private static final String SCHEME_DIALOG = "SCHEME";
-    private static final long DELAY_TIME = 250l;
+    private static final long DELAY_TIME = 100l;
     private int mUploadCount;
     private int mUpdateTimes;
     private int mUpdateFreq;
@@ -189,26 +190,34 @@ public class GalleryActivity extends BaseActivity
     }
 
     @Override
-    public void onOkClicked(String indexString) {
+    public void onOkClicked(final String indexString, final int imageId) {
         //TODO: refactor
-        getApp().setIndexString(indexString);
-        /*sHandler.postDelayed(new Runnable() {
+        Logger.d(TAG, "setIndexString = " + indexString);
+        setPrepareIndexSchemaFlag(false);
+        sHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                ((GalleryFragment) getFragmentManager()
-                        .findFragmentById(R.id.container)).sendSelectedItems();
+                Logger.d(TAG, "indexUpdated = " + getApp().updateImageIndexSchema(indexString, imageId));
             }
-        }, DELAY_TIME);*/
+        }, DELAY_TIME);
+    }
+
+    private void setPrepareIndexSchemaFlag(boolean b) {
+        GalleryFragment fragment = (GalleryFragment) getFragmentManager().findFragmentById(R.id.container);
+        if (fragment != null) {
+            fragment.setIsPrepareIndexScheme(b);
+        }
     }
 
     @Override
     public void onCancelClicked() {
+        setPrepareIndexSchemaFlag(false);
     }
 
     @Override
-    public void onFileUpload() {
+    public void onFileUpload(Integer id) {
         DialogFragment dialog = SchemeDialog
-                .newInstance(getApp().getCaptureChannelCode());
+                .newInstance(getApp().getCaptureChannelCode(), id);
         dialog.show(getFragmentManager(), SCHEME_DIALOG);
     }
 

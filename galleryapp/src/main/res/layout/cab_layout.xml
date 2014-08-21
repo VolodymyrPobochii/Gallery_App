@@ -2,8 +2,8 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
-    android:minWidth="200dp"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:minWidth="200dp">
 
     <TextView
         android:id="@+id/cab_title"
@@ -11,7 +11,8 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:textAppearance="@android:style/TextAppearance.Medium"
-        android:textColor="@color/white" />
+        android:textColor="@color/white"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/cab_subtitle"
@@ -20,14 +21,15 @@
         android:layout_below="@id/cab_title"
         android:gravity="center_vertical"
         android:textAppearance="@android:style/TextAppearance.Small"
-        android:textColor="@color/white" />
+        android:textColor="@color/white"
+        android:visibility="gone" />
 
     <Spinner
         android:id="@+id/cab_channels"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_marginLeft="10dp"
-        android:minWidth="30dp"
-        android:layout_toRightOf="@id/cab_subtitle" />
+        android:layout_toRightOf="@id/cab_subtitle"
+        android:minWidth="30dp" />
 
 </RelativeLayout>

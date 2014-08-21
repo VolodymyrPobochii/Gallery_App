@@ -1,7 +1,6 @@
-package com.galleryapp.activities;
+package com.galleryapp.fragmernts;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.LoaderManager;
 import android.content.CursorLoader;
@@ -11,6 +10,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,12 +28,15 @@ import com.galleryapp.R;
 import com.galleryapp.ScanRestService;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ElementData;
+import com.galleryapp.data.provider.GalleryDBContent;
 import com.galleryapp.data.provider.GalleryDBContent.IndexSchemas;
+import com.galleryapp.utils.StringUtils;
 import com.galleryapp.views.SchemeElementSelector;
 
 import org.apache.http.protocol.HTTP;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +52,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
 
     private static final String TAG = SchemeDialog.class.getSimpleName();
     private static final String ARG_CODE = "capchcode";
+    private static final String ARG_IMG_ID = "imageID";
 
     private Activity mActivity;
     private LayoutInflater mInflater;
@@ -56,18 +60,20 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
     private SchemeDialogCallbacks mCallback;
     private GalleryApp mApp;
     private static Handler mHandler = new Handler();
+    private String[][] mImageIndexString;
 
     public interface SchemeDialogCallbacks {
-        void onOkClicked(String indexString);
+        void onOkClicked(String indexString, int imageId);
 
         void onCancelClicked();
     }
 
-    public static SchemeDialog newInstance(String capchcode) {
+    public static SchemeDialog newInstance(String capchcode, Integer id) {
         Log.d(TAG, "newInstance() :: ARG_CODE = " + capchcode);
         SchemeDialog dialog = new SchemeDialog();
         Bundle args = new Bundle();
         args.putString(ARG_CODE, capchcode);
+        args.putInt(ARG_IMG_ID, id);
         dialog.setArguments(args);
         return dialog;
     }
@@ -89,36 +95,6 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        Log.d(TAG, "onDestroyView()");
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        Log.d(TAG, "onStop()");
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart()");
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        Log.d(TAG, "onSaveInstanceState()");
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        Log.d(TAG, "onActivityCreated()");
-    }
-
-    @Override
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);
         Log.d(TAG, "onDismiss()");
@@ -128,12 +104,6 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
     public void onCancel(DialogInterface dialog) {
         super.onCancel(dialog);
         Log.d(TAG, "onCancel()");
-    }
-
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateDialog()");
-        return super.onCreateDialog(savedInstanceState);
     }
 
     @Override
@@ -154,14 +124,6 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView()");
         getDialog().setTitle("Scheme data");
-//        mRoot = new LinearLayout(mActivity);
-//        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-//        mRoot.setPadding(10, 10, 10, 10);
-//        mRoot.setOrientation(LinearLayout.VERTICAL);
-//        mRoot.setShowDividers(LinearLayout.SHOW_DIVIDER_END);
-//        mRoot.setDividerDrawable(getResources().getDrawable(android.R.drawable.divider_horizontal_dark));
-//        mRoot.setDividerPadding(5);
-//        mRoot.setLayoutParams(lp);
         LinearLayout root = (LinearLayout) inflater.inflate(R.layout.scheme_root, container);
         root.findViewById(R.id.progress).setVisibility(View.VISIBLE);
         return root;
@@ -171,7 +133,25 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Log.d(TAG, "onViewCreated()");
+        mImageIndexString = getImageParsedIndexString();
         getLoaderManager().initLoader(R.id.scheme_loader, getArguments(), this);
+    }
+
+    private String[][] getImageParsedIndexString() {
+        Cursor schemaValues = mActivity.getContentResolver().query(GalleryDBContent.GalleryImages.CONTENT_URI,
+                new String[]{GalleryDBContent.GalleryImages.Columns.INDEX_SCHEMA.getName()},
+                GalleryDBContent.GalleryImages.Columns.ID.getName() + "=?",
+                new String[]{String.valueOf(getArguments().getInt(ARG_IMG_ID))},
+                null);
+
+        if (schemaValues != null && schemaValues.getCount() > 0) {
+            schemaValues.moveToLast();
+            String indexString = schemaValues.getString(schemaValues.getColumnIndex(GalleryDBContent.GalleryImages.Columns.INDEX_SCHEMA.getName()));
+            if (!TextUtils.isEmpty(indexString)) {
+                return StringUtils.parseIndexElements(indexString);
+            }
+        }
+        return null;
     }
 
     @Override
@@ -200,7 +180,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
 
                     String type = cursor.getString(cursor.getColumnIndex(IndexSchemas.Columns.TYPE.getName()));
                     String code = cursor.getString(cursor.getColumnIndex(IndexSchemas.Columns.CODE.getName()));
-                    String name = cursor.getString(cursor.getColumnIndex(IndexSchemas.Columns.NAME.getName()));
+                    final String name = cursor.getString(cursor.getColumnIndex(IndexSchemas.Columns.NAME.getName()));
                     String ruleCode = cursor.getString(cursor.getColumnIndex(IndexSchemas.Columns.RULECODE.getName()));
                     Log.d(TAG, "onLoadFinished() :: type = " + type + " / code = " + code);
 
@@ -244,6 +224,17 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                                                 elements.add(obj.getNAME());
                                             }
                                             spinner.setAdapter(new ArrayAdapter<String>(mActivity, R.layout.view_textview, elements));
+                                            if (mImageIndexString != null) {
+                                                int length = mImageIndexString.length;
+                                                for (String[] indexString : mImageIndexString) {
+                                                    String indexName = indexString[0];
+                                                    if (indexName.intern().equals(name)) {
+                                                        int selectedPos = elements.indexOf(indexString[1]);
+                                                        spinner.setSelection(selectedPos != -1 ? selectedPos : 0);
+                                                        break;
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -263,6 +254,26 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                                 SchemeElementSelector.TYPE_EDITTEXT, name, code.hashCode(), root);
                         ((TextView) editText.findViewById(R.id.name_et)).setText(name);
                         EditText et = (EditText) editText.findViewById(R.id.component_et);
+
+                        if (mImageIndexString != null) {
+                            Logger.d(TAG, "mImageIndexString != null");
+                            int length = mImageIndexString.length;
+                            Logger.d(TAG, "mImageIndexString.length = " + length);
+                            for (String[] indexString : mImageIndexString) {
+                                String indexName = indexString[0];
+                                Logger.d(TAG, "indexName = " + indexName);
+                                if (indexName.equals(name)) {
+                                    Logger.d(TAG, "indexName.equals(name)::" + indexName + "==" + name);
+                                    try {
+                                        et.setText(URLDecoder.decode(indexString[1], HTTP.UTF_8));
+                                    } catch (UnsupportedEncodingException e) {
+                                        e.printStackTrace();
+                                    }
+                                    Logger.d(TAG, "et.setText = " + indexString[1]);
+                                    break;
+                                }
+                            }
+                        }
 
                         views.add(et);
                     }
@@ -299,7 +310,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                             }
                             String indexString = sb.toString();
                             Logger.d(TAG, "onLoadFinished() :: onOkClicked :: indexString = " + indexString);
-                            mCallback.onOkClicked(indexString);
+                            mCallback.onOkClicked(indexString, getArguments().getInt(ARG_IMG_ID));
                         }
                         if (getDialog() != null) {
                             getDialog().dismiss();

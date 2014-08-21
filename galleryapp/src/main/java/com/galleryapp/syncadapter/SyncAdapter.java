@@ -357,7 +357,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         Logger.d(TAG, "prepareSubmitDocs() :: START : name = " + name);
         mIds.add(String.valueOf(id));
         Document document = new Document();
-        document.setIndexSchema(mApp.getIndexString());
+        document.setIndexSchema(mApp.getImageIndexString(id));
         document.setOriginalFileName(name);
         document.setContentType("image/jpg");
         document.setContentLength((int) length);

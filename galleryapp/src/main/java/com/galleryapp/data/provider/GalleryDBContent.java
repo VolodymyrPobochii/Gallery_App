@@ -46,7 +46,8 @@ public abstract class GalleryDBContent {
             STATUS("status", "text"),
             NEED_UPLOAD("needUpload", "integer"),
             FILE_URI("fileUri", "text"),
-            FILE_ID("fileId", "text");
+            FILE_ID("fileId", "text"),
+            INDEX_SCHEMA("indexSchema", "text");
 
             private final String mName;
             private final String mType;
@@ -84,7 +85,8 @@ public abstract class GalleryDBContent {
                 Columns.STATUS.getName(),
                 Columns.NEED_UPLOAD.getName(),
                 Columns.FILE_URI.getName(),
-                Columns.FILE_ID.getName()
+                Columns.FILE_ID.getName(),
+                Columns.INDEX_SCHEMA.getName()
         };
 
         private GalleryImages() {

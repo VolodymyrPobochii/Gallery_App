@@ -64,6 +64,7 @@ public class GalleryFragment extends SyncBaseFragment
     private static final String LIMIT = "limit";
     private static final String SCHEME_DIALOG = "SCHEME";
     private static final long DELAY_TIME = 250l;
+    private static final int NEGATIVE_CONST = -1;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -80,7 +81,11 @@ public class GalleryFragment extends SyncBaseFragment
     private int mConstantLimit = 100;
     private DisplayImageOptions mOptions;
     private ImageLoader mImageLoader;
-    private List<Integer> mCheckedIds = new ArrayList<Integer>();
+    private ArrayList<Integer> mCheckedIds = new ArrayList<Integer>();
+    private int mCheckedId = NEGATIVE_CONST;
+    private int mPrevCheckdId = NEGATIVE_CONST;
+    private int mTempCheckedId = NEGATIVE_CONST;
+    private int mTempPrevCheckdId = NEGATIVE_CONST;
     private GridView mGridView;
     private SimpleCursorAdapter mChannelsAdapter;
     private Spinner mChannels;
@@ -106,7 +111,7 @@ public class GalleryFragment extends SyncBaseFragment
             mChannelsAdapter.changeCursor(null);
         }
     };
-
+    private boolean isPrepareIndexScheme = false;
 
     public ImageAdapter getGalleryAdapter() {
         return mGalleryAdapter;
@@ -195,22 +200,36 @@ public class GalleryFragment extends SyncBaseFragment
                 Logger.d("CHECKED_IDS", "onItemCheckedStateChanged");
                 // Here you can do something when items are selected/de-selected,
                 // such as update the title in the CAB
-                if (checked) {
-                    mCheckedIds.add(position);
-                } else {
-                    mCheckedIds.remove((Integer) position);
-                }
-                int selectCount = mGridView.getCheckedItemCount();
-                TextView subtitle = (TextView) mode.getCustomView().findViewById(R.id.cab_subtitle);
-                switch (selectCount) {
-                    case 1:
+                if (!isPrepareIndexScheme) {
+                    if (checked) {
+                        if (mCheckedId != -1) {
+                            mPrevCheckdId = mCheckedId;
+                        }
+                        mCheckedId = position;
+                        mCheckedIds.add(position);
+                        Logger.d("CHECKED_IDS", "checked mCheckedId = " + mCheckedId + " / mPrevCheckdId = " + mPrevCheckdId);
+                    } else {
+                        mCheckedIds.remove((Integer) position);
+                        if (position >= mCheckedId) {
+                            mCheckedId = mPrevCheckdId;
+                        } else {
+                            mPrevCheckdId = mCheckedId;
+                        }
+                        Logger.d("CHECKED_IDS", "unchecked mCheckedId = " + mCheckedId + " / mPrevCheckdId = " + mPrevCheckdId);
+                    }
+                    Logger.d("CHECKED_IDS", "mCheckedIds.size = " + mCheckedIds.size());
+                    int selectCount = mGridView.getCheckedItemCount();
+                    TextView subtitle = (TextView) mode.getCustomView().findViewById(R.id.cab_subtitle);
+                    switch (selectCount) {
+                        case 1:
 //                        mode.setSubtitle("One item selected");
-                        subtitle.setText("One item selected");
-                        break;
-                    default:
+                            subtitle.setText("One item selected");
+                            break;
+                        default:
 //                        mode.setSubtitle("" + selectCount + " items selected");
-                        subtitle.setText("" + selectCount + " items selected");
-                        break;
+                            subtitle.setText("" + selectCount + " items selected");
+                            break;
+                    }
                 }
             }
 
@@ -226,7 +245,8 @@ public class GalleryFragment extends SyncBaseFragment
                     case R.id.action_set_index:
 //                        mode.finish(); // Action picked, so close the CAB
 //                        mApp.prepareFilesForSync(mCheckedIds);
-                        mCallback.onFileUpload();
+                        isPrepareIndexScheme = true;
+                        prepareIndexScema();
                         return true;
                     case R.id.action_send_photo_item:
                         mode.finish(); // Action picked, so close the CAB
@@ -316,9 +336,14 @@ public class GalleryFragment extends SyncBaseFragment
 
             @Override
             public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                Logger.d("CHECKED_IDS", "onPrepareActionMode");
                 // Here you can perform updates to the CAB due to
                 // an invalidate() request
-                mCheckedIds.clear();
+                if (!isPrepareIndexScheme) {
+                    mCheckedIds.clear();
+                    mCheckedId = NEGATIVE_CONST;
+                    mPrevCheckdId = NEGATIVE_CONST;
+                }
                 return true;
             }
         });
@@ -327,6 +352,20 @@ public class GalleryFragment extends SyncBaseFragment
         // Specify the layout to use when the list of choices appears
         mChannelsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         return rootView;
+    }
+
+    private void prepareIndexScema() {
+        Cursor cursor = ((ImageAdapter) mGridView.getAdapter()).getCursor();
+        assert cursor != null;
+        int id;
+        if (cursor.getCount() > 0) {
+            cursor.moveToPosition(mCheckedId);
+            Logger.d("UPLOAD", "adapterId = " + mCheckedId);
+            id = cursor.getInt(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.ID.getName()));
+            Logger.d("UPLOAD", "fileId = " + id);
+            cursor.close();
+            mCallback.onFileUpload(id);
+        }
     }
 
     @Override
@@ -344,7 +383,7 @@ public class GalleryFragment extends SyncBaseFragment
                 Logger.d("UPLOAD", "ID[" + id + "] = " + id);
                 cursor.moveToPosition(id);
                 fileIds.add(cursor.getInt(cursor.getColumnIndex(GalleryDBContent.GalleryImages.Columns.ID.getName())));
-                Logger.d("UPLOAD", "fileId = " + fileIds);
+                Logger.d("UPLOAD", "fileId = " + fileIds.get(fileIds.size() - 1));
             }
             cursor.close();
         }
@@ -394,11 +433,13 @@ public class GalleryFragment extends SyncBaseFragment
     @Override
     public void onResume() {
         super.onResume();
+        Logger.d("CHECKED_IDS", TAG + "onResume()");
         getActivity().registerReceiver(mStatusReceiver, mStatusFilter);
     }
 
     @Override
     public void onPause() {
+        Logger.d("CHECKED_IDS", TAG + "onPause()");
         getActivity().unregisterReceiver(mStatusReceiver);
         super.onPause();
     }
@@ -432,6 +473,10 @@ public class GalleryFragment extends SyncBaseFragment
         mGalleryAdapter.changeCursor(null);
     }
 
+    public void setIsPrepareIndexScheme(boolean isPrepareIndexScheme) {
+        this.isPrepareIndexScheme = isPrepareIndexScheme;
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -451,7 +496,7 @@ public class GalleryFragment extends SyncBaseFragment
 
     public interface ContextualActionCallback {
         // TODO: Update argument type and name
-        public void onFileUpload();
+        public void onFileUpload(Integer id);
     }
 
     private class StatusUpdateReceiver extends BroadcastReceiver {

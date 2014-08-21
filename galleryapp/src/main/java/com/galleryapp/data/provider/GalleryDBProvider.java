@@ -42,7 +42,7 @@ public final class GalleryDBProvider extends HttpBaseProvider {
     }
 
     // Version 1 : Creation of the database
-    public static final int DATABASE_VERSION = 3;
+    public static final int DATABASE_VERSION = 4;
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     private enum UriType {
