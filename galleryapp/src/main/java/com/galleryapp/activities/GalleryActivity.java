@@ -52,6 +52,15 @@ public class GalleryActivity extends BaseActivity
     }
 
     @Override
+    protected void onDestroy() {
+        DialogFragment dialog = (DialogFragment) getFragmentManager().findFragmentByTag(SCHEME_DIALOG);
+        if (dialog != null && dialog.isVisible()) {
+            dialog.dismiss();
+        }
+        super.onDestroy();
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         GalleryApp app = getApp();
