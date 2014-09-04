@@ -9,6 +9,17 @@ android {
         versionCode 1
         versionName '1.0.9'
     }
+    packagingOptions {
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/notice.txt'
+    }
+    lintOptions {
+        // simple xml fails lint checks because it references javax.xml.stream
+        abortOnError false
+    }
     productFlavors {
     }
     signingConfigs {
@@ -51,27 +62,16 @@ android {
 
 dependencies {
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.1'
-    // You must install or update the Support Repository through the SDK manager to use this dependency.
-    // The Support Repository (separate from the corresponding library) can be found in the Extras category.
-    //    compile 'com.android.support:support-v4:19.+'
-    // You must install or update the Support Repository through the SDK manager to use this dependency.
-    // The Support Repository (separate from the corresponding library) can be found in the Extras category.
-    //    compile 'com.android.support:appcompat-v7:19.+'
-    // You must install or update the Google Repository through the SDK manager to use this dependency.
-    // The Google Repository (separate from the corresponding library) can be found in the Extras category.
-    // compile 'com.google.android.gms:play-services:4.2.42'
-    // You must install or update the Support Repository through the SDK manager to use this dependency.
-    // The Support Repository (separate from the corresponding library) can be found in the Extras category.
-    //
     //    compile fileTree(dir: 'libs', include: ['*.jar'])
     // Google Play Services
-    //    compile 'com.google.android.gms:play-services:5.+'
+    //    compile 'com.google.android.gms:play-services:5.2.08'
     // Support Libraries
     //    compile 'com.squareup.okhttp:okhttp:1.5.4'
     compile 'com.google.guava:guava:17.0'
 //    compile 'org.apache.commons:commons-io:1.3.2'
     compile 'com.google.code.gson:gson:2.3'
     //    compile project(':retrofit')
+//    compile 'org.springframework.android:spring-android-rest-template:1.0.1.RELEASE'
     compile 'com.squareup.retrofit:retrofit:1.6.1'
     compile files('libs/android-support-v4.jar')
 }
