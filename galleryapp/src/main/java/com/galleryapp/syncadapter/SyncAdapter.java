@@ -39,6 +39,8 @@ import com.galleryapp.Config;
 import com.galleryapp.Logger;
 import com.galleryapp.R;
 import com.galleryapp.ScanRestService;
+import com.galleryapp.ScanRestService.BaseInterceptor;
+import com.galleryapp.ScanRestService.ScanServices;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ChannelsObj;
 import com.galleryapp.data.model.DocStatusObj;
@@ -66,6 +68,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.mime.TypedByteArray;
 import retrofit.mime.TypedFile;
@@ -148,9 +151,11 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
 
         String baseUrl = mApp.getHostName() + ":" + mApp.getPort();
         Log.d(TAG, "init():: API_Url = " + baseUrl);
-        ScanRestService serviceEnum = ScanRestService.INSTANCE.initRestAdapter(baseUrl);
-        Log.d(TAG, "init():: Created scanService = " + serviceEnum.toString());
-        mRestService = serviceEnum.getService();
+        RestAdapter restAdapter = new RestAdapter.Builder()
+                .setEndpoint(baseUrl)
+                .setRequestInterceptor(new BaseInterceptor(baseUrl))
+                .build();
+        mRestService = restAdapter.create(ScanServices.class);
         Log.d(TAG, "init():: Created mRestService = " + mRestService.toString());
     }
 
@@ -318,7 +323,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                 dispatchNotification(fileId);
                 Logger.d(TAG, "uploadFiles() :: RetrofitError = " + error.getLocalizedMessage());
             }
-            if (fileUpload != null) {
+            if (fileUpload != null && !TextUtils.isEmpty(fileUpload.getUrl())) {
                 Logger.d(TAG, "uploadFiles() :: success = " + fileUpload.getUrl());
                 mBuilder.setContentText("Upload Successful")
                         .setSmallIcon(android.R.drawable.stat_sys_upload_done);
@@ -328,6 +333,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                 mBuilder.setContentText("Upload Error")
                         .setSmallIcon(android.R.drawable.stat_notify_error);
                 dispatchNotification(fileId);
+                mUploadCount--;
             }
             Logger.d(TAG, "uploadFiles() :: END");
         }
@@ -354,10 +360,11 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private void prepareSubmitDocs(ContentProvider localProvider, String uri, Integer id, String name, long length) {
-        Logger.d(TAG, "prepareSubmitDocs() :: START : name = " + name);
+        String indexString = mApp.getImageIndexString(id);
+        Logger.d(TAG, "prepareSubmitDocs()::START:ID = " + id + ":IndexString = " + indexString);
         mIds.add(String.valueOf(id));
         Document document = new Document();
-        document.setIndexSchema(mApp.getImageIndexString(id));
+        document.setIndexSchema(indexString);
         document.setOriginalFileName(name);
         document.setContentType("image/jpg");
         document.setContentLength((int) length);

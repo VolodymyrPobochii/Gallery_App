@@ -2,6 +2,7 @@ package com.galleryapp.activities;
 
 import android.app.DialogFragment;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -52,11 +53,18 @@ public class GalleryActivity extends BaseActivity
     }
 
     @Override
-    protected void onDestroy() {
+    protected void onSaveInstanceState(Bundle outState) {
+        Logger.d(TAG, "onSaveInstanceState()");
         DialogFragment dialog = (DialogFragment) getFragmentManager().findFragmentByTag(SCHEME_DIALOG);
         if (dialog != null && dialog.isVisible()) {
+            Logger.d(TAG, "onSaveInstanceState()::dialog != null && dialog.isVisible()");
             dialog.dismiss();
         }
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onDestroy() {
         super.onDestroy();
     }
 
@@ -182,16 +190,28 @@ public class GalleryActivity extends BaseActivity
                 startActivityForResult(new Intent(this, PrefActivity.class), REQUEST_SETTINGS);
                 return true;
             case R.id.action_add_photo_item:
-                startActivityForResult(new Intent(this, PhotoIntentActivity.class), REQUEST_CAMERA_PHOTO);
+                sHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        startActivityForResult(new Intent(GalleryActivity.this,
+                                PhotoIntentActivity.class), REQUEST_CAMERA_PHOTO);
+                    }
+                }, 10);
                 return true;
             case R.id.action_add_gallery_item:
-                Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                // Verify the intent will resolve to at least one activity
-                if (i.resolveActivity(getPackageManager()) != null) {
-                    startActivityForResult(i, REQUEST_LOAD_IMAGE);
-                } else {
-                    Toast.makeText(this, "There is no appropriate application to perform this action", Toast.LENGTH_SHORT).show();
-                }
+                sHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                        // Verify the intent will resolve to at least one activity
+                        if (i.resolveActivity(getPackageManager()) != null) {
+                            startActivityForResult(i, REQUEST_LOAD_IMAGE);
+                        } else {
+                            Toast.makeText(GalleryActivity.this,
+                                    getString(R.string.msg_no_apropr_app), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, 10);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -209,6 +229,13 @@ public class GalleryActivity extends BaseActivity
                 Logger.d(TAG, "indexUpdated = " + getApp().updateImageIndexSchema(indexString, imageId));
             }
         }, DELAY_TIME);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+    }
+
+    @Override
+    public void onCancelClicked() {
+        setPrepareIndexSchemaFlag(false);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
     }
 
     private void setPrepareIndexSchemaFlag(boolean b) {
@@ -219,15 +246,12 @@ public class GalleryActivity extends BaseActivity
     }
 
     @Override
-    public void onCancelClicked() {
-        setPrepareIndexSchemaFlag(false);
-    }
-
-    @Override
     public void onFileUpload(Integer id) {
+        Logger.d(TAG, "onFileUpload()::ID = " + id);
         DialogFragment dialog = SchemeDialog
                 .newInstance(getApp().getCaptureChannelCode(), id);
         dialog.show(getFragmentManager(), SCHEME_DIALOG);
+        lockScreenOrientation();
     }
 
    /* @Override

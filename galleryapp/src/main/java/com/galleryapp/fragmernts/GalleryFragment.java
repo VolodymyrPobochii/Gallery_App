@@ -92,6 +92,8 @@ public class GalleryFragment extends SyncBaseFragment
     private GalleryApp mApp;
     private StatusUpdateReceiver mStatusReceiver;
     private IntentFilter mStatusFilter;
+    private boolean isPrepareIndexScheme = false;
+    private SharedPreferences mPreff;
 
     private LoaderManager.LoaderCallbacks<Cursor> mChannelsLoader = new LoaderManager.LoaderCallbacks<Cursor>() {
         @Override
@@ -111,7 +113,161 @@ public class GalleryFragment extends SyncBaseFragment
             mChannelsAdapter.changeCursor(null);
         }
     };
-    private boolean isPrepareIndexScheme = false;
+
+    private AbsListView.MultiChoiceModeListener mMultiChoiceModListener = new AbsListView.MultiChoiceModeListener() {
+
+        @Override
+        public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
+            Logger.d("CHECKED_IDS", "onItemCheckedStateChanged");
+            // Here you can do something when items are selected/de-selected,
+            // such as update the title in the CAB
+            if (!isPrepareIndexScheme) {
+                if (checked) {
+                    if (mCheckedId != -1) {
+                        mPrevCheckdId = mCheckedId;
+                    }
+                    mCheckedId = position;
+                    mCheckedIds.add(position);
+                    Logger.d("CHECKED_IDS", "checked mCheckedId = " + mCheckedId + " / mPrevCheckdId = " + mPrevCheckdId);
+                } else {
+                    mCheckedIds.remove((Integer) position);
+                    if (position >= mCheckedId) {
+                        mCheckedId = mPrevCheckdId;
+                    } else {
+                        mPrevCheckdId = mCheckedId;
+                    }
+                    Logger.d("CHECKED_IDS", "unchecked mCheckedId = " + mCheckedId + " / mPrevCheckdId = " + mPrevCheckdId);
+                }
+                Logger.d("CHECKED_IDS", "mCheckedIds.size = " + mCheckedIds.size());
+                int selectCount = mGridView.getCheckedItemCount();
+                TextView subtitle = (TextView) mode.getCustomView().findViewById(R.id.cab_subtitle);
+                switch (selectCount) {
+                    case 1:
+//                        mode.setSubtitle("One item selected");
+                        subtitle.setText("One item selected");
+                        break;
+                    default:
+//                        mode.setSubtitle("" + selectCount + " items selected");
+                        subtitle.setText("" + selectCount + " items selected");
+                        break;
+                }
+            }
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            Logger.d("CHECKED_IDS", "onActionItemClicked");
+            // Respond to clicks on the actions in the CAB
+            switch (item.getItemId()) {
+                case R.id.action_delete_photo_item:
+                    deleteSelectedItems();
+                    mode.finish(); // Action picked, so close the CAB
+                    return true;
+                case R.id.action_set_index:
+//                        mode.finish(); // Action picked, so close the CAB
+//                        mApp.prepareFilesForSync(mCheckedIds);
+                    isPrepareIndexScheme = true;
+                    prepareIndexScema();
+                    return true;
+                case R.id.action_send_photo_item:
+                    mode.finish(); // Action picked, so close the CAB
+//                        mApp.prepareFilesForSync(mCheckedIds);
+                    sendSelectedItems();
+//                        mCallback.onFileUpload();
+                    return true;
+                case R.id.action_status_item:
+                    mode.finish(); // Action picked, so close the CAB
+//                        getSelectedItemsStatus();
+                    SyncUtils.triggerRefresh(SyncAdapter.GET_DOC_STATUS);
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        @Override
+        public boolean onCreateActionMode(final ActionMode mode, final Menu menu) {
+            // Inflate the menu for the CAB
+            Logger.d(TAG, "onCreateActionMode");
+            MenuInflater inflater = mode.getMenuInflater();
+            assert inflater != null;
+            inflater.inflate(R.menu.context, menu);
+            Logger.d(TAG, "onCreateActionMode()::inflater.inflate()");
+            mode.setCustomView(getActivity().getLayoutInflater().inflate(R.layout.cab_layout, null));
+            ((TextView) mode.getCustomView().findViewById(R.id.cab_title)).setText("Select Items");
+            ((TextView) mode.getCustomView().findViewById(R.id.cab_subtitle)).setText("One item selected");
+            mChannels = (Spinner) mode.getCustomView().findViewById(R.id.cab_channels);
+            mChannels.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    Logger.d(TAG, "onCreateActionMode()::onItemSelected():CaptureChannel");
+                    ((TextView) view).setTextColor(Color.WHITE);
+                    Cursor channelCursor = (Cursor) mChannels.getSelectedItem();
+                    String channelDomain = channelCursor.getString(GalleryDBContent.Channels.Columns.DOMAIN.ordinal());
+                    String channelCode = channelCursor.getString(GalleryDBContent.Channels.Columns.CODE.ordinal());
+
+                    mPreff.edit()
+                            .putString("domain", channelDomain)
+                            .putString("capturechannelcode", channelCode)
+                            .apply();
+
+                    mApp.setUpHost();
+
+                    Cursor c = getActivity().getContentResolver().query(GalleryDBContent.IndexSchemas.CONTENT_URI,
+                            GalleryDBContent.IndexSchemas.PROJECTION,
+                            GalleryDBContent.IndexSchemas.Columns.CHANNCODE.getName() + "=?", new String[]{channelCode}, null);
+
+                    boolean hasSchema = c != null && c.getCount() > 0;
+
+                    menu.getItem(1).setEnabled(hasSchema);
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                }
+            });
+            mChannels.setAdapter(mChannelsAdapter);
+            Cursor data = mChannelsAdapter.getCursor();
+            if (data != null) {
+                while (data.moveToNext()) {
+                    if (data.getString(data.getColumnIndex(GalleryDBContent.Channels.Columns.DOMAIN.getName()))
+                            .equals(mPreff.getString("domain", getString(R.string.default_value_domain_preference)))) {
+                        if (mChannels != null) {
+                            mChannels.setSelection(data.getPosition());
+                        }
+                        break;
+                    }
+                }
+            } else {
+                Logger.d(TAG, "onCreateActionMode()::mChannelsAdapter.getCursor()::data = null");
+            }
+//                mode.setTitle("Select Items");
+//                mode.setSubtitle("One item selected");
+            return true;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            // Here you can make any necessary updates to the activity when
+            // the CAB is removed. By default, selected items are deselected/unchecked.
+            Logger.d("CHECKED_IDS", "onDestroyActionMode");
+//                mCheckedIds.clear();
+            initThumbLoader();
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            Logger.d("CHECKED_IDS", "onPrepareActionMode");
+            // Here you can perform updates to the CAB due to
+            // an invalidate() request
+            if (!isPrepareIndexScheme) {
+                mCheckedIds.clear();
+                mCheckedId = NEGATIVE_CONST;
+                mPrevCheckdId = NEGATIVE_CONST;
+            }
+            return true;
+        }
+    };
 
     public ImageAdapter getGalleryAdapter() {
         return mGalleryAdapter;
@@ -154,8 +310,9 @@ public class GalleryFragment extends SyncBaseFragment
                 .considerExifParams(true)
                 .bitmapConfig(Bitmap.Config.RGB_565)
                 .build();
-        initThumbLoader();
-        initChannelsLoader();
+        mPreff = mApp.getPreff();
+//        initThumbLoader();
+//        initChannelsLoader();
         initStatusReceiver();
     }
 
@@ -177,12 +334,10 @@ public class GalleryFragment extends SyncBaseFragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        final SharedPreferences preff = mApp.getPreff();
         final View rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
         // Inflate the layout for this fragment
         // Set up an array of the Thumbnail Image ID column we want
         assert rootView != null;
-
         mGridView = (GridView) rootView.findViewById(R.id.gallery_gv);
         mGalleryAdapter = new ImageAdapter(getActivity(), mImageLoader, mOptions);
         mGridView.setAdapter(mGalleryAdapter);
@@ -193,165 +348,18 @@ public class GalleryFragment extends SyncBaseFragment
             }
         });
         mGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);
-        mGridView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
-
-            @Override
-            public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
-                Logger.d("CHECKED_IDS", "onItemCheckedStateChanged");
-                // Here you can do something when items are selected/de-selected,
-                // such as update the title in the CAB
-                if (!isPrepareIndexScheme) {
-                    if (checked) {
-                        if (mCheckedId != -1) {
-                            mPrevCheckdId = mCheckedId;
-                        }
-                        mCheckedId = position;
-                        mCheckedIds.add(position);
-                        Logger.d("CHECKED_IDS", "checked mCheckedId = " + mCheckedId + " / mPrevCheckdId = " + mPrevCheckdId);
-                    } else {
-                        mCheckedIds.remove((Integer) position);
-                        if (position >= mCheckedId) {
-                            mCheckedId = mPrevCheckdId;
-                        } else {
-                            mPrevCheckdId = mCheckedId;
-                        }
-                        Logger.d("CHECKED_IDS", "unchecked mCheckedId = " + mCheckedId + " / mPrevCheckdId = " + mPrevCheckdId);
-                    }
-                    Logger.d("CHECKED_IDS", "mCheckedIds.size = " + mCheckedIds.size());
-                    int selectCount = mGridView.getCheckedItemCount();
-                    TextView subtitle = (TextView) mode.getCustomView().findViewById(R.id.cab_subtitle);
-                    switch (selectCount) {
-                        case 1:
-//                        mode.setSubtitle("One item selected");
-                            subtitle.setText("One item selected");
-                            break;
-                        default:
-//                        mode.setSubtitle("" + selectCount + " items selected");
-                            subtitle.setText("" + selectCount + " items selected");
-                            break;
-                    }
-                }
-            }
-
-            @Override
-            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-                Logger.d("CHECKED_IDS", "onActionItemClicked");
-                // Respond to clicks on the actions in the CAB
-                switch (item.getItemId()) {
-                    case R.id.action_delete_photo_item:
-                        deleteSelectedItems();
-                        mode.finish(); // Action picked, so close the CAB
-                        return true;
-                    case R.id.action_set_index:
-//                        mode.finish(); // Action picked, so close the CAB
-//                        mApp.prepareFilesForSync(mCheckedIds);
-                        isPrepareIndexScheme = true;
-                        prepareIndexScema();
-                        return true;
-                    case R.id.action_send_photo_item:
-                        mode.finish(); // Action picked, so close the CAB
-//                        mApp.prepareFilesForSync(mCheckedIds);
-                        sendSelectedItems();
-//                        mCallback.onFileUpload();
-                        return true;
-                    case R.id.action_status_item:
-                        mode.finish(); // Action picked, so close the CAB
-//                        getSelectedItemsStatus();
-                        SyncUtils.triggerRefresh(SyncAdapter.GET_DOC_STATUS);
-                        return true;
-                    default:
-                        return false;
-                }
-            }
-
-            @Override
-            public boolean onCreateActionMode(final ActionMode mode, final Menu menu) {
-                // Inflate the menu for the CAB
-                Logger.d(TAG, "onCreateActionMode");
-                MenuInflater inflater = mode.getMenuInflater();
-                assert inflater != null;
-                inflater.inflate(R.menu.context, menu);
-                Logger.d(TAG, "onCreateActionMode()::inflater.inflate()");
-                mode.setCustomView(getActivity().getLayoutInflater().inflate(R.layout.cab_layout, null));
-                ((TextView) mode.getCustomView().findViewById(R.id.cab_title)).setText("Select Items");
-                ((TextView) mode.getCustomView().findViewById(R.id.cab_subtitle)).setText("One item selected");
-                mChannels = (Spinner) mode.getCustomView().findViewById(R.id.cab_channels);
-                mChannels.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    @Override
-                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                        Logger.d(TAG, "onCreateActionMode()::onItemSelected():CaptureChannel");
-                        ((TextView) view).setTextColor(Color.WHITE);
-                        Cursor channelCursor = (Cursor) mChannels.getSelectedItem();
-                        String channelDomain = channelCursor.getString(GalleryDBContent.Channels.Columns.DOMAIN.ordinal());
-                        String channelCode = channelCursor.getString(GalleryDBContent.Channels.Columns.CODE.ordinal());
-
-                        preff.edit()
-                                .putString("domain", channelDomain)
-                                .putString("capturechannelcode", channelCode)
-                                .apply();
-
-                        mApp.setUpHost();
-
-                        Cursor c = getActivity().getContentResolver().query(GalleryDBContent.IndexSchemas.CONTENT_URI,
-                                GalleryDBContent.IndexSchemas.PROJECTION,
-                                GalleryDBContent.IndexSchemas.Columns.CHANNCODE.getName() + "=?", new String[]{channelCode}, null);
-
-                        boolean hasSchema = c != null && c.getCount() > 0;
-
-                        menu.getItem(1).setEnabled(hasSchema);
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> parent) {
-                    }
-                });
-                mChannels.setAdapter(mChannelsAdapter);
-                Cursor data = mChannelsAdapter.getCursor();
-                if (data != null) {
-                    while (data.moveToNext()) {
-                        if (data.getString(data.getColumnIndex(GalleryDBContent.Channels.Columns.DOMAIN.getName()))
-                                .equals(preff.getString("domain", getString(R.string.default_value_domain_preference)))) {
-                            if (mChannels != null) {
-                                mChannels.setSelection(data.getPosition());
-                            }
-                            break;
-                        }
-                    }
-                } else {
-                    Logger.d(TAG, "onCreateActionMode()::mChannelsAdapter.getCursor()::data = null");
-                }
-//                mode.setTitle("Select Items");
-//                mode.setSubtitle("One item selected");
-                return true;
-            }
-
-            @Override
-            public void onDestroyActionMode(ActionMode mode) {
-                // Here you can make any necessary updates to the activity when
-                // the CAB is removed. By default, selected items are deselected/unchecked.
-                Logger.d("CHECKED_IDS", "onDestroyActionMode");
-//                mCheckedIds.clear();
-                initThumbLoader();
-            }
-
-            @Override
-            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-                Logger.d("CHECKED_IDS", "onPrepareActionMode");
-                // Here you can perform updates to the CAB due to
-                // an invalidate() request
-                if (!isPrepareIndexScheme) {
-                    mCheckedIds.clear();
-                    mCheckedId = NEGATIVE_CONST;
-                    mPrevCheckdId = NEGATIVE_CONST;
-                }
-                return true;
-            }
-        });
+        mGridView.setMultiChoiceModeListener(mMultiChoiceModListener);
         mChannelsAdapter = new SimpleCursorAdapter(getActivity(), android.R.layout.simple_spinner_item, null,
                 new String[]{GalleryDBContent.Channels.Columns.NAME.getName()}, new int[]{android.R.id.text1}, 0);
         // Specify the layout to use when the list of choices appears
         mChannelsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         return rootView;
+    }
+
+    @Override
+    public void onDestroyView() {
+        mGridView.setMultiChoiceModeListener(null);
+        super.onDestroyView();
     }
 
     private void prepareIndexScema() {
@@ -433,16 +441,34 @@ public class GalleryFragment extends SyncBaseFragment
     @Override
     public void onResume() {
         super.onResume();
-        Logger.d("CHECKED_IDS", TAG + "onResume()");
+        Logger.d(TAG, "onResume()");
+        initThumbLoader();
+        initChannelsLoader();
         getActivity().registerReceiver(mStatusReceiver, mStatusFilter);
     }
 
     @Override
     public void onPause() {
-        Logger.d("CHECKED_IDS", TAG + "onPause()");
+        Logger.d(TAG, "onPause()");
         getActivity().unregisterReceiver(mStatusReceiver);
         super.onPause();
     }
+
+    /*@Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (mGridView != null) {
+            if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                mGridView.setNumColumns(getResources().getInteger(R.integer.grid_num_columns));
+            } else if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                mGridView.setNumColumns(getResources().getInteger(R.integer.grid_num_columns_ls));
+            }
+            mGridView.setAdapter(mGalleryAdapter);
+        }
+        Logger.d(TAG, "onConfigurationChanged()::orientation = " + newConfig.orientation +
+                " / numColumns = " + (mGridView != null ? mGridView.getNumColumns() : 0));
+        Logger.d(TAG, "onConfigurationChanged()::smallestScreenWidthDp = " + newConfig.smallestScreenWidthDp);
+    }*/
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {

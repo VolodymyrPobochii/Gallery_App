@@ -4,14 +4,12 @@ import android.app.Activity;
 import android.app.DialogFragment;
 import android.app.LoaderManager;
 import android.content.CursorLoader;
-import android.content.DialogInterface;
 import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,7 +23,8 @@ import android.widget.Toast;
 
 import com.galleryapp.Logger;
 import com.galleryapp.R;
-import com.galleryapp.ScanRestService;
+import com.galleryapp.ScanRestService.BaseInterceptor;
+import com.galleryapp.ScanRestService.ScanServices;
 import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ElementData;
 import com.galleryapp.data.provider.GalleryDBContent;
@@ -42,13 +41,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import retrofit.Callback;
+import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 /**
  * Created by pvg on 05.08.14.
  */
-public class SchemeDialog extends DialogFragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class SchemeDialog extends DialogFragment
+        implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = SchemeDialog.class.getSimpleName();
     private static final String ARG_CODE = "capchcode";
@@ -69,7 +70,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
     }
 
     public static SchemeDialog newInstance(String capchcode, Integer id) {
-        Log.d(TAG, "newInstance() :: ARG_CODE = " + capchcode);
+        Logger.d(TAG, "newInstance() :: ARG_CODE = " + capchcode);
         SchemeDialog dialog = new SchemeDialog();
         Bundle args = new Bundle();
         args.putString(ARG_CODE, capchcode);
@@ -85,7 +86,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        Log.d(TAG, "onAttach()");
+        Logger.d(TAG, "onAttach()");
         if (activity instanceof SchemeDialogCallbacks) {
             mCallback = (SchemeDialogCallbacks) activity;
         }
@@ -95,34 +96,16 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
     }
 
     @Override
-    public void onDismiss(DialogInterface dialog) {
-        super.onDismiss(dialog);
-        Log.d(TAG, "onDismiss()");
-    }
-
-    @Override
-    public void onCancel(DialogInterface dialog) {
-        super.onCancel(dialog);
-        Log.d(TAG, "onCancel()");
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        Log.d(TAG, "onDetach()");
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate()");
+        Logger.d(TAG, "onCreate()");
         setStyle(DialogFragment.STYLE_NORMAL, android.R.style.Theme_Holo_Light_Dialog);
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView()");
+        Logger.d(TAG, "onCreateView()");
         getDialog().setTitle("Scheme data");
         LinearLayout root = (LinearLayout) inflater.inflate(R.layout.scheme_root, container);
         root.findViewById(R.id.progress).setVisibility(View.VISIBLE);
@@ -132,7 +115,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Log.d(TAG, "onViewCreated()");
+        Logger.d(TAG, "onViewCreated()");
         mImageIndexString = getImageParsedIndexString();
         getLoaderManager().initLoader(R.id.scheme_loader, getArguments(), this);
     }
@@ -156,6 +139,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
 
     @Override
     public void onDestroy() {
+        Logger.d(TAG, "onDestroy()");
         mCallback = null;
         super.onDestroy();
     }
@@ -170,7 +154,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         final ViewGroup root = (ViewGroup) getView();
         if (cursor != null && cursor.getCount() > 0) {
-            Log.d(TAG, "onLoadFinished() :: Cursor = " + cursor.getCount());
+            Logger.d(TAG, "onLoadFinished() :: Cursor = " + cursor.getCount());
 
             final List<View> views = new ArrayList<View>();
             final List<String> names = new ArrayList<String>();
@@ -182,7 +166,7 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                     String code = cursor.getString(cursor.getColumnIndex(IndexSchemas.Columns.CODE.getName()));
                     final String name = cursor.getString(cursor.getColumnIndex(IndexSchemas.Columns.NAME.getName()));
                     String ruleCode = cursor.getString(cursor.getColumnIndex(IndexSchemas.Columns.RULECODE.getName()));
-                    Log.d(TAG, "onLoadFinished() :: type = " + type + " / code = " + code);
+                    Logger.d(TAG, "onLoadFinished() :: type = " + type + " / code = " + code);
 
                     if (type.contains("LookupSchemaElement")) {
 
@@ -190,8 +174,6 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                                 SchemeElementSelector.TYPE_SPINNER, name, code.hashCode(), root);
                         ((TextView) spinnerView.findViewById(R.id.name_sp)).setText(name);
                         final Spinner spinner = (Spinner) spinnerView.findViewById(R.id.component_sp);
-                       /* spinner.setAdapter(new ArrayAdapter<String>(mActivity, R.layout.view_textview,
-                                mActivity.getResources().getStringArray(R.array.stub_sp)));*/
                         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                             @Override
                             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -206,11 +188,14 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
                         //TODO: network request to get Element Items
                         String baseUrl = mApp.getHostName() + ":" + mApp.getPort();
                         Logger.d(TAG, "init():: API_Url = " + baseUrl);
-                        ScanRestService serviceEnum = ScanRestService.INSTANCE.initRestAdapter(baseUrl);
-                        Logger.d(TAG, "init():: Created scanService = " + serviceEnum.toString());
-                        ScanRestService.ScanServices mRestService = serviceEnum.getService();
+                        RestAdapter restAdapter = new RestAdapter.Builder()
+                                .setEndpoint(baseUrl)
+                                .setRequestInterceptor(new BaseInterceptor(baseUrl))
+                                .build();
+                        ScanServices restService = restAdapter.create(ScanServices.class);
+                        Logger.d(TAG, "init():: Created scanService = " + restService.toString());
 
-                        mRestService.getItems(mApp.getDomain(), ruleCode, mApp.getToken(), new Callback<ElementData>() {
+                        restService.getItems(mApp.getDomain(), ruleCode, mApp.getToken(), new Callback<ElementData>() {
                             @Override
                             public void success(ElementData elementData, Response response) {
                                 ElementData.RootData rootData = elementData.getDATA();
@@ -355,6 +340,5 @@ public class SchemeDialog extends DialogFragment implements LoaderManager.Loader
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
-
     }
 }

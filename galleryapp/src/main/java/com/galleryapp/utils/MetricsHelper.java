@@ -35,4 +35,6 @@ public class MetricsHelper {
     public static int getThumbHeight() {
         return getDisplayWidth() / sResources.getInteger(R.integer.grid_num_columns);
     }
+
+
 }

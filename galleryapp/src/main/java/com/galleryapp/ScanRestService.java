@@ -1,6 +1,5 @@
 package com.galleryapp;
 
-import com.galleryapp.application.GalleryApp;
 import com.galleryapp.data.model.ChannelsObj;
 import com.galleryapp.data.model.DocStatusObj;
 import com.galleryapp.data.model.DocSubmittedObj;
@@ -13,8 +12,6 @@ import java.net.URL;
 
 import retrofit.Callback;
 import retrofit.RequestInterceptor;
-import retrofit.RestAdapter;
-import retrofit.client.Response;
 import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.Header;
@@ -28,44 +25,7 @@ import retrofit.mime.TypedFile;
 /**
  * Created by pvg on 21.07.14.
  */
-public enum ScanRestService {
-
-    INSTANCE(new RestAdapter.Builder());
-
-    private final RestAdapter.Builder mBuilder;
-    private ScanServices mRestService;
-
-    /**
-     * Enum constructor
-     */
-    ScanRestService(RestAdapter.Builder builder) {
-        mBuilder = builder;
-    }
-
-    public RestAdapter.Builder getBuilder() {
-        return mBuilder;
-    }
-
-    public ScanRestService initRestAdapter(String apiUrl) {
-        if (mRestService == null) {
-            mRestService = mBuilder.setEndpoint(apiUrl)
-                    .setRequestInterceptor(new BaseInterceptor(apiUrl))
-                    .build()
-                    .create(ScanServices.class);
-        }
-        return INSTANCE;
-    }
-
-    public ScanServices getService() {
-        return mRestService;
-    }
-
-    @Override
-    public String toString() {
-        return "RestService{Builder:" + mBuilder.toString() + "(" + mBuilder.hashCode() + ")" +
-                " RestService:" + mRestService.toString() + "(" + mRestService.hashCode() + ")}";
-    }
-
+public final class ScanRestService {
 
     /**
      * Contains all the requests
@@ -92,12 +52,12 @@ public enum ScanRestService {
         @Headers("Method: POST")
         @POST(Config.SUBMITT_POST_REQUEST_RULE + "{domain}")
         void submitDoc(@Header("ContentLength") String contentLength, @Body TypedByteArray typedFile,
-                        @Path("domain") String domain, @Query("t") String t, Callback<DocSubmittedObj> callback);
+                       @Path("domain") String domain, @Query("t") String t, Callback<DocSubmittedObj> callback);
 
         @Headers("Method: POST")
         @POST(Config.SUBMITT_POST_REQUEST_RULE + "{domain}")
         DocSubmittedObj submitDoc(@Header("ContentLength") String contentLength, @Body TypedByteArray typedFile,
-                                 @Path("domain") String domain, @Query("t") String t);
+                                  @Path("domain") String domain, @Query("t") String t);
 
         @Headers("Method: GET")
         @GET(Config.STATUS_GET_REQUEST_RULE + "{domain}")
@@ -129,7 +89,7 @@ public enum ScanRestService {
      * Define RequestInterceptor class with
      * common headers for all requests
      */
-    private class BaseInterceptor implements RequestInterceptor {
+    public static class BaseInterceptor implements RequestInterceptor {
         private URL parsedUrl;
 
         public BaseInterceptor(String apiUrl) {

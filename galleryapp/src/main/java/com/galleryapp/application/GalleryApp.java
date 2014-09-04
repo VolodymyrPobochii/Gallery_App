@@ -29,7 +29,6 @@ import com.galleryapp.R;
 import com.galleryapp.activities.GalleryActivity;
 import com.galleryapp.activities.PrefActivity;
 import com.galleryapp.data.model.ImageObj;
-import com.galleryapp.data.model.SubmitDocumentObj.CaptureItemObj.BatchObj.Folder.Document;
 import com.galleryapp.data.provider.GalleryDBContent;
 import com.galleryapp.data.provider.GalleryDBProvider;
 import com.galleryapp.fragmernts.GalleryFragment;
@@ -50,7 +49,6 @@ import java.util.concurrent.Executors;
 public final class GalleryApp extends Application implements GalleryFragment.OnFragmentInteractionListener {
 
     public static final String TAG = GalleryApp.class.getSimpleName();
-    private static final long TIMER_TICK = 100l;
 
     private static GalleryApp sInstance;
 
@@ -59,20 +57,12 @@ public final class GalleryApp extends Application implements GalleryFragment.OnF
     private String token;
     private String domain;
     private String captureChannelCode;
-    private String indexString;
     private SharedPreferences preff;
     private String hostName;
     private String port;
     private String baseUrl;
     private String loginBaseUrl;
     private String cmsBaseUrl;
-    private String appVersion;
-    private ArrayList<Document> mDocuments;
-    private ArrayList<String> mIds;
-    private int mUpdateTimes;
-    private int mUpdateFreq;
-    private int mUploadCount;
-//    private static RestAdapter mRestAdapter;
 
     public GalleryApp() {
     }
@@ -380,14 +370,6 @@ public final class GalleryApp extends Application implements GalleryFragment.OnF
         this.captureChannelCode = captureChannelCode;
     }
 
-    public String getIndexString() {
-        return indexString;
-    }
-
-    public void setIndexString(String indexString) {
-        this.indexString = indexString;
-    }
-
     public String getToken() {
         return token;
     }
@@ -451,9 +433,5 @@ public final class GalleryApp extends Application implements GalleryFragment.OnF
             e.printStackTrace();
             return getString(R.string.version_unavailable);
         }
-    }
-
-    public void setAppVersion(String appVersion) {
-        this.appVersion = appVersion;
     }
 }

@@ -49,7 +49,6 @@ public class ImageAdapter extends CursorAdapter {
         ViewGroup.LayoutParams lp = picturesView.getLayoutParams();
         lp.height = MetricsHelper.getThumbHeight();
         Logger.d(TAG, "viewHeight = " + lp.height + " viewWidth = " + lp.width);
-        picturesView.setLayoutParams(lp);
         mHolder = new ViewHolder();
         mHolder.imageView = (ImageView) picturesView.findViewById(R.id.image);
         mHolder.thumbTitle = (TextView) picturesView.findViewById(R.id.thumb_title);
