@@ -94,6 +94,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
     public static final int GET_INDEX_SCHEME = 1003;
     private static final long TIMER_TICK = 100l;
     private static final long TIME_TO_CLOSE_NOTIFICATION = 3000l;
+    private static final Integer CHANNEL_TYPE = 3;
 
     /**
      * Network connection timeout, in milliseconds.
@@ -227,14 +228,9 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
     private void getIndexScheme(ContentProvider localProvider, SyncResult syncResult, String capchcode, String domain) {
         IndexSchema indexSchema = null;
         try {
-//            mNotifyManager.notify(R.id.get_channels, mBuilder.build());
-            Log.d(TAG, "getIndexScheme() :: BEGIN :: capchcode = " + capchcode + " domain = " + domain + " token = " + mApp.getToken());
             indexSchema = mRestService.getIndexScheme(domain, mApp.getToken(), capchcode);
         } catch (RetrofitError error) {
             Log.d(TAG, "getIndexScheme() :: RetrofitError = " + error.getLocalizedMessage());
-           /* mBuilder.setContentText("Channels code request FAILURE")
-                    .setSmallIcon(android.R.drawable.stat_notify_error);
-            dispatchNotification(R.id.get_channels);*/
         }
         if (indexSchema != null) {
             String scheme = new Gson().toJson(indexSchema);
@@ -258,7 +254,6 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
             } else {
                 Logger.d(TAG, "getIndexScheme() :: DocumentSchema = NULL");
             }
-
         } else {
             Logger.d(TAG, "getIndexScheme() :: END :: Scheme = NULL");
         }
@@ -266,29 +261,17 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private void getChannelsCodes(ContentProvider localProvider, SyncResult syncResult) {
         Logger.d(TAG, "getChannelsCodes() :: START");
-        /*mBuilder.setTicker("Channels update")
-                .setContentTitle("Channels update")
-                .setContentText("Updating channels...")
-                .setProgress(100, 0, true)
-                .setSmallIcon(android.R.drawable.stat_sys_download);*/
-
         ChannelsObj channels = null;
         try {
-//            mNotifyManager.notify(R.id.get_channels, mBuilder.build());
             channels = mRestService.getChannels(mApp.getToken());
         } catch (RetrofitError error) {
             Logger.d(TAG, "getChannelsCodes() :: RetrofitError = " + error.getLocalizedMessage());
-           /* mBuilder.setContentText("Channels code request FAILURE")
-                    .setSmallIcon(android.R.drawable.stat_notify_error);
-            dispatchNotification(R.id.get_channels);*/
         }
         Logger.d(TAG, "getChannelsCodes() :: END");
         completeGetChannels(channels, localProvider, syncResult);
     }
 
     private void uploadFiles(Cursor c, ContentProvider localProvider, SyncResult syncResult) {
-        //TODO: refactor later
-//        final ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
         while (c.moveToNext()) {
             Logger.d(TAG, "uploadFiles() :: BEGIN");
             Integer fileId = c.getInt(GalleryImages.Columns.ID.ordinal());
@@ -297,15 +280,10 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
             String fileThumbPath = c.getString(GalleryImages.Columns.THUMB_PATH.ordinal());
             Integer needUpload = c.getInt(GalleryImages.Columns.NEED_UPLOAD.ordinal());
             Integer isSynced = c.getInt(GalleryImages.Columns.IS_SYNCED.ordinal());
-            Logger.d(TAG, "fileId=" + fileId + "|fileName=" + fileName + "|filePath=" +
-                    filePath + "|fileThumbPath=" + fileThumbPath + "|needUpload=" + needUpload + "|isSynced=" + isSynced);
 
             TypedFile typedFile = new TypedFile("application/binary", new File(filePath));
             long fileLength = typedFile.length();
-            //TODO: refactor later
-            /*mRestService.uploadFile(String.valueOf(typedFile.length()), typedFile,
-                    mApp.getDomain(), mApp.getToken(),
-                    new UploadCallback(provider, fileId, fileName));*/
+
             mBuilder.setTicker("File upload")
                     .setContentTitle(fileName)
                     .setContentText("Uploading...")
@@ -326,11 +304,14 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
             if (fileUpload != null && !TextUtils.isEmpty(fileUpload.getUrl())) {
                 Logger.d(TAG, "uploadFiles() :: success = " + fileUpload.getUrl());
                 mBuilder.setContentText("Upload Successful")
-                        .setSmallIcon(android.R.drawable.stat_sys_upload_done);
+                        .setSmallIcon(android.R.drawable.stat_sys_upload_done)
+                        .setProgress(0, 0, false);
+
                 dispatchNotification(fileId);
                 completeFileUpload(localProvider, syncResult, fileUpload.getUrl(), fileId, fileName, fileLength);
             } else {
                 mBuilder.setContentText("Upload Error")
+                        .setProgress(0, 0, false)
                         .setSmallIcon(android.R.drawable.stat_notify_error);
                 dispatchNotification(fileId);
                 mUploadCount--;
@@ -431,7 +412,7 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
                 .toString();
         Logger.d(TAG, "PARAMETERS: " + parameters);
         captureItemObj.setParameters(parameters);
-        captureItemObj.setChannelType(3);
+        captureItemObj.setChannelType(CHANNEL_TYPE);
 
         SubmitDocumentObj submitDocumentObj = new SubmitDocumentObj();
         submitDocumentObj.setDomain(domain);
@@ -585,16 +566,12 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     private void completeGetChannels(ChannelsObj channels, ContentProvider localProvider, SyncResult syncResult) {
         if (channels != null) {
-            /*mBuilder.setContentText("Channels update Successful")
-                    .setSmallIcon(android.R.drawable.stat_sys_download_done);
-            dispatchNotification(R.id.get_channels);*/
             if (channels.getErrorCode() == 0 && TextUtils.isEmpty(channels.getErrorMessage())) {
                 if (channels.getChannels().size() > 0) {
                     Logger.d(TAG, "getChannelsCodes()" + "ChannelsObj = " + channels.toString());
                     Logger.d(TAG, "getChannelsCodes()" + "syncResult.stats.numInserts = " + syncResult.stats.numInserts);
                     int channelsUpdated = updateChannels(channels, localProvider);
                     syncResult.stats.numInserts += channelsUpdated;
-//                    dispatchNotification(R.id.get_channels);
                     Logger.d(TAG, "getChannelsCodes()" + "channelsUpdated = " + channelsUpdated);
                     Logger.d(TAG, "getChannelsCodes()" + "syncResult.stats.numInserts = " + syncResult.stats.numInserts);
                 } else {
@@ -605,9 +582,6 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
             }
         } else {
             Logger.d(TAG, "getChannelsCodes():: Error: channels = NULL");
-            /*mBuilder.setContentText("Upload Error")
-                    .setSmallIcon(android.R.drawable.stat_notify_error);
-            dispatchNotification(R.id.get_channels);*/
         }
         Logger.d(TAG, "getChannelsCodes()::END");
     }
@@ -654,30 +628,4 @@ public final class SyncAdapter extends AbstractThreadedSyncAdapter {
         Logger.d(TAG, "Waiting for close notification (dt:" + dt + ") FINISH");
         mNotifyManager.cancel(id);
     }
-
-
-    //TODO: refactor later
-    /*private class UploadCallback implements Callback<FileUploadObj> {
-
-        private final ContentProviderClient mProvider;
-        private final Integer mFileId;
-        private final String mFileName;
-
-        public UploadCallback(ContentProviderClient operations, Integer fileId, String fileName) {
-            this.mProvider = operations;
-            this.mFileId = fileId;
-            this.mFileName = fileName;
-        }
-
-        @Override
-        public void success(FileUploadObj fileUploadObj, Response response) {
-//            completeFileUpload(mProvider, fileUploadObj.getUrl(), mFileId, fileName, fileLength);
-            Logger.d(TAG, "UploadCallback()::success=" + fileUploadObj.getUrl());
-        }
-
-        @Override
-        public void failure(RetrofitError error) {
-            Logger.d(TAG, "UploadCallback()::error=" + error.getLocalizedMessage());
-        }
-    }*/
 }
