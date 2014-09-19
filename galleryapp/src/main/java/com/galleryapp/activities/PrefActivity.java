@@ -23,7 +23,6 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.view.Menu;
 import android.view.MenuItem;
 
 import com.galleryapp.Logger;
@@ -51,12 +50,14 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
     // we do not have unexpected name conflicts, and the framework can correctly
     // determine whether these preferences' defaults have already been written.
     public static final String PREFS_NAME = "defaults";
+    private SharedPreferences mPref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getActionBar().setDisplayHomeAsUpEnabled(true);
-        getPrefs(this).registerOnSharedPreferenceChangeListener(this);
+        mPref = getPrefs(this);
+        mPref.registerOnSharedPreferenceChangeListener(this);
         getPreferenceManager().setSharedPreferencesName(PREFS_NAME);
         addPreferencesFromResource(R.xml.default_values);
 
@@ -83,6 +84,8 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
 
         findPreference("updateFreq").setTitle(getString(R.string.update_freq_preference));
         findPreference("updateFreq").setDefaultValue(getString(R.string.default_value_update_freq_preference));
+
+        editPreff(mPref.getBoolean("firstLaunch", true));
     }
 
     private void updatePreffSummaries() {
@@ -90,25 +93,39 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
 
         bindPreferenceSummaryToValue(findPreference("hostName"));
         bindPreferenceSummaryToValue(findPreference("port"));
+        bindPreferenceSummaryToValue(findPreference("useport"));
         bindPreferenceSummaryToValue(findPreference("username"));
         bindPreferenceSummaryToValue(findPreference("password"));
         bindPreferenceSummaryToValue(findPreference("updateTimes"));
         bindPreferenceSummaryToValue(findPreference("updateFreq"));
     }
 
-    private void editPreff(final Context context) {
+    private void editPreff(final boolean firstLaunch) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                SharedPreferences sp = context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-                sp.edit()
-                        .putString("hostName", findPreference("hostName").getSummary().toString())
-                        .putString("port", findPreference("port").getSummary().toString())
-                        .putString("username", findPreference("username").getSummary().toString())
-                        .putString("password", findPreference("password").getSummary().toString())
-                        .putString("updateTimes", findPreference("updateTimes").getSummary().toString())
-                        .putString("updateFreq", findPreference("updateFreq").getSummary().toString())
-                        .apply();
+                if (firstLaunch) {
+                    mPref.edit()
+                            .putString("hostName", getString(R.string.default_value_host_preference))
+                            .putString("port", getString(R.string.default_value_port_preference))
+                            .putBoolean("useport", false)
+                            .putString("username", getString(R.string.default_value_username_preference))
+                            .putString("password", getString(R.string.default_value_password_preference))
+                            .putString("updateTimes", getString(R.string.default_value_update_times_preference))
+                            .putString("updateFreq", getString(R.string.default_value_update_freq_preference))
+                            .putBoolean("firstLaunch", false)
+                            .apply();
+                } else {
+                    mPref.edit()
+                            .putString("hostName", findPreference("hostName").getSummary().toString())
+                            .putString("port", findPreference("port").getSummary().toString())
+                            .putBoolean("useport", Boolean.parseBoolean(findPreference("useport").getSummary().toString()))
+                            .putString("username", findPreference("username").getSummary().toString())
+                            .putString("password", findPreference("password").getSummary().toString())
+                            .putString("updateTimes", findPreference("updateTimes").getSummary().toString())
+                            .putString("updateFreq", findPreference("updateFreq").getSummary().toString())
+                            .apply();
+                }
             }
         }).start();
     }
@@ -116,36 +133,6 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
     public static SharedPreferences getPrefs(Context context) {
         PreferenceManager.setDefaultValues(context, PREFS_NAME, MODE_PRIVATE, R.xml.default_values, false);
         return context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        return false;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            // Respond to the action bar's Up/Home button
-            case android.R.id.home:
-                /*Intent upIntent = NavUtils.getParentActivityIntent(this);
-                if (NavUtils.shouldUpRecreateTask(this, upIntent)) {
-                    // This activity is NOT part of this app's task, so create a new task
-                    // when navigating up, with a synthesized back stack.
-                    TaskStackBuilder.create(this)
-                            // Add all of this activity's parents to the back stack
-                            .addNextIntentWithParentStack(upIntent)
-                                    // Navigate up to the closest parent
-                            .startActivities();
-                } else {
-                    // This activity is part of this app's task, so simply
-                    // navigate up to the logical parent activity.
-                    NavUtils.navigateUpTo(this, upIntent);
-                }*/
-                finish();
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -172,9 +159,7 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
 
                 // Set the summary to reflect the new value.
                 preference.setSummary(
-                        index >= 0
-                                ? listPreference.getEntries()[index]
-                                : null
+                        index >= 0 ? listPreference.getEntries()[index] : null
                 );
 
             } else {
@@ -201,11 +186,13 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
 
         // Trigger the listener immediately with the preference's
         // current value.
-        sBindPreferenceSummaryToValueListener.onPreferenceChange(
-                preference,
-                this.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-                        .getString(preference.getKey(), "")
-        );
+        String key = preference.getKey();
+        Logger.d(TAG, "Key = " + key);
+        Object value = key.equals("useport") ?
+                this.getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean(key, true) :
+                this.getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getString(key, "");
+        Logger.d(TAG, "Value = " + value);
+        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, value);
     }
 
     private GalleryApp getApp() {
@@ -213,8 +200,16 @@ public class PrefActivity extends PreferenceActivity implements SharedPreference
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+        }
+        return true;
+    }
+
+    @Override
     public void finish() {
-        editPreff(this);
+        editPreff(mPref.getBoolean("firstLaunch", true));
         Logger.d(TAG, "HostName = " + findPreference("hostName").getSummary());
         setResult(RESULT_OK);
         super.finish();

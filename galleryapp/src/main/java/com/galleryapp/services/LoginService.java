@@ -19,9 +19,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
 
-/**
- * Created by user on 10/18/13.
- */
 public final class LoginService extends IntentService {
 
     private final String TAG = this.getClass().getSimpleName();
@@ -38,11 +35,11 @@ public final class LoginService extends IntentService {
     private String hostName;
     private String port;
     private PendingIntent loginProgressIntent;
+    private AndroidHttpClient httpClient;
 
     public LoginService() {
         super("Empty constructor");
         Logger.d(TAG, "OAuthService()");
-
     }
 
 
@@ -106,15 +103,13 @@ public final class LoginService extends IntentService {
         InputStream inputStream = null;
         try {
             URL parsedUrl = new URL(url);
-//            DefaultHttpClient httpClient = new DefaultHttpClient(mHttpConnectionManager, mHttpParams);
-            AndroidHttpClient httpClient = AndroidHttpClient.newInstance("android", getApplicationContext());
+            httpClient = AndroidHttpClient.newInstance("android", getApplicationContext());
             HttpGet get = new HttpGet(parsedUrl.toURI());
             get.addHeader("Host", parsedUrl.getAuthority());
             Logger.d(TAG, "OpenHttpGETConnection::addHeader = " + "Host::" + parsedUrl.getAuthority());
             get.addHeader("Content-Type", "application/json");
             HttpResponse httpResponse = httpClient.execute(get);
             inputStream = httpResponse.getEntity().getContent();
-            httpClient.close();
         } catch (Exception e) {
             e.printStackTrace();
             Logger.d(TAG, "OpenHttpGETConnection::Exception = " + e.toString());
@@ -165,6 +160,7 @@ public final class LoginService extends IntentService {
             connectionMessage(CONNECTION_ERROR);
             return "";
         }
+        httpClient.close();
         return str;
     }
 

@@ -29,6 +29,12 @@
         <com.galleryapp.ScanPreff
             android:defaultValue="@string/default_value_port_preference"
             android:key="port" />
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="useport"
+            android:summary="true"
+            android:title="Enable/Disable port usage" />
         <!--<Preference
             android:defaultValue="@string/default_value_port_preference"
             android:key="port"

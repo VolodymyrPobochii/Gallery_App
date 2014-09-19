@@ -228,9 +228,18 @@ public final class GalleryApp extends Application implements GalleryFragment.OnF
         captureChannelCode = preff.getString("capturechannelcode", Config.DEFAULT_CAPTURE_CHANNEL_CODE);
         login = preff.getString("username", Config.DEFAULT_USERNAME);
         password = preff.getString("password", Config.DEFAULT_PASSWORD);
-        loginBaseUrl = hostName + ":" + port;
-        baseUrl = hostName + ":" + port + Config.DEFAULT_URL_BODY + domain;
-        cmsBaseUrl = hostName + ":" + port + Config.DEFAULT_CSM_URL_BODY;
+
+        boolean usePort = preff.getBoolean("useport", false);
+
+        if (usePort) {
+            loginBaseUrl = hostName + ":" + port;
+            baseUrl = hostName + ":" + port + Config.DEFAULT_URL_BODY + domain;
+            cmsBaseUrl = hostName + ":" + port + Config.DEFAULT_CSM_URL_BODY;
+        } else {
+            loginBaseUrl = hostName;
+            baseUrl = hostName + Config.DEFAULT_URL_BODY + domain;
+            cmsBaseUrl = hostName + Config.DEFAULT_CSM_URL_BODY;
+        }
 
         Logger.d("GalleryApp", "setUpHost()::host=" + hostName);
         Logger.d("GalleryApp", "setUpHost()::port=" + port);
